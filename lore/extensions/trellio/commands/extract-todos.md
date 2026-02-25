@@ -1,11 +1,11 @@
 ---
-name: deftrello-extract-todos
+name: trellio-extract-todos
 description: Extract TODO/FIXME comments from code and create Trello cards
 allowed-tools:
   - Grep
   - Read
-  - mcp__plugin_deftrello_deftrello__trello_create_card
-  - mcp__plugin_deftrello_deftrello__trello_search_cards
+  - mcp__plugin_trellio_trellio__trello_create_card
+  - mcp__plugin_trellio_trellio__trello_search_cards
   - AskUserQuestion
 ---
 
@@ -19,7 +19,7 @@ Use AskUserQuestion:
 - Question: "Which codebase should I scan for TODOs?"
 - Options:
   - Current project directory
-  - DefTrello project directory
+  - Trellio project directory
   - Current directory
   - Custom path
 
@@ -318,7 +318,7 @@ After import:
 ## Example Session
 
 ```
-$ Run /deftrello-extract-todos
+$ Run /trellio-extract-todos
 
 ? Which codebase should I scan?
   → Current project directory

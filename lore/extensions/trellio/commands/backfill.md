@@ -1,13 +1,13 @@
 ---
-name: deftrello-backfill
+name: trellio-backfill
 description: Comprehensive backfill workflow - analyze codebase and populate Trello with all work items
 allowed-tools:
   - Glob
   - Grep
   - Read
-  - mcp__plugin_deftrello_deftrello__trello_create_card
-  - mcp__plugin_deftrello_deftrello__deftrello_batch_update_cards
-  - mcp__plugin_deftrello_deftrello__deftrello_get_board_snapshot
+  - mcp__plugin_trellio_trellio__trello_create_card
+  - mcp__plugin_trellio_trellio__trellio_batch_update_cards
+  - mcp__plugin_trellio_trellio__trellio_get_board_snapshot
   - AskUserQuestion
 ---
 
@@ -38,7 +38,7 @@ Use AskUserQuestion:
 - Question: "Which project should I backfill?"
 - Options:
   - Current project directory
-  - DefTrello project directory
+  - Trellio project directory
   - Both projects (comprehensive)
   - Custom path (specify directory)
 
@@ -319,7 +319,7 @@ Refactoring: 35 (19%)
 Architecture: 21 (11%)
 ```
 
-Save to: `/tmp/deftrello-backfill-report-[date].md`
+Save to: `/tmp/trellio-backfill-report-[date].md`
 
 **2. Tech Debt Register**
 ```csv
@@ -330,7 +330,7 @@ ID,Type,File,Line,Description,Priority,Effort,Complexity
 [... more ...]
 ```
 
-Save to: `/tmp/deftrello-tech-debt-[date].csv`
+Save to: `/tmp/trellio-tech-debt-[date].csv`
 
 **3. Sprint Plan**
 ```markdown
@@ -363,7 +363,7 @@ Total: 72 hours (30 planned = 42% utilization)
 - External API documented
 ```
 
-Save to: `/tmp/deftrello-sprint-plan-[date].md`
+Save to: `/tmp/trellio-sprint-plan-[date].md`
 
 ## Step 11: Final Summary
 
@@ -386,9 +386,9 @@ METADATA:
   - Task types: All categorized
 
 REPORTS GENERATED:
-  1. Backfill summary -> /tmp/deftrello-backfill-report.md
-  2. Tech debt register -> /tmp/deftrello-tech-debt.csv
-  3. Sprint plan -> /tmp/deftrello-sprint-plan.md
+  1. Backfill summary -> /tmp/trellio-backfill-report.md
+  2. Tech debt register -> /tmp/trellio-tech-debt.csv
+  3. Sprint plan -> /tmp/trellio-sprint-plan.md
 
 ESTIMATED EFFORT:
   Critical (this week): 30 hours
@@ -410,7 +410,7 @@ RECOMMENDED NEXT STEPS:
    -> Monthly technical debt review
 
 4. Track progress
-   -> Use /deftrello-weekly for stats
+   -> Use /trellio-weekly for stats
    -> Monitor completion rates
    -> Adjust priorities as needed
 ```

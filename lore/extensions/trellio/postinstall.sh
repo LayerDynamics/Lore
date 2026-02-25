@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# DefTrello Extension Postinstall
-# Clones the deftrello repo locally so its code is available for the plugin.
+# Trellio Extension Postinstall
+# Clones the trellio repo locally so its code is available for the plugin.
 
 set -euo pipefail
 
@@ -10,16 +10,16 @@ RED='\033[0;31m'
 DIM='\033[2m'
 NC='\033[0m'
 
-log()     { echo -e "${CYAN}[deftrello]${NC} $1"; }
-success() { echo -e "${GREEN}[deftrello]${NC} $1"; }
-error()   { echo -e "${RED}[deftrello]${NC} $1"; }
+log()     { echo -e "${CYAN}[trellio]${NC} $1"; }
+success() { echo -e "${GREEN}[trellio]${NC} $1"; }
+error()   { echo -e "${RED}[trellio]${NC} $1"; }
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$SCRIPT_DIR/repo"
-REPO_URL="https://github.com/LayerDynamics/deftrello.git"
+REPO_URL="https://github.com/LayerDynamics/trellio.git"
 
 echo ""
-log "DefTrello Postinstall"
+log "Trellio Postinstall"
 echo ""
 
 # Skip if already cloned
@@ -32,23 +32,23 @@ if [ -d "$REPO_DIR" ] && [ -f "$REPO_DIR/package.json" ]; then
   git pull --ff-only 2>/dev/null || log "Could not fast-forward (may have local changes)"
   cd "$SCRIPT_DIR"
 
-  success "DefTrello repo up to date."
+  success "Trellio repo up to date."
   exit 0
 fi
 
 # Check for git
 if ! command -v git &>/dev/null; then
-  error "git is not installed. Cannot clone deftrello repo."
+  error "git is not installed. Cannot clone trellio repo."
   exit 1
 fi
 
 # Clone
-log "Cloning deftrello from $REPO_URL..."
+log "Cloning trellio from $REPO_URL..."
 git clone --depth 1 "$REPO_URL" "$REPO_DIR"
 
 # Verify
 if [ -f "$REPO_DIR/package.json" ]; then
-  success "DefTrello repo cloned successfully."
+  success "Trellio repo cloned successfully."
 else
   error "Clone succeeded but package.json not found."
   exit 1
@@ -64,5 +64,5 @@ fi
 
 echo ""
 success "Postinstall complete."
-echo -e "${DIM}DefTrello code is now available at: $REPO_DIR${NC}"
+echo -e "${DIM}Trellio code is now available at: $REPO_DIR${NC}"
 echo ""

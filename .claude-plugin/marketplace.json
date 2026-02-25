@@ -19,9 +19,9 @@
       "tags": ["browser", "automation", "scraping", "web"]
     },
     {
-      "name": "deftrello",
-      "source": "./lore/extensions/deftrello",
-      "description": "DefTrello task management commands and MCP integration for Trello boards, cards, and workflows.",
+      "name": "trellio",
+      "source": "./lore/extensions/trellio",
+      "description": "Trellio task management commands and MCP integration for Trello boards, cards, and workflows.",
       "version": "1.0.0",
       "category": "productivity",
       "tags": ["trello", "task-management", "boards", "cards"]

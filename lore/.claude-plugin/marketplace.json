@@ -48,9 +48,9 @@
       "source": "./extensions/browserx"
     },
     {
-      "name": "deftrello",
+      "name": "trellio",
       "description": "Trello-based task management with board operations, planning workflows, and priority-matched task retrieval via MCP tools.",
-      "source": "./extensions/deftrello"
+      "source": "./extensions/trellio"
     },
     {
       "name": "cc-telemetry",

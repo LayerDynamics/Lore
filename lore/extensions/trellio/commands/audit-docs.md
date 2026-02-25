@@ -1,11 +1,11 @@
 ---
-name: deftrello-audit-docs
+name: trellio-audit-docs
 description: Compare documentation to code and create tasks for gaps
 allowed-tools:
   - Glob
   - Grep
   - Read
-  - mcp__plugin_deftrello_deftrello__trello_create_card
+  - mcp__plugin_trellio_trellio__trello_create_card
   - AskUserQuestion
 ---
 
@@ -19,7 +19,7 @@ Use AskUserQuestion:
 - Question: "Which project should I audit?"
 - Options:
   - Current project directory
-  - DefTrello project directory
+  - Trellio project directory
   - Current directory
   - Custom path
 
@@ -365,7 +365,7 @@ curl -X POST https://api.example.com/users/create \
 ```
 ```
 
-Save template to: `/tmp/deftrello-doc-templates/api-users-create.md`
+Save template to: `/tmp/trellio-doc-templates/api-users-create.md`
 
 ## Step 10: Summary and Next Steps
 
@@ -404,7 +404,7 @@ Generated starter templates for:
 - 12 docstring examples
 - 3 architecture sections
 
-Templates saved to: /tmp/deftrello-doc-templates/
+Templates saved to: /tmp/trellio-doc-templates/
 
 Next steps:
 1. Review cards in Reference

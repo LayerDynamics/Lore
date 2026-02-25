@@ -6,14 +6,14 @@ Claude Desktop couldn't find Node.js and npx because the configuration was using
 
 ### Before (Broken):
 ```json
-"deftrello": { "command": "$HOME/.asdf/shims/node" }
+"trellio": { "command": "$HOME/.asdf/shims/node" }
 "mcp-cron": { "command": "npx" }
 "trigger-gateway": { "command": "..." } // Was already fixed
 ```
 
 ### After (Fixed):
 ```json
-"deftrello": { "command": "$HOME/.asdf/installs/nodejs/24.8.0/bin/node" }
+"trellio": { "command": "$HOME/.asdf/installs/nodejs/24.8.0/bin/node" }
 "mcp-cron": { "command": "$HOME/.asdf/installs/nodejs/24.8.0/bin/npx" }
 "trigger-gateway": { "command": "$HOME/.asdf/installs/nodejs/24.8.0/bin/node" }
 ```
@@ -32,7 +32,7 @@ Claude Desktop couldn't find Node.js and npx because the configuration was using
 - **Purpose**: Cron job scheduling
 - **Was failing**: "No such file or directory"
 
-### 3. deftrello
+### 3. trellio
 - **Status**: ✅ Fixed - now using full node path
 - **Command**: Full Node.js path
 - **Purpose**: Trello integration
@@ -57,7 +57,7 @@ What MCP servers are available?
 **Expected**: You should see all three:
 - ✅ trigger-gateway
 - ✅ mcp-cron
-- ✅ deftrello
+- ✅ trellio
 
 ### Test 2: Test trigger-gateway
 ```
@@ -80,7 +80,7 @@ What can mcp-cron do?
 
 **Expected**: List of cron scheduling tools
 
-### Test 5: Test deftrello
+### Test 5: Test trellio
 ```
 What Trello tools are available?
 ```
@@ -118,8 +118,8 @@ tail ~/Library/Logs/Claude/mcp-server-trigger-gateway.log
 # Check mcp-cron
 tail ~/Library/Logs/Claude/mcp-server-mcp-cron.log
 
-# Check deftrello
-tail ~/Library/Logs/Claude/mcp-server-deftrello.log
+# Check trellio
+tail ~/Library/Logs/Claude/mcp-server-trellio.log
 ```
 
 **Good signs**:
@@ -185,7 +185,7 @@ Once all servers are working (after restart):
 - Schedule one-time and recurring tasks
 - Manage cron jobs through conversation
 
-### With deftrello:
+### With trellio:
 - Manage Trello boards
 - Create cards
 - Update lists
@@ -200,7 +200,7 @@ Once all servers are working (after restart):
 **Changes made**:
 1. ✅ trigger-gateway: Using full node path
 2. ✅ mcp-cron: Using full npx path (was failing)
-3. ✅ deftrello: Using full node path (was using shim)
+3. ✅ trellio: Using full node path (was using shim)
 
 **Action required**:
 - **Restart Claude Desktop** (⌘Q, then reopen)

@@ -85,7 +85,7 @@ Specialized subagents for parallel work:
 
 Optional modules for specific tooling:
 
-- `deftrello` — Trello integration via MCP
+- `trellio` — Trello integration via MCP
 - `browserx` — Browser automation via MCP
 
 ## Customization

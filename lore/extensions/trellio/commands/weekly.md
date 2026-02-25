@@ -1,11 +1,11 @@
 ---
-name: deftrello-weekly
+name: trellio-weekly
 description: Weekly review with completion stats, patterns, and planning
 allowed-tools:
-  - mcp__plugin_deftrello_deftrello__coach_weekly_completion_stats
-  - mcp__plugin_deftrello_deftrello__deftrello_get_board_snapshot
-  - mcp__plugin_deftrello_deftrello__deftrello_clean_up_board
-  - mcp__plugin_deftrello_deftrello__coach_generate_accountability_message
+  - mcp__plugin_trellio_trellio__coach_weekly_completion_stats
+  - mcp__plugin_trellio_trellio__trellio_get_board_snapshot
+  - mcp__plugin_trellio_trellio__trellio_clean_up_board
+  - mcp__plugin_trellio_trellio__coach_generate_accountability_message
 ---
 
 # Weekly Review
@@ -149,7 +149,7 @@ Want to send this or modify it?
 
 ## Step 6: Clean Up Board
 
-Call `deftrello_clean_up_board` automatically:
+Call `trellio_clean_up_board` automatically:
 
 ```
 Weekly Cleanup Performed

@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "deftrello": {
+    "trellio": {
       "command": "node",
       "args": ["${PROJECT_DIR}/mcp-server/dist/index.js"],
       "env": {

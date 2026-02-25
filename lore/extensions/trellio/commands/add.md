@@ -1,8 +1,8 @@
 ---
-name: deftrello-add
+name: trellio-add
 description: Quick add task with automatic priority assignment
 allowed-tools:
-  - mcp__plugin_deftrello_deftrello__deftrello_quick_add_task
+  - mcp__plugin_trellio_trellio__trellio_quick_add_task
   - AskUserQuestion
 ---
 
@@ -19,7 +19,7 @@ Get a clear, concise description of the task.
 
 ## Step 2: Call Quick Add
 
-Use `deftrello_quick_add_task` with the task description.
+Use `trellio_quick_add_task` with the task description.
 
 This tool automatically:
 - Creates the card

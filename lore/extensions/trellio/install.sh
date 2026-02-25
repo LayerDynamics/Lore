@@ -1,6 +1,6 @@
 #!/bin/bash
-# DefTrello Plugin Installer
-# Installs DefTrello commands as a Claude Code plugin
+# Trellio Plugin Installer
+# Installs Trellio commands as a Claude Code plugin
 
 set -e
 
@@ -10,16 +10,16 @@ RED='\033[0;31m'
 DIM='\033[2m'
 NC='\033[0m'
 
-log()     { echo -e "${CYAN}[deftrello]${NC} $1"; }
-success() { echo -e "${GREEN}[deftrello]${NC} $1"; }
-error()   { echo -e "${RED}[deftrello]${NC} $1"; }
+log()     { echo -e "${CYAN}[trellio]${NC} $1"; }
+success() { echo -e "${GREEN}[trellio]${NC} $1"; }
+error()   { echo -e "${RED}[trellio]${NC} $1"; }
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_SRC="$SCRIPT_DIR"
-PLUGIN_DEST="$HOME/.claude/plugins/deftrello"
+PLUGIN_DEST="$HOME/.claude/plugins/trellio"
 
 echo ""
-echo -e "${CYAN}DefTrello - Plugin Installer${NC}"
+echo -e "${CYAN}Trellio - Plugin Installer${NC}"
 echo -e "${DIM}Priority-based task management${NC}"
 echo ""
 
@@ -46,18 +46,18 @@ echo ""
 success "Plugin installed successfully!"
 echo ""
 echo -e "${CYAN}Available commands (after restart):${NC}"
-echo "  /deftrello-board       — View board snapshot"
-echo "  /deftrello-add         — Add a new task"
-echo "  /deftrello-planning    — Daily planning workflow"
-echo "  /deftrello-cleanup     — Organize board"
-echo "  /deftrello-status      — Check task status"
-echo "  /deftrello-priority    — Get priority-matched tasks"
-echo "  /deftrello-recovery    — Task recovery workflow"
-echo "  /deftrello-weekly      — Weekly review and stats"
-echo "  /deftrello-backfill    — Codebase analysis and task backfill"
+echo "  /trellio-board       — View board snapshot"
+echo "  /trellio-add         — Add a new task"
+echo "  /trellio-planning    — Daily planning workflow"
+echo "  /trellio-cleanup     — Organize board"
+echo "  /trellio-status      — Check task status"
+echo "  /trellio-priority    — Get priority-matched tasks"
+echo "  /trellio-recovery    — Task recovery workflow"
+echo "  /trellio-weekly      — Weekly review and stats"
+echo "  /trellio-backfill    — Codebase analysis and task backfill"
 echo ""
 echo -e "${CYAN}MCP Tools:${NC}"
-echo "  All DefTrello MCP tools remain available"
+echo "  All Trellio MCP tools remain available"
 echo "  See MCP_TOOLS_REFERENCE.md for full list"
 echo ""
 echo -e "${CYAN}Configuration:${NC}"

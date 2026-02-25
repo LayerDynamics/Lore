@@ -1,8 +1,8 @@
 ---
-name: deftrello-priority
+name: trellio-priority
 description: Get tasks matched to your current priorities
 allowed-tools:
-  - mcp__plugin_deftrello_deftrello__deftrello_get_board_snapshot
+  - mcp__plugin_trellio_trellio__trellio_get_board_snapshot
   - AskUserQuestion
 ---
 
@@ -22,7 +22,7 @@ Use AskUserQuestion to ask:
 
 ## Step 2: Get Board Snapshot
 
-Call `deftrello_get_board_snapshot` to see all available tasks.
+Call `trellio_get_board_snapshot` to see all available tasks.
 
 ## Step 3: Present Results
 

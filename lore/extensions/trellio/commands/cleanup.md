@@ -1,9 +1,9 @@
 ---
-name: deftrello-cleanup
+name: trellio-cleanup
 description: Clean up and organize board automatically
 allowed-tools:
-  - mcp__plugin_deftrello_deftrello__deftrello_clean_up_board
-  - mcp__plugin_deftrello_deftrello__deftrello_get_board_snapshot
+  - mcp__plugin_trellio_trellio__trellio_clean_up_board
+  - mcp__plugin_trellio_trellio__trellio_get_board_snapshot
 ---
 
 # Board Cleanup
@@ -12,7 +12,7 @@ Automatically organize and tidy your Trello board.
 
 ## Step 1: Show Current State
 
-Call `deftrello_get_board_snapshot` to show before state:
+Call `trellio_get_board_snapshot` to show before state:
 
 ```
 Current Board State (Before Cleanup)
@@ -31,7 +31,7 @@ Issues detected:
 
 ## Step 2: Run Cleanup
 
-Call `deftrello_clean_up_board` which automatically:
+Call `trellio_clean_up_board` which automatically:
 - Archives completed cards in Done (older than 7 days)
 - Moves overdue cards from This Week to Today
 - Reorders cards by priority level

@@ -1,12 +1,12 @@
 ---
-name: deftrello-analyze-code
+name: trellio-analyze-code
 description: Analyze a codebase to generate and backfill tasks into Trello
 allowed-tools:
   - Glob
   - Grep
   - Read
-  - mcp__plugin_deftrello_deftrello__trello_create_card
-  - mcp__plugin_deftrello_deftrello__deftrello_batch_update_cards
+  - mcp__plugin_trellio_trellio__trello_create_card
+  - mcp__plugin_trellio_trellio__trellio_batch_update_cards
   - AskUserQuestion
 ---
 
@@ -20,7 +20,7 @@ Use AskUserQuestion to ask:
 - Question: "Which codebase should I analyze?"
 - Options:
   - Current project directory
-  - DefTrello project directory
+  - Trellio project directory
   - Custom path (let me specify)
 
 ## Step 2: Analyze Code Structure

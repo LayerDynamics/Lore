@@ -1,8 +1,8 @@
 ---
-name: deftrello-status
+name: trellio-status
 description: Check current task status and what's in progress
 allowed-tools:
-  - mcp__plugin_deftrello_deftrello__deftrello_get_board_snapshot
+  - mcp__plugin_trellio_trellio__trellio_get_board_snapshot
 ---
 
 # Task Status Check
@@ -11,7 +11,7 @@ See what's currently in progress and what's coming up next.
 
 ## Step 1: Get Board Status
 
-Call `deftrello_get_board_snapshot` to retrieve current task state.
+Call `trellio_get_board_snapshot` to retrieve current task state.
 
 ## Step 2: Present Task Status
 

@@ -1,10 +1,10 @@
 ---
-name: deftrello-recovery
+name: trellio-recovery
 description: Task recovery workflow with smallest next actions and progress building
 allowed-tools:
-  - mcp__plugin_deftrello_deftrello__coach_assess_crash_state
-  - mcp__plugin_deftrello_deftrello__coach_get_smallest_next_action
-  - mcp__plugin_deftrello_deftrello__deftrello_quick_add_task
+  - mcp__plugin_trellio_trellio__coach_assess_crash_state
+  - mcp__plugin_trellio_trellio__coach_get_smallest_next_action
+  - mcp__plugin_trellio_trellio__trellio_quick_add_task
   - AskUserQuestion
 ---
 
@@ -69,7 +69,7 @@ Use AskUserQuestion:
 
 ## Step 5: Create Task
 
-If they choose an action, use `deftrello_quick_add_task` to create:
+If they choose an action, use `trellio_quick_add_task` to create:
 - A card for just that step
 - In Today list
 - Clear, actionable title

@@ -37,7 +37,7 @@ Lore also bundles tools originally developed as standalone plugins:
 - **local-code-review** — Git-free code review
 - **productivity** — Standup writing, diff review, code explanation
 - **writing-plans** — Structured implementation planning
-- **deftrello** — Trello project management integration
+- **trellio** — Trello project management integration
 - **browserx** — Browser automation
 
 ---

@@ -104,7 +104,7 @@ if [ -d "$EXT_DIR" ]; then
   echo ""
   echo "    browserx             — Browser automation engine"
   echo "    cc-telemetry         — Deep telemetry and observability for Claude Code"
-  echo "    deftrello            — Trello task management integration"
+  echo "    trellio              — Trello task management integration"
   echo "    findlazy             — Detect placeholder/stub code left by AI agents"
   echo "    mcp-trigger-gateway  — Cron, webhook, and file-watcher triggers via MCP"
   echo "    scratchpad           — Ephemeral scratchpad workspace"

@@ -1,8 +1,8 @@
 ---
-name: deftrello-planning
+name: trellio-planning
 description: Morning planning workflow with task prioritization
 allowed-tools:
-  - mcp__plugin_deftrello_deftrello__deftrello_get_daily_planning_context
+  - mcp__plugin_trellio_trellio__trellio_get_daily_planning_context
   -
 ---
 
@@ -12,7 +12,7 @@ Let's plan your day with smart task prioritization.
 
 ## Step 1: Get Daily Planning Context
 
-Call `deftrello_get_daily_planning_context` to get:
+Call `trellio_get_daily_planning_context` to get:
 - Current board state
 - Tasks in each list
 - Recommended tasks for today

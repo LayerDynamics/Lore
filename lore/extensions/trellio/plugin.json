@@ -1,72 +1,72 @@
 {
-  "name": "deftrello",
+  "name": "trellio",
   "version": "1.0.0",
-  "description": "DefTrello task management commands and MCP integration",
+  "description": "Trellio task management commands and MCP integration",
   "commands": [
     {
-      "name": "deftrello-planning",
+      "name": "trellio-planning",
       "path": "commands/planning.md",
       "description": "Morning planning workflow with task prioritization"
     },
     {
-      "name": "deftrello-board",
+      "name": "trellio-board",
       "path": "commands/board.md",
       "description": "View current board snapshot with all cards"
     },
     {
-      "name": "deftrello-add",
+      "name": "trellio-add",
       "path": "commands/add.md",
       "description": "Quick add task with automatic priority assignment"
     },
     {
-      "name": "deftrello-priority",
+      "name": "trellio-priority",
       "path": "commands/priority.md",
       "description": "Get tasks matched to your current priorities"
     },
     {
-      "name": "deftrello-recovery",
+      "name": "trellio-recovery",
       "path": "commands/recovery.md",
       "description": "Task recovery workflow with smallest actions"
     },
     {
-      "name": "deftrello-cleanup",
+      "name": "trellio-cleanup",
       "path": "commands/cleanup.md",
       "description": "Clean up and organize board automatically"
     },
     {
-      "name": "deftrello-status",
+      "name": "trellio-status",
       "path": "commands/status.md",
       "description": "Check current task status and what's in progress"
     },
     {
-      "name": "deftrello-weekly",
+      "name": "trellio-weekly",
       "path": "commands/weekly.md",
       "description": "Weekly review with stats and planning"
     },
     {
-      "name": "deftrello-analyze-code",
+      "name": "trellio-analyze-code",
       "path": "commands/analyze-code.md",
       "description": "Analyze codebase to generate and backfill tasks"
     },
     {
-      "name": "deftrello-extract-todos",
+      "name": "trellio-extract-todos",
       "path": "commands/extract-todos.md",
       "description": "Extract TODO/FIXME comments and create cards"
     },
     {
-      "name": "deftrello-audit-docs",
+      "name": "trellio-audit-docs",
       "path": "commands/audit-docs.md",
       "description": "Compare docs to code and create gap tasks"
     },
     {
-      "name": "deftrello-backfill",
+      "name": "trellio-backfill",
       "path": "commands/backfill.md",
       "description": "Comprehensive backfill - analyze and populate all tasks"
     },
     {
-      "name": "using-deftrello",
-      "path": "commands/using-deftrello.md",
-      "description": "Complete reference for all DefTrello MCP commands and tools"
+      "name": "using-trellio",
+      "path": "commands/using-trellio.md",
+      "description": "Complete reference for all Trellio MCP commands and tools"
     },
     {
       "name": "defcad-board",

@@ -1,6 +1,6 @@
-# DefTrello Plugin
+# Trellio Plugin
 
-Global DefTrello commands and MCP integration for task management.
+Global Trellio commands and MCP integration for task management.
 
 ## Setup
 
@@ -31,7 +31,7 @@ export N8N_BASE_URL="https://your-n8n-instance.example.com"
 export N8N_API_KEY="your-n8n-api-key"
 
 # Project Directory
-export PROJECT_DIR="/path/to/your/deftrello"
+export PROJECT_DIR="/path/to/your/trellio"
 ```
 
 After setting these, restart your terminal or run:
@@ -42,21 +42,21 @@ source ~/.zshrc  # or source ~/.bashrc
 ## Available Commands
 
 ### Daily Workflow
-- `/using-deftrello` - Complete reference guide for all DefTrello commands
-- `/deftrello-planning` - Morning planning workflow with task prioritization
-- `/deftrello-board` - View current board snapshot
-- `/deftrello-add` - Quick add task with priority assignment
-- `/deftrello-priority` - Get tasks matched to your current priorities
-- `/deftrello-recovery` - Task recovery workflow with smallest actions
-- `/deftrello-cleanup` - Clean up and organize board
-- `/deftrello-status` - Check task status and what's in progress
-- `/deftrello-weekly` - Weekly review and statistics
+- `/using-trellio` - Complete reference guide for all Trellio commands
+- `/trellio-planning` - Morning planning workflow with task prioritization
+- `/trellio-board` - View current board snapshot
+- `/trellio-add` - Quick add task with priority assignment
+- `/trellio-priority` - Get tasks matched to your current priorities
+- `/trellio-recovery` - Task recovery workflow with smallest actions
+- `/trellio-cleanup` - Clean up and organize board
+- `/trellio-status` - Check task status and what's in progress
+- `/trellio-weekly` - Weekly review and statistics
 
 ### Codebase Backfilling
-- `/deftrello-backfill` - **Comprehensive backfill** - Analyze codebase and populate all tasks
-- `/deftrello-analyze-code` - Analyze code structure and generate tasks
-- `/deftrello-extract-todos` - Extract TODO/FIXME comments and create cards
-- `/deftrello-audit-docs` - Compare documentation to code and create gap tasks
+- `/trellio-backfill` - **Comprehensive backfill** - Analyze codebase and populate all tasks
+- `/trellio-analyze-code` - Analyze code structure and generate tasks
+- `/trellio-extract-todos` - Extract TODO/FIXME comments and create cards
+- `/trellio-audit-docs` - Compare documentation to code and create gap tasks
 
 ### Project-Specific Commands
 - `/defcad-board` - View board snapshot with task status
@@ -67,18 +67,18 @@ source ~/.zshrc  # or source ~/.bashrc
 
 ## Global Access
 
-This plugin is installed in `~/.claude/plugins/deftrello/` and works from **any directory**.
+This plugin is installed in `~/.claude/plugins/trellio/` and works from **any directory**.
 
 ## MCP Server
 
-The plugin bundles the DefTrello MCP server, providing tools like:
-- `deftrello_get_board_snapshot`
-- `deftrello_quick_add_task`
-- `deftrello_get_priority_matched_tasks`
-- `deftrello_clean_up_board`
+The plugin bundles the Trellio MCP server, providing tools like:
+- `trellio_get_board_snapshot`
+- `trellio_quick_add_task`
+- `trellio_get_priority_matched_tasks`
+- `trellio_clean_up_board`
 - And 40+ more...
 
-All tools are prefixed as `mcp__plugin_deftrello_deftrello__*` in Claude Code.
+All tools are prefixed as `mcp__plugin_trellio_trellio__*` in Claude Code.
 
 ## Documentation
 

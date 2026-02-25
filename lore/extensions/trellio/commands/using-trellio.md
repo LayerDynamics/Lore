@@ -1,11 +1,11 @@
 ---
-name: using-deftrello
-description: Complete reference guide for all DefTrello MCP commands and tools
+name: using-trellio
+description: Complete reference guide for all Trellio MCP commands and tools
 ---
 
-# DefTrello Command Reference
+# Trellio Command Reference
 
-Complete guide to all available DefTrello MCP tools for task management.
+Complete guide to all available Trellio MCP tools for task management.
 
 ## Core Board Operations
 
@@ -340,36 +340,36 @@ Verify n8n server connectivity and status.
 
 ### Read Project File
 ```
-"Read file [path] from deftrello project"
+"Read file [path] from trellio project"
 ```
-Access files in the DefTrello project directory.
+Access files in the Trellio project directory.
 
 ### Write Project File
 ```
-"Write to [path] in deftrello project"
+"Write to [path] in trellio project"
 ```
-Modify files in the DefTrello project directory.
+Modify files in the Trellio project directory.
 
 ### List Project Files
 ```
-"List files in deftrello project"
+"List files in trellio project"
 "Show project structure"
 ```
-Browse the DefTrello codebase.
+Browse the Trellio codebase.
 
 ### Search Codebase
 ```
-"Search deftrello code for [pattern]"
+"Search trellio code for [pattern]"
 "Find [keyword] in project"
 ```
-Grep through DefTrello source code.
+Grep through Trellio source code.
 
 ### Run Project Script
 ```
-"Run script [name] in deftrello"
+"Run script [name] in trellio"
 "Execute [script.sh]"
 ```
-Execute scripts in the DefTrello project.
+Execute scripts in the Trellio project.
 
 ### Environment Config
 ```
@@ -377,7 +377,7 @@ Execute scripts in the DefTrello project.
 "Show environment variables"
 "Get value of [ENV_VAR]"
 ```
-View DefTrello environment configuration.
+View Trellio environment configuration.
 
 ---
 
@@ -385,28 +385,28 @@ View DefTrello environment configuration.
 
 ### Git Status
 ```
-"Git status for deftrello"
+"Git status for trellio"
 "Show git state"
 ```
 View git working tree status.
 
 ### Git Diff
 ```
-"Git diff for deftrello"
+"Git diff for trellio"
 "Show uncommitted changes"
 ```
 View changes since last commit.
 
 ### Git Log
 ```
-"Git log for deftrello"
+"Git log for trellio"
 "Show recent commits"
 ```
 View commit history.
 
 ### Git Commit
 ```
-"Git commit deftrello changes"
+"Git commit trellio changes"
 "Commit with message [text]"
 ```
 Create a git commit.
@@ -449,7 +449,7 @@ Create a git commit.
 
 ## Configuration
 
-Your DefTrello is configured with:
+Your Trellio is configured with:
 
 **Board Lists:**
 - Reference
@@ -488,7 +488,7 @@ Label IDs are configured via environment variables (`TRELLO_LABEL_*_ID`).
 
 ## Troubleshooting
 
-**DefTrello not available?**
+**Trellio not available?**
 - Ensure MCP server is in `~/.claude.json` (user scope)
 - Restart Claude Code
 - Check `firecrawl --status` for connection
@@ -505,5 +505,5 @@ Label IDs are configured via environment variables (`TRELLO_LABEL_*_ID`).
 
 ---
 
-**DefTrello Version:** 1.0
+**Trellio Version:** 1.0
 **Global Access:** Available from all directories

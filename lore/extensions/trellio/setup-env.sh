@@ -1,9 +1,9 @@
 #!/bin/bash
-# Setup DefTrello environment variables
+# Setup Trellio environment variables
 
 set -euo pipefail
 
-echo "DefTrello Environment Setup"
+echo "Trellio Environment Setup"
 echo ""
 
 # Detect shell
@@ -19,11 +19,11 @@ echo ""
 cp "$SHELL_RC" "${SHELL_RC}.backup-$(date +%Y%m%d-%H%M%S)"
 echo "Created backup of $SHELL_RC"
 
-# Add DefTrello section
+# Add Trellio section
 cat >> "$SHELL_RC" << 'EOF'
 
-# === DefTrello Configuration ===
-# Added by DefTrello plugin setup
+# === Trellio Configuration ===
+# Added by Trellio plugin setup
 # Replace placeholder values with your actual credentials
 
 # Trello API Credentials
@@ -52,12 +52,12 @@ export N8N_BASE_URL="https://your-n8n-instance.example.com"
 export N8N_API_KEY="your-n8n-api-key"
 
 # Project Directory
-export PROJECT_DIR="/path/to/your/deftrello"
+export PROJECT_DIR="/path/to/your/trellio"
 
-# === End DefTrello Configuration ===
+# === End Trellio Configuration ===
 EOF
 
-echo "Added DefTrello environment variables"
+echo "Added Trellio environment variables"
 echo ""
 echo "IMPORTANT: Edit $SHELL_RC and replace placeholder values with your actual credentials."
 echo ""

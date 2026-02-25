@@ -1,16 +1,16 @@
-# DefTrello - Getting Started
+# Trellio - Getting Started
 
-Three ways to use DefTrello for task management.
+Three ways to use Trellio for task management.
 
 ## What's Already Working
 
-The DefTrello MCP server is **running and connected**:
+The Trellio MCP server is **running and connected**:
 - Configured via `.mcp.json` in project root
 - Connected to your Trello board
 - All 40+ MCP tools available immediately
 - No restart needed
 
-## Three Ways to Use DefTrello
+## Three Ways to Use Trellio
 
 ### Option 1: Direct MCP Tools (Works Now!)
 
@@ -18,13 +18,13 @@ Use MCP tools directly without slash commands:
 
 ```bash
 # View board
-mcp__deftrello__deftrello_get_board_snapshot
+mcp__trellio__trellio_get_board_snapshot
 
 # Add task
-mcp__deftrello__deftrello_quick_add_task
+mcp__trellio__trellio_quick_add_task
 
 # Move card
-mcp__deftrello__deftrello_move_card_through_pipeline
+mcp__trellio__trellio_move_card_through_pipeline
 ```
 
 **Pros:**
@@ -42,7 +42,7 @@ mcp__deftrello__deftrello_move_card_through_pipeline
 
 ### Option 2: Plugin Commands (Install Required)
 
-Install the DefTrello extension and get friendly slash commands:
+Install the Trellio extension and get friendly slash commands:
 
 ```bash
 ./install.sh
@@ -71,12 +71,12 @@ After install, use friendly slash commands:
 
 ---
 
-### Option 3: Global DefTrello Plugin
+### Option 3: Global Trellio Plugin
 
-Use the original DefTrello plugin globally:
+Use the original Trellio plugin globally:
 
-The plugin at `~/.claude/plugins/deftrello/` provides global access. Commands are prefixed with `/deftrello-`:
-- `/deftrello-board`, `/deftrello-planning`, `/deftrello-add`, etc.
+The plugin at `~/.claude/plugins/trellio/` provides global access. Commands are prefixed with `/trellio-`:
+- `/trellio-board`, `/trellio-planning`, `/trellio-add`, etc.
 
 ---
 
@@ -86,14 +86,14 @@ The plugin at `~/.claude/plugins/deftrello/` provides global access. Commands ar
 
 **Morning Planning:**
 ```
-1. mcp__deftrello__deftrello_get_board_snapshot
+1. mcp__trellio__trellio_get_board_snapshot
 2. Review Upcoming tasks
 3. Move prioritized tasks to Today
 ```
 
 **Add a Task:**
 ```
-mcp__deftrello__deftrello_quick_add_task
+mcp__trellio__trellio_quick_add_task
 -> Title: "Fix login bug"
 -> List: today
 -> Priority: High
@@ -102,7 +102,7 @@ mcp__deftrello__deftrello_quick_add_task
 
 **Complete Work:**
 ```
-1. mcp__deftrello__deftrello_move_card_through_pipeline
+1. mcp__trellio__trellio_move_card_through_pipeline
    -> card_id: <id>
    -> target_list: done
 2. Pull next prioritized task from Today to Working on
@@ -167,7 +167,7 @@ Set in your `~/.zshrc`:
 
 1. **Try it now:**
    ```
-   mcp__deftrello__deftrello_get_board_snapshot
+   mcp__trellio__trellio_get_board_snapshot
    ```
 
 2. **Install commands (optional):**

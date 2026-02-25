@@ -46,11 +46,11 @@ elif [ -n "${BROWSERX_PATH:-}" ] && [ -d "$BROWSERX_PATH" ]; then
   BROWSERX_REPO="env"
 fi
 
-# ── Deftrello repo check ───────────────────────────────────────────
-DEFTRELLO_DIR="$PLUGIN_ROOT/extensions/deftrello"
-DEFTRELLO_REPO=""
-if [ -d "$DEFTRELLO_DIR/repo" ] && [ -f "$DEFTRELLO_DIR/repo/package.json" ]; then
-  DEFTRELLO_REPO="local"
+# ── Trellio repo check ───────────────────────────────────────────
+TRELLIO_DIR="$PLUGIN_ROOT/extensions/trellio"
+TRELLIO_REPO=""
+if [ -d "$TRELLIO_DIR/repo" ] && [ -f "$TRELLIO_DIR/repo/package.json" ]; then
+  TRELLIO_REPO="local"
 fi
 
 # ── Output session info ────────────────────────────────────────────
@@ -59,7 +59,7 @@ echo ""
 echo "Extensions:"
 check_extension "browserx"
 check_extension "cc-telemetry"
-check_extension "deftrello"
+check_extension "trellio"
 check_extension "findlazy"
 check_extension "mcp-trigger-gateway"
 echo ""
@@ -74,10 +74,10 @@ else
   echo "BrowserX repo: not available (run postinstall.sh in extensions/browserx)"
 fi
 
-if [ "$DEFTRELLO_REPO" = "local" ]; then
-  echo "Deftrello repo: cloned locally"
+if [ "$TRELLIO_REPO" = "local" ]; then
+  echo "Trellio repo: cloned locally"
 else
-  echo "Deftrello repo: not available (run postinstall.sh in extensions/deftrello)"
+  echo "Trellio repo: not available (run postinstall.sh in extensions/trellio)"
 fi
 
 echo ""

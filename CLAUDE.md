@@ -29,7 +29,7 @@ This symlinks `lore/` into `~/.claude/plugins/lore`. Verify with `/lore:list` in
   - `hooks/` — Session hooks (`hooks.json`, `start-session.sh`, `verify-completion.sh`)
   - `lib/` — Shared conventions, utilities, and the skill template
   - `templates/` — Scaffolding templates for new agents, commands, plugins, skills
-  - `extensions/` — Optional sub-plugins (deftrello, browserx, scratchpad, mcp-trigger-gateway, findlazy, cc-telemetry)
+  - `extensions/` — Optional sub-plugins (trellio, browserx, scratchpad, mcp-trigger-gateway, findlazy, cc-telemetry)
 - `resources/` — Reference implementations from upstream frameworks (superpowers, loki-mode, get-shit-done, SuperClaude)
 - `research/` — Research notes and docs on Claude Code plugins, skills, and frameworks
 
@@ -43,7 +43,7 @@ Lore follows the Claude Code plugin structure: `plugin.json` declares the plugin
 
 **Agents** define specialized subagents for parallel work. They are markdown files in `agents/`.
 
-**Extensions** are self-contained sub-plugins with their own MCP servers or integrations (e.g., deftrello has Trello MCP tools, browserx has browser automation).
+**Extensions** are self-contained sub-plugins with their own MCP servers or integrations (e.g., trellio has Trello MCP tools, browserx has browser automation).
 
 ## Key Rules
 

@@ -1,8 +1,8 @@
 ---
-name: deftrello-board
+name: trellio-board
 description: View current board snapshot with all cards organized by list
 allowed-tools:
-  - mcp__plugin_deftrello_deftrello__deftrello_get_board_snapshot
+  - mcp__plugin_trellio_trellio__trellio_get_board_snapshot
 ---
 
 # Board Snapshot
@@ -11,7 +11,7 @@ Get a complete overview of your Trello board.
 
 ## Action
 
-Call `deftrello_get_board_snapshot` to retrieve:
+Call `trellio_get_board_snapshot` to retrieve:
 - All lists (Reference, This Week, Today, Doing, Done)
 - Cards in each list
 - Card details (title, labels, due dates, members)
@@ -22,7 +22,7 @@ Call `deftrello_get_board_snapshot` to retrieve:
 Present the board in a clear, organized format:
 
 ```
-DefTrello Board Snapshot
+Trellio Board Snapshot
 
 REFERENCE (X cards)
 - [Card 1 title] - [priority label]
