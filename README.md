@@ -6,27 +6,11 @@ Lore bundles battle-tested skills, commands, agents, and workflows into a single
 
 ## Installation
 
-### Option 1: Git Clone (Recommended)
-
 ```bash
-git clone https://github.com/LayerDynamics/lore.git
-cd lore/lore
-./bin/install.sh
+curl -fsSL https://raw.githubusercontent.com/LayerDynamics/lore/main/install.sh | bash
 ```
 
-This creates a symlink from `~/.claude/plugins/lore` to your local clone. Verify with `/lore:list` in a Claude Code session.
-
-### Option 2: npm
-
-```bash
-npx lore-framework
-```
-
-### Option 3: Direct Plugin Directory
-
-```bash
-claude --plugin-dir /path/to/lore/lore
-```
+This clones the repo into `~/.claude/plugins/_src/lore`, symlinks the plugin into `~/.claude/plugins/lore`, optionally sets up extensions, and offers to launch Claude Code with a guided tour. Verify with `/lore:list` in a Claude Code session.
 
 ## Quick Start
 
