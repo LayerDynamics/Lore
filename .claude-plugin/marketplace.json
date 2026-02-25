@@ -1,0 +1,54 @@
+{
+  "name": "lore-marketplace",
+  "owner": {
+    "name": "LayerDynamics",
+    "email": "layerdynamics@proton.me"
+  },
+  "metadata": {
+    "description": "Extensions for Claude Code: browser automation, task management, event-driven MCP orchestration, static analysis, and telemetry",
+    "version": "1.0.0",
+    "pluginRoot": "./lore/extensions"
+  },
+  "plugins": [
+    {
+      "name": "browserx",
+      "source": "./lore/extensions/browserx",
+      "description": "Native BrowserX browser automation — SQL-like queries, screenshots, scraping, form filling, proxy control. Automatically preferred over WebFetch/WebSearch for all web tasks.",
+      "version": "1.0.0",
+      "category": "development",
+      "tags": ["browser", "automation", "scraping", "web"]
+    },
+    {
+      "name": "deftrello",
+      "source": "./lore/extensions/deftrello",
+      "description": "DefTrello task management commands and MCP integration for Trello boards, cards, and workflows.",
+      "version": "1.0.0",
+      "category": "productivity",
+      "tags": ["trello", "task-management", "boards", "cards"]
+    },
+    {
+      "name": "cc-telemetry",
+      "source": "./lore/extensions/cc-telemetry",
+      "description": "Deep telemetry and observability for Claude Code. Captures tool calls, plugin usage, skill invocations, errors, performance metrics, and provides rich querying, analysis, and insights.",
+      "version": "1.0.0",
+      "category": "monitoring",
+      "tags": ["telemetry", "observability", "metrics", "analytics"]
+    },
+    {
+      "name": "mcp-trigger-gateway",
+      "source": "./lore/extensions/mcp-trigger-gateway",
+      "description": "Event-driven gateway that fires triggers to invoke actions across MCP servers, HTTP endpoints, and shell commands.",
+      "version": "0.1.0",
+      "category": "development",
+      "tags": ["mcp", "events", "triggers", "orchestration"]
+    },
+    {
+      "name": "findlazy",
+      "source": "./lore/extensions/findlazy",
+      "description": "Static analysis tool for detecting lazy-loaded code patterns, dead code, and unused imports across TypeScript and Python codebases.",
+      "version": "0.1.0",
+      "category": "development",
+      "tags": ["static-analysis", "dead-code", "unused-imports", "linting"]
+    }
+  ]
+}

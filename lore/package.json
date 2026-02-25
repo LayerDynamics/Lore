@@ -1,0 +1,34 @@
+{
+  "name": "lore-framework",
+  "version": "1.0.0",
+  "description": "Opinionated meta skills & plugin framework for deterministic results",
+  "author": "LayerDynamics",
+  "license": "MIT",
+  "homepage": "https://github.com/LayerDynamics/lore",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LayerDynamics/lore.git"
+  },
+  "bin": {
+    "lore": "./bin/install.sh"
+  },
+  "files": [
+    ".claude-plugin",
+    "commands",
+    "skills",
+    "agents",
+    "hooks",
+    "lib",
+    "templates",
+    "extensions"
+  ],
+  "keywords": [
+    "claude-code",
+    "plugin",
+    "framework",
+    "skills",
+    "meta",
+    "deterministic",
+    "workflow"
+  ]
+}

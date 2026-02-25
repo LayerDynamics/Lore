@@ -1,0 +1,26 @@
+{
+  "mcpServers": {
+    "deftrello": {
+      "command": "node",
+      "args": ["${PROJECT_DIR}/mcp-server/dist/index.js"],
+      "env": {
+        "TRELLO_API_KEY": "${TRELLO_API_KEY}",
+        "TRELLO_TOKEN": "${TRELLO_TOKEN}",
+        "TRELLO_BOARD_ID": "${TRELLO_BOARD_ID}",
+        "TRELLO_LIST_REFERENCE_ID": "${TRELLO_LIST_REFERENCE_ID}",
+        "TRELLO_LIST_THIS_WEEK_ID": "${TRELLO_LIST_THIS_WEEK_ID}",
+        "TRELLO_LIST_TODAY_ID": "${TRELLO_LIST_TODAY_ID}",
+        "TRELLO_LIST_DOING_ID": "${TRELLO_LIST_DOING_ID}",
+        "TRELLO_LIST_DONE_ID": "${TRELLO_LIST_DONE_ID}",
+        "TRELLO_LABEL_HIGH_PRIORITY_ID": "${TRELLO_LABEL_HIGH_PRIORITY_ID}",
+        "TRELLO_LABEL_MEDIUM_PRIORITY_ID": "${TRELLO_LABEL_MEDIUM_PRIORITY_ID}",
+        "TRELLO_LABEL_LOW_PRIORITY_ID": "${TRELLO_LABEL_LOW_PRIORITY_ID}",
+        "TRELLO_LABEL_SIMPLE_TASKS_ID": "${TRELLO_LABEL_SIMPLE_TASKS_ID}",
+        "TRELLO_LABEL_DUE_SOON_ID": "${TRELLO_LABEL_DUE_SOON_ID}",
+        "N8N_BASE_URL": "${N8N_BASE_URL}",
+        "N8N_API_KEY": "${N8N_API_KEY}",
+        "PROJECT_DIR": "${PROJECT_DIR}"
+      }
+    }
+  }
+}

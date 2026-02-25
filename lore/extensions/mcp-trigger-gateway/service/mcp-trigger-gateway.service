@@ -1,0 +1,41 @@
+[Unit]
+Description=MCP Trigger Gateway - Automation trigger service for Model Context Protocol
+Documentation=https://github.com/yourusername/mcp-trigger-gateway
+After=network.target
+
+[Service]
+Type=simple
+User=%i
+WorkingDirectory=/home/%i/.mcp-trigger-gateway
+
+# Command to run
+ExecStart=/usr/bin/node /path/to/mcp-trigger-gateway/dist/index.js
+
+# Environment
+Environment="NODE_ENV=production"
+Environment="LOG_LEVEL=INFO"
+
+# Restart policy
+Restart=always
+RestartSec=10
+StartLimitInterval=0
+StartLimitBurst=5
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/%i/.mcp-trigger-gateway
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=mcp-trigger-gateway
+
+# Resource limits
+LimitNOFILE=65536
+MemoryMax=512M
+
+[Install]
+WantedBy=multi-user.target

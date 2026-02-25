@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "findlazy": {
+      "command": "deno",
+      "args": ["run", "--allow-read", "--allow-write", "--allow-env", "src/interface/mcp/server.ts"],
+      "cwd": "."
+    }
+  }
+}

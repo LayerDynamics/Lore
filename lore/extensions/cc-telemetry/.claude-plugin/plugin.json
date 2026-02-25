@@ -1,0 +1,20 @@
+{
+  "name": "cc-telemetry",
+  "version": "1.0.0",
+  "description": "Deep telemetry and observability for Claude Code. Captures tool calls, plugin usage, skill invocations, errors, performance metrics, and provides rich querying, analysis, and insights.",
+  "author": {
+    "name": "LayerDynamics",
+    "email": "layerdynamics@proton.me"
+  },
+  "keywords": [
+    "telemetry",
+    "observability",
+    "monitoring",
+    "debugging",
+    "performance",
+    "analytics",
+    "metrics"
+  ],
+  "repository": "https://github.com/LayerDynamics/lore",
+  "license": "MIT"
+}

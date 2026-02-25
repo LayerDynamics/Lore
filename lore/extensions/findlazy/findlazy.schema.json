@@ -1,0 +1,217 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://findlazy.dev/schema/config.json",
+  "title": "FindLazy Configuration",
+  "description": "Configuration schema for FindLazy - AI code laziness detector",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Configuration version",
+      "default": "1.0"
+    },
+    "include": {
+      "type": "array",
+      "description": "Glob patterns for files to include in scanning",
+      "items": {
+        "type": "string"
+      },
+      "default": ["src/**/*"]
+    },
+    "exclude": {
+      "type": "array",
+      "description": "Glob patterns for files to exclude from scanning",
+      "items": {
+        "type": "string"
+      },
+      "default": ["node_modules/**", "dist/**", ".git/**"]
+    },
+    "languages": {
+      "type": "object",
+      "description": "Language-specific configurations",
+      "properties": {
+        "typescript": {
+          "$ref": "#/definitions/languageConfig"
+        },
+        "python": {
+          "$ref": "#/definitions/languageConfig"
+        }
+      }
+    },
+    "patterns": {
+      "type": "object",
+      "description": "Detection pattern configurations",
+      "properties": {
+        "placeholders": {
+          "$ref": "#/definitions/patternConfig"
+        },
+        "mocks": {
+          "$ref": "#/definitions/patternConfig"
+        },
+        "unused": {
+          "$ref": "#/definitions/patternConfig"
+        },
+        "deceptive": {
+          "$ref": "#/definitions/patternConfig"
+        }
+      }
+    },
+    "customPatterns": {
+      "type": "array",
+      "description": "Custom detection patterns",
+      "items": {
+        "$ref": "#/definitions/customPattern"
+      }
+    },
+    "ignoreInTests": {
+      "type": "boolean",
+      "description": "Skip scanning test files",
+      "default": true
+    },
+    "ignorePatterns": {
+      "type": "array",
+      "description": "Additional patterns to ignore",
+      "items": {
+        "type": "string"
+      }
+    },
+    "output": {
+      "type": "object",
+      "description": "Output formatting options",
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": ["table", "json", "text", "compact"],
+          "default": "table"
+        },
+        "groupBy": {
+          "type": "string",
+          "enum": ["file", "type", "severity"],
+          "default": "file"
+        },
+        "showContext": {
+          "type": "boolean",
+          "description": "Show code context around findings",
+          "default": true
+        },
+        "contextLines": {
+          "type": "number",
+          "description": "Number of context lines to show",
+          "default": 2,
+          "minimum": 0,
+          "maximum": 10
+        },
+        "colors": {
+          "type": "boolean",
+          "description": "Use colored output",
+          "default": true
+        }
+      }
+    },
+    "cache": {
+      "type": "object",
+      "description": "Cache configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "location": {
+          "type": "string",
+          "default": ".findlazy/cache"
+        },
+        "ttl": {
+          "type": "number",
+          "description": "Cache time-to-live in seconds",
+          "default": 3600,
+          "minimum": 0
+        }
+      }
+    },
+    "reporting": {
+      "type": "object",
+      "description": "Reporting options",
+      "properties": {
+        "includeStats": {
+          "type": "boolean",
+          "default": true
+        },
+        "showSuggestions": {
+          "type": "boolean",
+          "default": true
+        },
+        "verbosity": {
+          "type": "string",
+          "enum": ["quiet", "normal", "verbose", "debug"],
+          "default": "normal"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "languageConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "extensions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^\\."
+          }
+        }
+      },
+      "required": ["enabled"]
+    },
+    "patternConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["info", "warning", "error"],
+          "default": "warning"
+        }
+      },
+      "required": ["enabled"]
+    },
+    "customPattern": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Pattern identifier"
+        },
+        "pattern": {
+          "type": "string",
+          "description": "Regex pattern or text to match"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["regex", "exact", "ast"],
+          "default": "regex"
+        },
+        "caseInsensitive": {
+          "type": "boolean",
+          "default": false
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["info", "warning", "error"],
+          "default": "warning"
+        },
+        "message": {
+          "type": "string",
+          "description": "Custom message to display"
+        }
+      },
+      "required": ["name", "pattern"]
+    }
+  }
+}

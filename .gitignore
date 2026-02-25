@@ -1,0 +1,5 @@
+resources
+research
+# Cloned extension repos (created by postinstall.sh)
+lore/extensions/*/repo/
+firebase-debug.log

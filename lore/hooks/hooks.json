@@ -1,0 +1,14 @@
+{
+  "hooks": [
+    {
+      "type": "SessionStart",
+      "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/start-session.sh",
+      "description": "Display Lore welcome message on session start"
+    },
+    {
+      "type": "Stop",
+      "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/verify-completion.sh",
+      "description": "Verify tests pass and work is complete before claiming done"
+    }
+  ]
+}

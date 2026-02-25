@@ -1,0 +1,25 @@
+{
+  "name": "mcp-trigger-gateway",
+  "version": "0.1.0",
+  "description": "a gateway that allows you to trigger other mcps in various ways ",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "bin": {
+    "mcp-trigger-gateway": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.6.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}

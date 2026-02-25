@@ -1,0 +1,96 @@
+{
+  "$schema": "./findlazy.schema.json",
+  "version": "1.0",
+  "include": [
+    "src/**/*",
+    "lib/**/*",
+    "*.ts",
+    "*.py",
+    "*.js",
+    "*.jsx",
+    "*.tsx"
+  ],
+  "exclude": [
+    "node_modules/**",
+    "dist/**",
+    ".git/**",
+    "vendor/**",
+    "**/*.min.js",
+    "**/*.bundle.js",
+    "coverage/**",
+    ".cache/**"
+  ],
+  "languages": {
+    "typescript": {
+      "enabled": true,
+      "extensions": [".ts", ".tsx", ".js", ".jsx"]
+    },
+    "python": {
+      "enabled": true,
+      "extensions": [".py"]
+    }
+  },
+  "patterns": {
+    "placeholders": {
+      "enabled": true,
+      "severity": "warning"
+    },
+    "mocks": {
+      "enabled": true,
+      "severity": "warning"
+    },
+    "unused": {
+      "enabled": true,
+      "severity": "error"
+    },
+    "deceptive": {
+      "enabled": true,
+      "severity": "error"
+    }
+  },
+  "customPatterns": [
+    {
+      "name": "mock-function-names",
+      "pattern": "\\b(mock|stub|fake|dummy|placeholder)\\w+",
+      "type": "regex",
+      "severity": "warning",
+      "message": "Potential mock implementation detected in function/variable name"
+    },
+    {
+      "name": "temporary-comments",
+      "pattern": "\\b(temporary|temp|hack|fixme|todo|xxx)\\b",
+      "type": "regex",
+      "caseInsensitive": true,
+      "severity": "info",
+      "message": "Temporary or incomplete code marker found"
+    }
+  ],
+  "ignoreInTests": true,
+  "ignorePatterns": [
+    "test/**/*",
+    "tests/**/*",
+    "**/*.test.ts",
+    "**/*.test.js",
+    "**/*.test.py",
+    "**/*.spec.ts",
+    "**/*.spec.js",
+    "**/test_*.py"
+  ],
+  "output": {
+    "format": "table",
+    "groupBy": "file",
+    "showContext": true,
+    "contextLines": 2,
+    "colors": true
+  },
+  "cache": {
+    "enabled": true,
+    "location": "~/.findlazy/cache",
+    "ttl": 3600
+  },
+  "reporting": {
+    "includeStats": true,
+    "showSuggestions": true,
+    "verbosity": "normal"
+  }
+}

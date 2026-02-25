@@ -1,0 +1,10 @@
+{
+  "name": "lore",
+  "version": "1.0.0",
+  "description": "Opinionated meta skills & plugin framework for deterministic results",
+  "author": {
+    "name": "LayerDynamics"
+  },
+  "homepage": "https://github.com/LayerDynamics/lore",
+  "keywords": ["framework", "skills", "meta", "deterministic", "workflow"]
+}

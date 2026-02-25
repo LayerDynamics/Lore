@@ -1,0 +1,26 @@
+{
+  "name": "API Health Monitor",
+  "description": "Check API health every 5 minutes and alert on failures",
+  "type": "cron",
+  "config": {
+    "type": "cron",
+    "schedule": "*/5 * * * *"
+  },
+  "actions": [
+    {
+      "type": "http",
+      "config": {
+        "type": "http",
+        "url": "https://api.example.com/health",
+        "method": "GET"
+      }
+    },
+    {
+      "type": "chain",
+      "config": {
+        "type": "chain",
+        "triggers": ["alert-on-api-failure"]
+      }
+    }
+  ]
+}

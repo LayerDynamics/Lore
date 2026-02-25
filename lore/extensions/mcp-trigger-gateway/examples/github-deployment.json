@@ -1,0 +1,41 @@
+{
+  "name": "GitHub Deployment Notification",
+  "description": "Triggered when a deployment.complete event is fired",
+  "type": "event",
+  "config": {
+    "type": "event",
+    "eventName": "deployment.complete",
+    "source": "github",
+    "filter": {
+      "environment": "production"
+    }
+  },
+  "actions": [
+    {
+      "type": "mcp_call",
+      "config": {
+        "type": "mcp_call",
+        "server": "slack-mcp",
+        "tool": "send_message",
+        "arguments": {
+          "channel": "#deployments",
+          "text": "🚀 New deployment to production"
+        }
+      }
+    },
+    {
+      "type": "mcp_call",
+      "config": {
+        "type": "mcp_call",
+        "server": "analytics-mcp",
+        "tool": "track_event",
+        "arguments": {
+          "event": "deployment",
+          "properties": {
+            "environment": "production"
+          }
+        }
+      }
+    }
+  ]
+}

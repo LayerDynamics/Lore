@@ -1,0 +1,8 @@
+{
+  "name": "findlazy",
+  "description": "Static analysis tool for detecting lazy-loaded code patterns, dead code, and unused imports across TypeScript and Python codebases.",
+  "version": "0.1.0",
+  "author": {
+    "name": "lore"
+  }
+}

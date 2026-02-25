@@ -1,0 +1,42 @@
+{
+  "name": "Daily Database Backup",
+  "description": "Backup PostgreSQL database every day at 2 AM",
+  "type": "cron",
+  "config": {
+    "type": "cron",
+    "schedule": "0 2 * * *",
+    "timezone": "America/New_York"
+  },
+  "actions": [
+    {
+      "type": "shell",
+      "config": {
+        "type": "shell",
+        "command": "pg_dump",
+        "args": [
+          "-U", "postgres",
+          "-h", "localhost",
+          "mydb",
+          "-f", "/backups/daily-$(date +%Y%m%d).sql"
+        ],
+        "env": {
+          "PGPASSWORD": "${DB_PASSWORD}"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "config": {
+        "type": "http",
+        "url": "https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "text": "✅ Daily backup completed successfully"
+        }
+      }
+    }
+  ]
+}

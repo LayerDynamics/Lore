@@ -1,0 +1,8 @@
+{
+  "name": "scratchpad",
+  "description": "Collaborative visual canvas MCP server. Opens a browser-based scratchpad where both Claude and the user can draw shapes, add text, place images, create ASCII art, and render markdown — all synced in real-time via WebSocket.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Lore"
+  }
+}

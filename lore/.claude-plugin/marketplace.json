@@ -1,0 +1,76 @@
+{
+  "name": "lore",
+  "owner": {
+    "name": "LayerDynamics",
+    "email": "LayerDynamics@proton.me"
+  },
+  "metadata": {
+    "description": "Opinionated meta skills & plugin framework for deterministic results",
+    "version": "1.0.0",
+    "homepage": "https://github.com/LayerDynamics/lore"
+  },
+  "plugins": [
+    {
+      "name": "lore-core",
+      "description": "Core framework — 25 skills for debugging, TDD, planning, code review, and agent workflows. 29 commands across 8 namespaces. 9 agents for code exploration, research, and stub detection. Lore Gateway MCP server with 44 tools.",
+      "source": "./",
+      "skills": [
+        "./skills/brainstorming",
+        "./skills/code-review-methodology",
+        "./skills/codebase-pattern-analysis",
+        "./skills/context-engineering",
+        "./skills/debug",
+        "./skills/deep-investigation",
+        "./skills/feature-research",
+        "./skills/implementation-blueprint",
+        "./skills/lifecycle-phases",
+        "./skills/no-placeholders",
+        "./skills/outline-understanding-user-request",
+        "./skills/pr-style-review",
+        "./skills/pre-commit-review",
+        "./skills/quality-gates",
+        "./skills/rarv-cycle",
+        "./skills/reading-unfamiliar-code",
+        "./skills/standup-writing",
+        "./skills/staying-on-request",
+        "./skills/subagent-development",
+        "./skills/systematic-debugging",
+        "./skills/test-coverage-analysis",
+        "./skills/test-driven-development",
+        "./skills/verification-before-completion",
+        "./skills/verify-before-documenting",
+        "./skills/writing-plans"
+      ]
+    },
+    {
+      "name": "browserx",
+      "description": "Native browser automation — SQL-like queries, screenshots, scraping, form filling, proxy control. Automatically preferred over WebFetch/WebSearch for all web tasks.",
+      "source": "./extensions/browserx"
+    },
+    {
+      "name": "deftrello",
+      "description": "Trello-based task management with board operations, planning workflows, and priority-matched task retrieval via MCP tools.",
+      "source": "./extensions/deftrello"
+    },
+    {
+      "name": "cc-telemetry",
+      "description": "Deep telemetry and observability for Claude Code — captures tool calls, plugin usage, skill invocations, errors, and performance metrics with a background daemon and rich querying.",
+      "source": "./extensions/cc-telemetry"
+    },
+    {
+      "name": "mcp-trigger-gateway",
+      "description": "Event-driven gateway that fires actions across MCP servers, HTTP endpoints, and shell commands based on configurable triggers.",
+      "source": "./extensions/mcp-trigger-gateway"
+    },
+    {
+      "name": "findlazy",
+      "description": "Static analysis tool for detecting lazy-loaded code patterns, dead code, placeholder stubs, and unused imports across TypeScript and Python codebases.",
+      "source": "./extensions/findlazy"
+    },
+    {
+      "name": "scratchpad",
+      "description": "Collaborative visual canvas MCP server. Opens a browser-based scratchpad where both Claude and the user can draw shapes, add text, place images, create ASCII art, and render markdown — all synced in real-time via WebSocket.",
+      "source": "./extensions/scratchpad"
+    }
+  ]
+}

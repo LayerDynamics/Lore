@@ -1,0 +1,126 @@
+{
+  "version": "1.0",
+  "language": "all",
+  "patterns": [
+    {
+      "name": "todo-comment",
+      "pattern": "\\bTODO\\b",
+      "type": "keyword",
+      "severity": "info",
+      "message": "TODO comment indicates incomplete work",
+      "category": "placeholder",
+      "suggestion": "Complete the TODO or create a ticket",
+      "enabled": true
+    },
+    {
+      "name": "fixme-comment",
+      "pattern": "\\bFIXME\\b",
+      "type": "keyword",
+      "severity": "warning",
+      "message": "FIXME comment indicates code needs fixing",
+      "category": "placeholder",
+      "suggestion": "Fix the issue or create a ticket",
+      "enabled": true
+    },
+    {
+      "name": "hack-comment",
+      "pattern": "\\bHACK\\b",
+      "type": "keyword",
+      "severity": "warning",
+      "message": "HACK comment indicates non-ideal solution",
+      "category": "deceptive",
+      "suggestion": "Replace hack with proper solution",
+      "enabled": true
+    },
+    {
+      "name": "xxx-comment",
+      "pattern": "\\bXXX\\b",
+      "type": "keyword",
+      "severity": "warning",
+      "message": "XXX comment indicates problematic code",
+      "category": "placeholder",
+      "suggestion": "Address the marked issue",
+      "enabled": true
+    },
+    {
+      "name": "temp-comment",
+      "pattern": "\\b(temp|temporary)\\b",
+      "type": "regex",
+      "severity": "warning",
+      "message": "Temporary code marker found",
+      "category": "placeholder",
+      "suggestion": "Replace temporary code with permanent solution",
+      "enabled": true
+    },
+    {
+      "name": "for-now-phrase",
+      "pattern": "for now",
+      "type": "keyword",
+      "severity": "warning",
+      "message": "\"for now\" indicates temporary solution",
+      "category": "placeholder",
+      "suggestion": "Implement permanent solution",
+      "enabled": true
+    },
+    {
+      "name": "in-a-real-phrase",
+      "pattern": "in a real",
+      "type": "keyword",
+      "severity": "warning",
+      "message": "\"in a real\" indicates mock/incomplete implementation",
+      "category": "mock",
+      "suggestion": "Implement real functionality",
+      "enabled": true
+    },
+    {
+      "name": "placeholder-text",
+      "pattern": "\\bplaceholder\\b",
+      "type": "keyword",
+      "severity": "warning",
+      "message": "Placeholder text found",
+      "category": "placeholder",
+      "suggestion": "Replace placeholder with actual implementation",
+      "enabled": true
+    },
+    {
+      "name": "mock-prefix",
+      "pattern": "\\b(mock|stub|fake|dummy)\\w*",
+      "type": "regex",
+      "severity": "warning",
+      "message": "Mock/stub implementation detected",
+      "category": "mock",
+      "suggestion": "Replace with real implementation",
+      "enabled": true
+    },
+    {
+      "name": "not-implemented-text",
+      "pattern": "not implemented",
+      "type": "keyword",
+      "severity": "error",
+      "message": "\"not implemented\" found in code",
+      "category": "deceptive",
+      "suggestion": "Implement the functionality",
+      "enabled": true
+    },
+    {
+      "name": "coming-soon",
+      "pattern": "coming soon",
+      "type": "keyword",
+      "severity": "warning",
+      "message": "\"coming soon\" indicates planned but missing feature",
+      "category": "placeholder",
+      "suggestion": "Implement the feature or remove the marker",
+      "enabled": true
+    },
+    {
+      "name": "wip-marker",
+      "pattern": "\\bWIP\\b",
+      "type": "keyword",
+      "severity": "info",
+      "message": "Work in progress marker found",
+      "category": "placeholder",
+      "suggestion": "Complete the work or remove marker",
+      "enabled": true
+    }
+  ]
+}

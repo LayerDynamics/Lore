@@ -1,0 +1,371 @@
+#!/usr/bin/env python3
+"""
+cc-telemetry CLI — query the telemetry SQLite database.
+
+Commands:
+  sessions              List recent sessions
+  tools                 Show tool call history
+  stats                 Aggregate statistics
+  errors                Show errored tool calls
+  hooks                 Show hook events
+  live                  Tail new tool calls as they're written (polls DB)
+  daemon start|stop|status|restart   Manage the background daemon
+
+Options (for tools/errors):
+  --session <id|slug>   Filter by session
+  --tail N              Show last N entries
+  --tool <name>         Filter by tool name
+"""
+
+import sys
+import os
+import json
+import time
+import argparse
+import signal
+import subprocess
+from pathlib import Path
+from datetime import datetime
+from typing import Optional
+
+# Add daemon dir to path
+DAEMON_DIR = Path(__file__).resolve().parent.parent / "daemon"
+sys.path.insert(0, str(DAEMON_DIR))
+
+import db
+
+DAEMON_SCRIPT = DAEMON_DIR / "daemon.py"
+DAEMON_PID_FILE = Path(os.path.expanduser("~/.claude/telemetry/daemon.pid"))
+DAEMON_LOG = Path(os.path.expanduser("~/.claude/telemetry/daemon.log"))
+
+
+# ---------------------------------------------------------------------------
+# Formatting helpers
+# ---------------------------------------------------------------------------
+
+def _fmt_ts(ts: Optional[str]) -> str:
+    if not ts:
+        return "?"
+    try:
+        dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
+    except Exception:
+        return ts
+
+
+def _fmt_duration(ms: Optional[int]) -> str:
+    if ms is None:
+        return " —  "
+    if ms < 1000:
+        return f"{ms}ms"
+    return f"{ms/1000:.1f}s"
+
+
+def _truncate(s: Optional[str], n: int = 60) -> str:
+    if not s:
+        return ""
+    s = s.replace("\n", " ")
+    return s[:n] + "…" if len(s) > n else s
+
+
+# ---------------------------------------------------------------------------
+# Sub-commands
+# ---------------------------------------------------------------------------
+
+def cmd_sessions(args, conn):
+    rows = db.query_sessions(conn, limit=args.tail or 20)
+    if not rows:
+        print("No sessions found. Is the daemon running?")
+        return
+    print(f"{'SLUG':<28} {'STARTED':<20} {'CALLS':>6} {'ERRORS':>6}  CWD")
+    print("-" * 90)
+    for r in rows:
+        slug = _truncate(r.get("slug") or r["session_id"][:8], 27)
+        print(
+            f"{slug:<28} {_fmt_ts(r['started_at']):<20} "
+            f"{r['tool_call_count']:>6} {(r['error_count'] or 0):>6}  "
+            f"{_truncate(r.get('cwd') or '', 30)}"
+        )
+
+
+def _resolve_session(conn, session_arg: Optional[str]) -> Optional[str]:
+    """Resolve session id or slug to session_id."""
+    if not session_arg:
+        return None
+    # Try exact match first
+    row = conn.execute(
+        "SELECT session_id FROM sessions WHERE session_id=? OR slug=?",
+        (session_arg, session_arg)
+    ).fetchone()
+    if row:
+        return row["session_id"]
+    # Prefix match
+    row = conn.execute(
+        "SELECT session_id FROM sessions WHERE session_id LIKE ? OR slug LIKE ?",
+        (f"{session_arg}%", f"{session_arg}%")
+    ).fetchone()
+    return row["session_id"] if row else None
+
+
+def cmd_tools(args, conn):
+    session_id = _resolve_session(conn, args.session)
+    rows = db.query_tool_calls(
+        conn,
+        session_id=session_id,
+        tool_name=args.tool,
+        errors_only=False,
+        limit=args.tail or 50,
+    )
+    if not rows:
+        print("No tool calls found.")
+        return
+    print(f"{'STARTED':<20} {'TOOL':<22} {'DUR':>6}  {'STATUS':<6}  RESULT")
+    print("-" * 100)
+    for r in rows:
+        status = "ERROR" if r["result_is_error"] else "ok"
+        result = _truncate(r.get("result_preview") or "", 55)
+        print(
+            f"{_fmt_ts(r['started_at']):<20} {r['tool_name']:<22} "
+            f"{_fmt_duration(r['duration_ms']):>6}  {status:<6}  {result}"
+        )
+
+
+def cmd_errors(args, conn):
+    session_id = _resolve_session(conn, args.session)
+    rows = db.query_tool_calls(
+        conn,
+        session_id=session_id,
+        errors_only=True,
+        limit=args.tail or 20,
+    )
+    if not rows:
+        print("No errors found.")
+        return
+    print(f"{'STARTED':<20} {'SESSION':<18} {'TOOL':<22}  RESULT")
+    print("-" * 100)
+    for r in rows:
+        slug = _truncate(r.get("slug") or r["session_id"][:8], 17)
+        result = _truncate(r.get("result_preview") or "", 55)
+        print(f"{_fmt_ts(r['started_at']):<20} {slug:<18} {r['tool_name']:<22}  {result}")
+
+
+def cmd_hooks(args, conn):
+    session_id = _resolve_session(conn, args.session)
+    clauses, params = [], []
+    if session_id:
+        clauses.append("session_id=?")
+        params.append(session_id)
+    where = "WHERE " + " AND ".join(clauses) if clauses else ""
+    params.append(args.tail or 30)
+    rows = conn.execute(
+        f"SELECT * FROM hook_events {where} ORDER BY ts DESC LIMIT ?", params
+    ).fetchall()
+    if not rows:
+        print("No hook events found.")
+        return
+    print(f"{'TS':<20} {'EVENT':<18} {'HOOK NAME':<35}  TOOL_USE_ID")
+    print("-" * 100)
+    for r in rows:
+        print(
+            f"{_fmt_ts(r['ts']):<20} {(r['hook_event'] or ''):<18} "
+            f"{_truncate(r['hook_name'] or '', 34):<35}  {r['tool_use_id'] or ''}"
+        )
+
+
+def cmd_stats(args, conn):
+    session_id = _resolve_session(conn, args.session)
+    stats = db.query_stats(conn, session_id=session_id)
+    label = f"Session: {args.session}" if args.session else "All sessions"
+    print(f"=== cc-telemetry stats [{label}] ===")
+    print(f"Total tool calls : {stats['total_tool_calls']}")
+    print(f"Errors           : {stats['error_count']}")
+    avg = stats['avg_duration_ms']
+    print(f"Avg duration     : {f'{avg:.0f} ms' if avg else '—'}")
+    print()
+    if stats["by_tool"]:
+        print(f"{'TOOL':<28} {'CALLS':>6} {'ERRORS':>6} {'AVG_MS':>8}")
+        print("-" * 52)
+        for t in stats["by_tool"]:
+            avg_ms = f"{t['avg_ms']:.0f}" if t["avg_ms"] else "—"
+            print(
+                f"{t['tool_name']:<28} {t['cnt']:>6} "
+                f"{int(t['errors'] or 0):>6} {avg_ms:>8}"
+            )
+
+
+def cmd_live(args, conn):
+    """Tail new tool calls as they're written to the DB."""
+    print("Watching for new tool calls… (Ctrl-C to stop)")
+    print(f"{'STARTED':<20} {'TOOL':<22} {'DUR':>6}  STATUS")
+    print("-" * 60)
+
+    # Track the max id we've seen
+    row = conn.execute("SELECT MAX(id) FROM tool_calls").fetchone()
+    last_id = row[0] or 0
+
+    try:
+        while True:
+            rows = conn.execute(
+                "SELECT tc.*, s.slug FROM tool_calls tc "
+                "LEFT JOIN sessions s ON s.session_id=tc.session_id "
+                "WHERE tc.id > ? ORDER BY tc.id ASC LIMIT 50",
+                (last_id,)
+            ).fetchall()
+            for r in rows:
+                status = "ERROR" if r["result_is_error"] else "ok"
+                # Only show completed calls (have completed_at)
+                if r["completed_at"]:
+                    print(
+                        f"{_fmt_ts(r['started_at']):<20} {r['tool_name']:<22} "
+                        f"{_fmt_duration(r['duration_ms']):>6}  {status}"
+                    )
+                last_id = max(last_id, r["id"])
+            time.sleep(0.5)
+    except KeyboardInterrupt:
+        pass
+
+
+# ---------------------------------------------------------------------------
+# Daemon management
+# ---------------------------------------------------------------------------
+
+def _read_pid() -> Optional[int]:
+    try:
+        return int(DAEMON_PID_FILE.read_text().strip())
+    except Exception:
+        return None
+
+
+def _daemon_running(pid: Optional[int]) -> bool:
+    if pid is None:
+        return False
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
+def cmd_daemon(args, conn):
+    action = args.daemon_action
+
+    if action == "status":
+        pid = _read_pid()
+        if _daemon_running(pid):
+            print(f"Daemon running (PID {pid})")
+        else:
+            print("Daemon not running")
+        return
+
+    if action == "start":
+        pid = _read_pid()
+        if _daemon_running(pid):
+            print(f"Daemon already running (PID {pid})")
+            return
+        log_fd = open(str(DAEMON_LOG), "a")
+        proc = subprocess.Popen(
+            [sys.executable, str(DAEMON_SCRIPT)],
+            stdout=log_fd,
+            stderr=log_fd,
+            start_new_session=True,
+        )
+        DAEMON_PID_FILE.parent.mkdir(parents=True, exist_ok=True)
+        DAEMON_PID_FILE.write_text(str(proc.pid))
+        print(f"Daemon started (PID {proc.pid}). Log: {DAEMON_LOG}")
+        return
+
+    if action == "stop":
+        pid = _read_pid()
+        if not _daemon_running(pid):
+            print("Daemon not running")
+            return
+        os.kill(pid, signal.SIGTERM)
+        print(f"Sent SIGTERM to PID {pid}")
+        DAEMON_PID_FILE.unlink(missing_ok=True)
+        return
+
+    if action == "restart":
+        cmd_daemon(argparse.Namespace(daemon_action="stop"), conn)
+        time.sleep(1)
+        cmd_daemon(argparse.Namespace(daemon_action="start"), conn)
+        return
+
+
+# ---------------------------------------------------------------------------
+# Argument parsing
+# ---------------------------------------------------------------------------
+
+def build_parser() -> argparse.ArgumentParser:
+    ap = argparse.ArgumentParser(
+        prog="cc-telemetry",
+        description="Query Claude Code telemetry DB"
+    )
+    sub = ap.add_subparsers(dest="command")
+
+    # sessions
+    p_sess = sub.add_parser("sessions", help="List recent sessions")
+    p_sess.add_argument("--tail", "-n", type=int, help="Max rows to show")
+
+    # tools
+    p_tools = sub.add_parser("tools", help="Show tool call history")
+    p_tools.add_argument("--session", "-s", help="Filter by session id/slug")
+    p_tools.add_argument("--tool", "-t", help="Filter by tool name")
+    p_tools.add_argument("--tail", "-n", type=int, help="Max rows")
+
+    # errors
+    p_err = sub.add_parser("errors", help="Show errored tool calls")
+    p_err.add_argument("--session", "-s", help="Filter by session id/slug")
+    p_err.add_argument("--tail", "-n", type=int)
+
+    # hooks
+    p_hooks = sub.add_parser("hooks", help="Show hook events")
+    p_hooks.add_argument("--session", "-s")
+    p_hooks.add_argument("--tail", "-n", type=int)
+
+    # stats
+    p_stats = sub.add_parser("stats", help="Aggregate statistics")
+    p_stats.add_argument("--session", "-s")
+
+    # live
+    sub.add_parser("live", help="Tail new tool calls in real time")
+
+    # daemon
+    p_daemon = sub.add_parser("daemon", help="Manage background daemon")
+    p_daemon.add_argument(
+        "daemon_action",
+        choices=["start", "stop", "restart", "status"],
+        nargs="?", default="status",
+    )
+
+    return ap
+
+
+def main() -> None:
+    ap = build_parser()
+    args = ap.parse_args()
+
+    conn = db.open_db()
+
+    dispatch = {
+        "sessions": cmd_sessions,
+        "tools":    cmd_tools,
+        "errors":   cmd_errors,
+        "hooks":    cmd_hooks,
+        "stats":    cmd_stats,
+        "live":     cmd_live,
+        "daemon":   cmd_daemon,
+    }
+
+    if args.command is None:
+        ap.print_help()
+        return
+
+    fn = dispatch.get(args.command)
+    if fn:
+        fn(args, conn)
+    else:
+        ap.print_help()
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,8 @@
+{
+  "name": "mcp-trigger-gateway",
+  "description": "MCP trigger gateway that fires events to invoke actions across MCP servers, HTTP endpoints, and shell commands.",
+  "version": "0.1.0",
+  "author": {
+    "name": "lore"
+  }
+}

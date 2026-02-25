@@ -1,0 +1,97 @@
+{
+  "name": "deftrello",
+  "version": "1.0.0",
+  "description": "DefTrello task management commands and MCP integration",
+  "commands": [
+    {
+      "name": "deftrello-planning",
+      "path": "commands/planning.md",
+      "description": "Morning planning workflow with task prioritization"
+    },
+    {
+      "name": "deftrello-board",
+      "path": "commands/board.md",
+      "description": "View current board snapshot with all cards"
+    },
+    {
+      "name": "deftrello-add",
+      "path": "commands/add.md",
+      "description": "Quick add task with automatic priority assignment"
+    },
+    {
+      "name": "deftrello-priority",
+      "path": "commands/priority.md",
+      "description": "Get tasks matched to your current priorities"
+    },
+    {
+      "name": "deftrello-recovery",
+      "path": "commands/recovery.md",
+      "description": "Task recovery workflow with smallest actions"
+    },
+    {
+      "name": "deftrello-cleanup",
+      "path": "commands/cleanup.md",
+      "description": "Clean up and organize board automatically"
+    },
+    {
+      "name": "deftrello-status",
+      "path": "commands/status.md",
+      "description": "Check current task status and what's in progress"
+    },
+    {
+      "name": "deftrello-weekly",
+      "path": "commands/weekly.md",
+      "description": "Weekly review with stats and planning"
+    },
+    {
+      "name": "deftrello-analyze-code",
+      "path": "commands/analyze-code.md",
+      "description": "Analyze codebase to generate and backfill tasks"
+    },
+    {
+      "name": "deftrello-extract-todos",
+      "path": "commands/extract-todos.md",
+      "description": "Extract TODO/FIXME comments and create cards"
+    },
+    {
+      "name": "deftrello-audit-docs",
+      "path": "commands/audit-docs.md",
+      "description": "Compare docs to code and create gap tasks"
+    },
+    {
+      "name": "deftrello-backfill",
+      "path": "commands/backfill.md",
+      "description": "Comprehensive backfill - analyze and populate all tasks"
+    },
+    {
+      "name": "using-deftrello",
+      "path": "commands/using-deftrello.md",
+      "description": "Complete reference for all DefTrello MCP commands and tools"
+    },
+    {
+      "name": "defcad-board",
+      "path": "commands/defcad/board.md",
+      "description": "View current Trello board snapshot with task status (DEFCAD)"
+    },
+    {
+      "name": "defcad-add",
+      "path": "commands/defcad/add.md",
+      "description": "Quickly add a new task to your Trello board (DEFCAD)"
+    },
+    {
+      "name": "defcad-planning",
+      "path": "commands/defcad/planning.md",
+      "description": "Plan your day by reviewing board status and upcoming tasks (DEFCAD)"
+    },
+    {
+      "name": "defcad-cleanup",
+      "path": "commands/defcad/cleanup.md",
+      "description": "Clean up and organize your Trello board (DEFCAD)"
+    },
+    {
+      "name": "defcad-status",
+      "path": "commands/defcad/status.md",
+      "description": "Check current task status and what's in progress (DEFCAD)"
+    }
+  ]
+}

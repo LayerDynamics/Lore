@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scratchpad</title>
+<style>
+:root {
+  --bg: #0f172a; --surface: #1e293b; --surface2: #334155; --border: #475569;
+  --text: #e2e8f0; --text2: #94a3b8; --accent: #3b82f6; --accent2: #60a5fa;
+  --danger: #ef4444; --success: #22c55e;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+
+/* ─── TOOLBAR ─── */
+#toolbar {
+  position: fixed; top: 0; left: 0; right: 0; height: 52px; z-index: 100;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 4px; padding: 0 12px;
+}
+.tool-group { display: flex; align-items: center; gap: 2px; padding: 0 4px; }
+.tool-group + .tool-group { border-left: 1px solid var(--border); padding-left: 8px; margin-left: 4px; }
+#toolbar button {
+  width: 36px; height: 36px; border: 1px solid transparent; border-radius: 8px;
+  background: transparent; color: var(--text); cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+}
+#toolbar button:hover { background: var(--surface2); }
+#toolbar button.active { background: var(--accent); border-color: var(--accent2); color: #fff; }
+#toolbar button svg { width: 18px; height: 18px; }
+#toolbar input[type="color"] { width: 28px; height: 28px; border: 2px solid var(--border); cursor: pointer; border-radius: 6px; background: none; padding: 0; }
+#toolbar input[type="number"] { width: 48px; height: 28px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface2); color: var(--text); text-align: center; font-size: 12px; }
+#toolbar select { height: 28px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface2); color: var(--text); font-size: 12px; padding: 0 4px; }
+.tool-label { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: -2px; }
+#status { margin-left: auto; font-size: 11px; color: var(--text2); display: flex; align-items: center; gap: 6px; }
+#status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); }
+#status .dot.connected { background: var(--success); }
+
+/* ─── CANVAS AREA ─── */
+#canvas-container {
+  position: absolute; top: 52px; left: 220px; right: 0; bottom: 32px;
+  overflow: hidden; background: var(--bg);
+}
+#canvas-viewport {
+  position: absolute; top: 0; left: 0; transform-origin: 0 0;
+}
+#canvas {
+  position: relative; width: 3000px; height: 2000px; background: #ffffff;
+  background-image:
+    linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
+  background-size: 20px 20px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+
+/* ─── OBJECTS ─── */
+.canvas-obj { position: absolute; cursor: move; user-select: none; }
+.canvas-obj:hover .resize-handles { opacity: 1; }
+.canvas-obj.selected { outline: 2px solid var(--accent); outline-offset: 1px; }
+.canvas-obj.selected .resize-handles { opacity: 1; }
+
+.resize-handle {
+  position: absolute; width: 10px; height: 10px; background: #fff;
+  border: 2px solid var(--accent); border-radius: 2px; opacity: 0; transition: opacity 0.15s;
+  z-index: 10;
+}
+.resize-handles { opacity: 0; }
+.rh-tl { top: -5px; left: -5px; cursor: nw-resize; }
+.rh-tr { top: -5px; right: -5px; cursor: ne-resize; }
+.rh-bl { bottom: -5px; left: -5px; cursor: sw-resize; }
+.rh-br { bottom: -5px; right: -5px; cursor: se-resize; }
+.rh-t { top: -5px; left: 50%; margin-left: -5px; cursor: n-resize; }
+.rh-b { bottom: -5px; left: 50%; margin-left: -5px; cursor: s-resize; }
+.rh-l { top: 50%; left: -5px; margin-top: -5px; cursor: w-resize; }
+.rh-r { top: 50%; right: -5px; margin-top: -5px; cursor: e-resize; }
+
+.obj-shape svg { width: 100%; height: 100%; display: block; }
+.obj-text { white-space: pre-wrap; overflow: hidden; padding: 4px; min-height: 20px; }
+.obj-ascii { white-space: pre; overflow: auto; padding: 12px; border-radius: 8px; font-family: 'Courier New', monospace; }
+.obj-markdown { padding: 12px; border-radius: 8px; overflow: auto; line-height: 1.5; }
+.obj-markdown h1 { font-size: 1.5em; margin-bottom: 0.3em; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 0.2em; }
+.obj-markdown h2 { font-size: 1.3em; margin-bottom: 0.3em; }
+.obj-markdown h3 { font-size: 1.1em; margin-bottom: 0.3em; }
+.obj-markdown p { margin-bottom: 0.5em; }
+.obj-markdown code { background: rgba(0,0,0,0.15); padding: 2px 5px; border-radius: 3px; font-family: monospace; font-size: 0.9em; }
+.obj-markdown pre { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px; overflow-x: auto; margin: 0.5em 0; }
+.obj-markdown pre code { background: none; padding: 0; }
+.obj-markdown ul, .obj-markdown ol { padding-left: 1.5em; margin-bottom: 0.5em; }
+.obj-markdown blockquote { border-left: 3px solid rgba(0,0,0,0.2); padding-left: 10px; margin: 0.5em 0; opacity: 0.8; }
+.obj-image img { width: 100%; height: 100%; display: block; border-radius: 4px; }
+
+/* ─── FREEHAND ─── */
+#freehand-svg {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 50;
+}
+#freehand-svg.drawing { pointer-events: all; cursor: crosshair; }
+
+/* ─── DRAG-TO-CREATE PREVIEW ─── */
+#create-preview {
+  position: absolute; border: 2px dashed var(--accent); border-radius: 4px;
+  pointer-events: none; z-index: 40; display: none;
+}
+
+/* ─── STATUS BAR ─── */
+#statusbar {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 32px;
+  background: var(--surface); border-top: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 12px; font-size: 11px; color: var(--text2); gap: 16px;
+}
+#statusbar .zoom-controls { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+#statusbar button {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+  width: 24px; height: 22px; border-radius: 4px; cursor: pointer; font-size: 12px;
+}
+#statusbar button:hover { background: var(--border); }
+
+/* ─── PROPERTIES PANEL ─── */
+#props-panel {
+  position: fixed; top: 52px; right: 0; width: 220px; bottom: 32px;
+  background: var(--surface); border-left: 1px solid var(--border);
+  padding: 12px; overflow-y: auto; font-size: 12px; display: none; z-index: 90;
+}
+#props-panel.visible { display: block; }
+#props-panel h3 { font-size: 11px; text-transform: uppercase; color: var(--text2); margin: 10px 0 6px; letter-spacing: 0.5px; }
+#props-panel h3:first-child { margin-top: 0; }
+#props-panel label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; color: var(--text2); }
+#props-panel input[type="number"] { width: 60px; height: 24px; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; color: var(--text); text-align: center; font-size: 11px; }
+#props-panel input[type="color"] { width: 32px; height: 24px; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; }
+#props-panel input[type="text"], #props-panel textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; color: var(--text); padding: 4px 6px; font-size: 11px; font-family: inherit; }
+#props-panel textarea { height: 60px; resize: vertical; }
+
+/* ─── LEFT SIDEBAR ─── */
+#left-sidebar {
+  position: fixed; top: 52px; left: 0; width: 220px; bottom: 32px;
+  background: var(--surface); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; z-index: 90; font-size: 12px;
+}
+.sidebar-section { display: flex; flex-direction: column; min-height: 0; }
+.sidebar-section:first-child { max-height: 40%; }
+.sidebar-section:last-child { flex: 1; }
+.sidebar-header {
+  padding: 8px 12px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--text2); border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  flex-shrink: 0;
+}
+.sidebar-header button {
+  background: none; border: 1px solid var(--border); color: var(--text); cursor: pointer;
+  border-radius: 4px; width: 22px; height: 20px; font-size: 14px; display: flex; align-items: center; justify-content: center;
+}
+.sidebar-header button:hover { background: var(--surface2); }
+.sidebar-list { overflow-y: auto; flex: 1; padding: 4px 0; }
+.sidebar-item {
+  display: flex; align-items: center; gap: 6px; padding: 5px 12px; cursor: pointer;
+  transition: background 0.1s;
+}
+.sidebar-item:hover { background: var(--surface2); }
+.sidebar-item.active { background: var(--accent); color: #fff; }
+.sidebar-item.selected { background: rgba(59,130,246,0.25); }
+.sidebar-item .item-icon { width: 16px; text-align: center; font-size: 11px; opacity: 0.7; flex-shrink: 0; }
+.sidebar-item .item-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-item .item-vis {
+  opacity: 0.4; cursor: pointer; font-size: 12px; flex-shrink: 0;
+}
+.sidebar-item .item-vis:hover { opacity: 1; }
+.sidebar-item .item-vis.hidden { opacity: 0.15; }
+.sidebar-divider { height: 1px; background: var(--border); margin: 0; }
+
+/* ─── EXPORT MENU ─── */
+#export-menu {
+  position: fixed; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 4px; z-index: 250; display: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5); min-width: 140px;
+}
+#export-menu button {
+  display: block; width: 100%; text-align: left; padding: 6px 12px;
+  background: none; border: none; color: var(--text); cursor: pointer;
+  border-radius: 4px; font-size: 12px;
+}
+#export-menu button:hover { background: var(--surface2); }
+
+/* ─── CONTEXT MENU ─── */
+#context-menu {
+  position: fixed; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 4px; z-index: 200; display: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5); min-width: 160px;
+}
+#context-menu button {
+  display: block; width: 100%; text-align: left; padding: 6px 12px;
+  background: none; border: none; color: var(--text); cursor: pointer;
+  border-radius: 4px; font-size: 12px;
+}
+#context-menu button:hover { background: var(--surface2); }
+#context-menu hr { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <div class="tool-group">
+    <button id="btn-select" title="Select (V)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg></button>
+    <button id="btn-pan" title="Pan (Space+Drag)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4m0 12v4M2 12h4m12 0h4m-5.66-5.66l-2.83 2.83m-2.83 2.83l-2.83 2.83m8.49 0l-2.83-2.83M8.17 8.17L5.34 5.34"/></svg></button>
+  </div>
+  <div class="tool-group">
+    <button id="btn-rect" title="Rectangle (R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></button>
+    <button id="btn-circle" title="Ellipse (E)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="12" rx="10" ry="10"/></svg></button>
+    <button id="btn-line" title="Line (L)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="19" x2="19" y2="5"/></svg></button>
+    <button id="btn-pencil" title="Freehand (P)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>
+  </div>
+  <div class="tool-group">
+    <button id="btn-text" title="Text (T)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="8" y1="20" x2="16" y2="20"/></svg></button>
+    <button id="btn-note" title="Sticky Note (N)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3z"/><polyline points="14 3 14 8 21 8"/></svg></button>
+  </div>
+  <div class="tool-group">
+    <input type="color" id="fill-color" value="#3b82f6" title="Fill">
+    <input type="color" id="stroke-color" value="#1e40af" title="Stroke">
+    <input type="number" id="stroke-width" value="2" min="0" max="20" title="Stroke width">
+  </div>
+  <div class="tool-group">
+    <button id="btn-undo" title="Undo (Cmd+Z)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></button>
+    <button id="btn-redo" title="Redo (Cmd+Shift+Z)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10"/></svg></button>
+    <button id="btn-delete" title="Delete (Del)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+    <button id="btn-clear" title="Clear All"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></button>
+  </div>
+  <div class="tool-group">
+    <button id="btn-export" title="Export" style="width:auto;padding:0 10px;font-size:12px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export
+    </button>
+  </div>
+  <span id="status"><span class="dot"></span> Connecting</span>
+</div>
+
+<!-- LEFT SIDEBAR -->
+<div id="left-sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-header">Layers <button id="btn-add-layer" title="Add layer">+</button></div>
+    <div id="layer-list" class="sidebar-list"></div>
+  </div>
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-section">
+    <div class="sidebar-header">Objects</div>
+    <div id="object-list" class="sidebar-list"></div>
+  </div>
+</div>
+
+<!-- EXPORT MENU -->
+<div id="export-menu">
+  <button id="export-svg">Export SVG</button>
+  <button id="export-png">Export PNG</button>
+  <button id="export-pdf">Export PDF</button>
+</div>
+
+<div id="canvas-container">
+  <div id="canvas-viewport">
+    <div id="canvas">
+      <svg id="freehand-svg"></svg>
+      <div id="create-preview"></div>
+    </div>
+  </div>
+</div>
+
+<div id="props-panel">
+  <h3>Position</h3>
+  <label>X <input type="number" id="prop-x"></label>
+  <label>Y <input type="number" id="prop-y"></label>
+  <h3>Size</h3>
+  <label>W <input type="number" id="prop-w"></label>
+  <label>H <input type="number" id="prop-h"></label>
+  <h3>Rotation</h3>
+  <label>Deg <input type="number" id="prop-rot" value="0" min="0" max="360"></label>
+  <h3>Style</h3>
+  <label>Fill <input type="color" id="prop-fill"></label>
+  <label>Stroke <input type="color" id="prop-stroke"></label>
+  <h3>Content</h3>
+  <textarea id="prop-content" placeholder="Edit content..."></textarea>
+</div>
+
+<div id="context-menu">
+  <button id="ctx-duplicate">Duplicate</button>
+  <button id="ctx-front">Bring to Front</button>
+  <button id="ctx-back">Send to Back</button>
+  <hr>
+  <button id="ctx-delete">Delete</button>
+</div>
+
+<div id="statusbar">
+  <span id="obj-count">0 objects</span>
+  <span id="cursor-pos">0, 0</span>
+  <span id="canvas-size">3000 × 2000</span>
+  <div class="zoom-controls">
+    <button id="zoom-out" title="Zoom out">−</button>
+    <span id="zoom-level">100%</span>
+    <button id="zoom-in" title="Zoom in">+</button>
+    <button id="zoom-fit" title="Fit to window">⊡</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  // ─── DOM REFS ───
+  const canvasEl = document.getElementById('canvas');
+  const viewport = document.getElementById('canvas-viewport');
+  const container = document.getElementById('canvas-container');
+  const statusDot = document.querySelector('#status .dot');
+  const statusText = document.querySelector('#status');
+  const fillColor = document.getElementById('fill-color');
+  const strokeColor = document.getElementById('stroke-color');
+  const strokeWidth = document.getElementById('stroke-width');
+  const freehandSvg = document.getElementById('freehand-svg');
+  const preview = document.getElementById('create-preview');
+  const propsPanel = document.getElementById('props-panel');
+  const contextMenu = document.getElementById('context-menu');
+  const layerList = document.getElementById('layer-list');
+  const objectList = document.getElementById('object-list');
+  const exportMenu = document.getElementById('export-menu');
+  const objCount = document.getElementById('obj-count');
+  const cursorPos = document.getElementById('cursor-pos');
+  const zoomLevel = document.getElementById('zoom-level');
+
+  // ─── STATE ───
+  let ws = null;
+  let activeTool = 'select';
+  let selectedId = null;
+  let objects = {}; // id -> obj data
+  let layers = [{ id: 'default', name: 'Default', visible: true }];
+  let activeLayerId = 'default';
+  let zoom = 1;
+  let panX = 0, panY = 0;
+  let isPanning = false;
+  let panStart = null;
+  let dragState = null; // { type: 'move'|'resize'|'create', ... }
+  let freehandPoints = [];
+  let isDrawingFreehand = false;
+  // Pen tool state: anchors have {x, y, handleIn:{x,y}|null, handleOut:{x,y}|null}
+  // handleIn/handleOut are ABSOLUTE coordinates of control handles
+  let penAnchors = [];
+  let penActive = false;
+  let penDragging = false; // true while mouse is held after placing anchor (pulling handles)
+  let penDragAnchorIdx = -1; // index of anchor being handle-dragged
+
+  // Point editing mode (after selecting a path, double-click to edit)
+  let editingPathId = null; // id of object being point-edited
+  let editAnchors = []; // editable anchors (absolute coords)
+  let editDragType = null; // 'anchor' | 'handleIn' | 'handleOut'
+  let editDragIdx = -1;
+
+  // ─── TOOL BUTTONS ───
+  const toolButtons = {
+    select: 'btn-select', pan: 'btn-pan', rect: 'btn-rect', circle: 'btn-circle',
+    line: 'btn-line', pencil: 'btn-pencil', text: 'btn-text', note: 'btn-note',
+  };
+  Object.entries(toolButtons).forEach(([tool, id]) => {
+    document.getElementById(id).onclick = () => setTool(tool);
+  });
+
+  document.getElementById('btn-undo').onclick = () => send('user_undo', {});
+  document.getElementById('btn-redo').onclick = () => send('user_redo', {});
+  document.getElementById('btn-delete').onclick = deleteSelected;
+  document.getElementById('btn-clear').onclick = () => { if (confirm('Clear entire canvas?')) send('user_clear', {}); };
+
+  document.getElementById('zoom-in').onclick = () => setZoom(zoom * 1.25);
+  document.getElementById('zoom-out').onclick = () => setZoom(zoom / 1.25);
+  document.getElementById('zoom-fit').onclick = () => {
+    const cw = container.clientWidth, ch = container.clientHeight;
+    setZoom(Math.min(cw / 3000, ch / 2000) * 0.95);
+    panX = (cw - 3000 * zoom) / 2;
+    panY = (ch - 2000 * zoom) / 2;
+    updateViewport();
+  };
+
+  function setTool(t) {
+    if (penActive && t !== 'line') finalizePen();
+    if (editingPathId) exitPointEditMode();
+    activeTool = t;
+    Object.values(toolButtons).forEach(id => document.getElementById(id).classList.remove('active'));
+    const btn = document.getElementById(toolButtons[t]);
+    if (btn) btn.classList.add('active');
+    container.style.cursor = t === 'select' ? 'default' : t === 'pan' ? 'grab' : 'crosshair';
+    freehandSvg.classList.toggle('drawing', t === 'pencil' || t === 'line');
+    if (t !== 'select') { deselectAll(); }
+  }
+  setTool('select');
+
+  // ─── ZOOM & PAN ───
+  function setZoom(z) {
+    zoom = Math.max(0.1, Math.min(5, z));
+    zoomLevel.textContent = Math.round(zoom * 100) + '%';
+    updateViewport();
+  }
+  function updateViewport() {
+    viewport.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+  }
+
+  container.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    if (e.ctrlKey || e.metaKey) {
+      const rect = container.getBoundingClientRect();
+      const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+      const oldZoom = zoom;
+      const factor = e.deltaY > 0 ? 0.9 : 1.1;
+      zoom = Math.max(0.1, Math.min(5, zoom * factor));
+      panX = mx - (mx - panX) * (zoom / oldZoom);
+      panY = my - (my - panY) * (zoom / oldZoom);
+      zoomLevel.textContent = Math.round(zoom * 100) + '%';
+      updateViewport();
+    } else {
+      panX -= e.deltaX;
+      panY -= e.deltaY;
+      updateViewport();
+    }
+  }, { passive: false });
+
+  // ─── COORDINATE HELPERS ───
+  function clientToCanvas(cx, cy) {
+    const rect = container.getBoundingClientRect();
+    return {
+      x: (cx - rect.left - panX) / zoom,
+      y: (cy - rect.top - panY) / zoom,
+    };
+  }
+
+  container.addEventListener('mousemove', (e) => {
+    const p = clientToCanvas(e.clientX, e.clientY);
+    cursorPos.textContent = `${Math.round(p.x)}, ${Math.round(p.y)}`;
+  });
+
+  // ─── WEBSOCKET ───
+  function connect() {
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    ws = new WebSocket(proto + '//' + location.host);
+    ws.onopen = () => {
+      statusDot.classList.add('connected');
+      statusText.lastChild.textContent = ' Connected';
+    };
+    ws.onclose = () => {
+      statusDot.classList.remove('connected');
+      statusText.lastChild.textContent = ' Disconnected';
+      setTimeout(connect, 2000);
+    };
+    ws.onmessage = (e) => {
+      try { handleMessage(JSON.parse(e.data)); } catch(err) { console.error('WS parse error', err); }
+    };
+  }
+  connect();
+
+  function send(type, payload) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type, payload }));
+    }
+  }
+
+  // ─── MESSAGE HANDLING ───
+  function handleMessage(msg) {
+    switch (msg.type) {
+      case 'full_state':
+        renderFullState(msg.payload);
+        break;
+      case 'draw_shape': case 'add_text': case 'add_image':
+      case 'ascii_art': case 'render_markdown':
+      case 'user_draw': case 'user_text': case 'user_image':
+      case 'user_ascii': case 'user_markdown':
+        if (msg.payload && msg.payload.id) {
+          objects[msg.payload.id] = msg.payload;
+          renderObject(msg.payload);
+          updateObjCount();
+        }
+        break;
+      case 'user_delete': {
+        const did = msg.payload.deleted || msg.payload.id;
+        if (did) {
+          delete objects[did];
+          const el = document.getElementById('obj-' + did);
+          if (el) el.remove();
+          if (selectedId === did) { selectedId = null; propsPanel.classList.remove('visible'); }
+          updateObjCount();
+        }
+        break;
+      }
+      case 'set_background':
+        canvasEl.style.backgroundColor = msg.payload.color;
+        break;
+      default:
+        if (msg.payload && msg.payload.objects) renderFullState(msg.payload);
+    }
+  }
+
+  function renderFullState(state) {
+    canvasEl.querySelectorAll('.canvas-obj').forEach(el => el.remove());
+    objects = {};
+    canvasEl.style.backgroundColor = state.background || '#ffffff';
+    if (state.layers && state.layers.length) layers = state.layers;
+    if (state.objects) {
+      state.objects.forEach(obj => {
+        objects[obj.id] = obj;
+        renderObject(obj);
+      });
+    }
+    updateObjCount();
+    renderLayerList();
+    renderObjectList();
+  }
+
+  function updateObjCount() {
+    const n = Object.keys(objects).length;
+    objCount.textContent = n + ' object' + (n !== 1 ? 's' : '');
+    renderObjectList();
+  }
+
+  // ─── RENDER OBJECTS ───
+  function renderObject(obj) {
+    let el = document.getElementById('obj-' + obj.id);
+    if (el) el.remove();
+
+    el = document.createElement('div');
+    el.id = 'obj-' + obj.id;
+    el.className = 'canvas-obj';
+    el.dataset.objId = obj.id;
+    Object.assign(el.style, {
+      left: obj.x + 'px', top: obj.y + 'px',
+      width: obj.width + 'px', height: obj.height + 'px',
+      opacity: obj.opacity,
+    });
+    if (obj.rotation) el.style.transform = 'rotate(' + obj.rotation + 'deg)';
+    if (!obj.visible) el.style.display = 'none';
+
+    // Resize handles
+    const handles = document.createElement('div');
+    handles.className = 'resize-handles';
+    ['tl','tr','bl','br','t','b','l','r'].forEach(pos => {
+      const h = document.createElement('div');
+      h.className = 'resize-handle rh-' + pos;
+      h.dataset.handle = pos;
+      handles.appendChild(h);
+    });
+    el.appendChild(handles);
+
+    // Content
+    const content = document.createElement('div');
+    content.style.cssText = 'width:100%;height:100%;overflow:hidden;';
+    switch (obj.type) {
+      case 'shape':
+        content.classList.add('obj-shape');
+        content.innerHTML = renderShapeSvg(obj);
+        break;
+      case 'text':
+        content.classList.add('obj-text');
+        Object.assign(content.style, {
+          fontSize: obj.fontSize + 'px', fontFamily: obj.fontFamily,
+          color: obj.color, textAlign: obj.align,
+          fontWeight: obj.bold ? 'bold' : 'normal',
+          fontStyle: obj.italic ? 'italic' : 'normal',
+        });
+        content.textContent = obj.content;
+        break;
+      case 'image':
+        content.classList.add('obj-image');
+        const img = document.createElement('img');
+        img.src = obj.src; img.alt = obj.alt || '';
+        img.style.objectFit = obj.objectFit || 'contain';
+        img.draggable = false;
+        content.appendChild(img);
+        break;
+      case 'ascii':
+        content.classList.add('obj-ascii');
+        Object.assign(content.style, {
+          fontSize: obj.fontSize + 'px',
+          fontFamily: obj.fontFamily || 'Courier New, monospace',
+          color: obj.color, backgroundColor: obj.backgroundColor,
+        });
+        content.textContent = obj.content;
+        break;
+      case 'markdown':
+        content.classList.add('obj-markdown');
+        Object.assign(content.style, {
+          fontSize: obj.fontSize + 'px', color: obj.color,
+          backgroundColor: obj.backgroundColor,
+        });
+        content.innerHTML = renderMarkdown(obj.content);
+        break;
+    }
+    el.appendChild(content);
+
+    if (selectedId === obj.id) el.classList.add('selected');
+    canvasEl.appendChild(el);
+  }
+
+  function renderShapeSvg(obj) {
+    const w = obj.width, h = obj.height;
+    const fill = obj.fill || 'none', stroke = obj.stroke || '#000', sw = obj.strokeWidth || 2;
+    let inner = '';
+    switch (obj.shapeType) {
+      case 'rect':
+        inner = `<rect x="${sw/2}" y="${sw/2}" width="${w-sw}" height="${h-sw}" rx="4" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
+        break;
+      case 'circle':
+        inner = `<ellipse cx="${w/2}" cy="${h/2}" rx="${w/2-sw/2}" ry="${h/2-sw/2}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
+        break;
+      case 'line':
+        inner = `<line x1="${sw/2}" y1="${h-sw/2}" x2="${w-sw/2}" y2="${sw/2}" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round"/>`;
+        break;
+      case 'polygon': case 'path':
+        if (obj.pathData) {
+          // Bezier path data from pen tool
+          inner = `<path d="${obj.pathData}" fill="${obj.shapeType === 'polygon' ? fill : 'none'}" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"/>`;
+        } else if (obj.points && obj.points.length) {
+          const pts = obj.points.map(p => p.x + ',' + p.y).join(' ');
+          inner = `<polyline points="${pts}" fill="${obj.shapeType === 'polygon' ? fill : 'none'}" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"/>`;
+        }
+        break;
+    }
+    return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
+  }
+
+  function renderMarkdown(md) {
+    return md
+      .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+      .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+      .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+      .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/`(.+?)`/g, '<code>$1</code>')
+      .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+      .replace(/^- (.+)$/gm, '<li>$1</li>')
+      .replace(/\n{2,}/g, '</p><p>')
+      .replace(/^(?!<[hupblo])(.+)$/gm, '<p>$1</p>');
+  }
+
+  // ─── SELECTION ───
+  function selectObject(id) {
+    deselectAll();
+    selectedId = id;
+    const el = document.getElementById('obj-' + id);
+    if (el) el.classList.add('selected');
+    showProps(id);
+    renderObjectList();
+    // Auto-enter point edit mode for paths with anchor data
+    const obj = objects[id];
+    if (obj && obj.type === 'shape' && (obj.shapeType === 'path' || obj.shapeType === 'polygon') && obj.anchors && obj.anchors.length >= 2) {
+      enterPointEditMode(id, obj);
+    }
+  }
+  function deselectAll() {
+    if (editingPathId) exitPointEditMode();
+    canvasEl.querySelectorAll('.canvas-obj.selected').forEach(el => el.classList.remove('selected'));
+    selectedId = null;
+    propsPanel.classList.remove('visible');
+  }
+  function deleteSelected() {
+    if (!selectedId) return;
+    const id = selectedId;
+    send('user_delete', { id });
+    // Remove locally immediately
+    delete objects[id];
+    const el = document.getElementById('obj-' + id);
+    if (el) el.remove();
+    selectedId = null;
+    propsPanel.classList.remove('visible');
+    updateObjCount();
+  }
+
+  // ─── PROPERTIES PANEL ───
+  function showProps(id) {
+    const obj = objects[id];
+    if (!obj) return;
+    propsPanel.classList.add('visible');
+    document.getElementById('prop-x').value = Math.round(obj.x);
+    document.getElementById('prop-y').value = Math.round(obj.y);
+    document.getElementById('prop-w').value = Math.round(obj.width);
+    document.getElementById('prop-h').value = Math.round(obj.height);
+    document.getElementById('prop-rot').value = obj.rotation || 0;
+    document.getElementById('prop-fill').value = obj.fill || obj.color || obj.backgroundColor || '#3b82f6';
+    document.getElementById('prop-stroke').value = obj.stroke || '#1e40af';
+    document.getElementById('prop-content').value = obj.content || '';
+  }
+
+  // Property change handlers
+  ['prop-x','prop-y','prop-w','prop-h','prop-rot'].forEach(id => {
+    document.getElementById(id).addEventListener('change', () => {
+      if (!selectedId) return;
+      send('user_move', {
+        id: selectedId,
+        x: +document.getElementById('prop-x').value,
+        y: +document.getElementById('prop-y').value,
+        width: +document.getElementById('prop-w').value,
+        height: +document.getElementById('prop-h').value,
+        rotation: +document.getElementById('prop-rot').value,
+      });
+    });
+  });
+
+  // ─── MOUSE: SELECT / CREATE / DRAG / RESIZE ───
+  canvasEl.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    const target = e.target.closest('.canvas-obj');
+    const handle = e.target.closest('.resize-handle');
+    const p = clientToCanvas(e.clientX, e.clientY);
+
+    // Resize handle
+    if (handle && target) {
+      e.stopPropagation();
+      const id = target.dataset.objId;
+      const obj = objects[id];
+      if (!obj) return;
+      selectObject(id);
+      dragState = {
+        type: 'resize', id, handle: handle.dataset.handle,
+        startX: e.clientX, startY: e.clientY,
+        origX: obj.x, origY: obj.y, origW: obj.width, origH: obj.height,
+      };
+      return;
+    }
+
+    // Click on object -> select + drag
+    if (target && activeTool === 'select') {
+      e.stopPropagation();
+      const id = target.dataset.objId;
+      const obj = objects[id];
+      if (!obj) return;
+      selectObject(id);
+      dragState = {
+        type: 'move', id,
+        startX: e.clientX, startY: e.clientY,
+        origX: obj.x, origY: obj.y,
+      };
+      return;
+    }
+
+    // Click on empty space with select tool -> deselect
+    if (activeTool === 'select' && !target) {
+      deselectAll();
+      return;
+    }
+
+    // Pan tool or space+drag
+    if (activeTool === 'pan') {
+      isPanning = true;
+      panStart = { x: e.clientX - panX, y: e.clientY - panY };
+      container.style.cursor = 'grabbing';
+      return;
+    }
+
+    // Text tool
+    if (activeTool === 'text') {
+      const text = prompt('Enter text:');
+      if (text) send('user_text', { content: text, x: p.x, y: p.y, fontSize: 18, color: fillColor.value });
+      return;
+    }
+
+    // Sticky note
+    if (activeTool === 'note') {
+      const text = prompt('Note text:');
+      if (text) {
+        send('user_text', {
+          content: text, x: p.x, y: p.y,
+          width: 200, height: 150,
+          fontSize: 14, color: '#1e293b', backgroundColor: '#fef08a',
+        });
+      }
+      return;
+    }
+
+    // Pen/Line tool — click to place anchor, hold+drag to pull bezier handles
+    if (activeTool === 'line') {
+      penPlaceAnchor(p.x, p.y);
+      return;
+    }
+
+    // Shape tools (rect, circle) -> drag to create
+    if (['rect', 'circle'].includes(activeTool)) {
+      dragState = {
+        type: 'create', tool: activeTool,
+        startX: p.x, startY: p.y,
+        currentX: p.x, currentY: p.y,
+      };
+      preview.style.display = 'block';
+      preview.style.left = p.x + 'px';
+      preview.style.top = p.y + 'px';
+      preview.style.width = '0px';
+      preview.style.height = '0px';
+      return;
+    }
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    // Point-edit dragging (at document level so innerHTML replacement doesn't break it)
+    if (editDragType && editDragIdx >= 0 && editingPathId) {
+      e.preventDefault();
+      const p = clientToCanvas(e.clientX, e.clientY);
+      const a = editAnchors[editDragIdx];
+      if (editDragType === 'anchor') {
+        const dx = p.x - a.x, dy = p.y - a.y;
+        a.x = p.x; a.y = p.y;
+        if (a.handleIn) { a.handleIn.x += dx; a.handleIn.y += dy; }
+        if (a.handleOut) { a.handleOut.x += dx; a.handleOut.y += dy; }
+      } else if (editDragType === 'handleOut') {
+        a.handleOut = { x: p.x, y: p.y };
+        a.handleIn = { x: 2 * a.x - p.x, y: 2 * a.y - p.y };
+      } else if (editDragType === 'handleIn') {
+        a.handleIn = { x: p.x, y: p.y };
+        a.handleOut = { x: 2 * a.x - p.x, y: 2 * a.y - p.y };
+      }
+      renderEditPoints();
+      return;
+    }
+
+    // Panning
+    if (isPanning && panStart) {
+      panX = e.clientX - panStart.x;
+      panY = e.clientY - panStart.y;
+      updateViewport();
+      return;
+    }
+
+    // Pen tool: handle dragging or live preview
+    if (penActive && activeTool === 'line') {
+      const p = clientToCanvas(e.clientX, e.clientY);
+      if (penDragging && penDragAnchorIdx >= 0) {
+        // Dragging = pulling out bezier handles symmetrically
+        const anchor = penAnchors[penDragAnchorIdx];
+        anchor.handleOut = { x: p.x, y: p.y };
+        // Mirror: handleIn is opposite direction, same distance
+        anchor.handleIn = { x: 2 * anchor.x - p.x, y: 2 * anchor.y - p.y };
+      }
+      updatePenPreview(p.x, p.y);
+      return;
+    }
+
+    if (!dragState) return;
+
+    if (dragState.type === 'move') {
+      const dx = (e.clientX - dragState.startX) / zoom;
+      const dy = (e.clientY - dragState.startY) / zoom;
+      const el = document.getElementById('obj-' + dragState.id);
+      if (el) {
+        el.style.left = (dragState.origX + dx) + 'px';
+        el.style.top = (dragState.origY + dy) + 'px';
+      }
+    } else if (dragState.type === 'resize') {
+      const dx = (e.clientX - dragState.startX) / zoom;
+      const dy = (e.clientY - dragState.startY) / zoom;
+      const el = document.getElementById('obj-' + dragState.id);
+      if (!el) return;
+      let { origX: x, origY: y, origW: w, origH: h } = dragState;
+      const hd = dragState.handle;
+      if (hd.includes('r')) w = Math.max(20, w + dx);
+      if (hd.includes('l')) { x += dx; w = Math.max(20, w - dx); }
+      if (hd.includes('b')) h = Math.max(20, h + dy);
+      if (hd.includes('t')) { y += dy; h = Math.max(20, h - dy); }
+      el.style.left = x + 'px'; el.style.top = y + 'px';
+      el.style.width = w + 'px'; el.style.height = h + 'px';
+      // Re-render SVG for shapes
+      const obj = objects[dragState.id];
+      if (obj && obj.type === 'shape') {
+        const svgEl = el.querySelector('.obj-shape');
+        if (svgEl) svgEl.innerHTML = renderShapeSvg({ ...obj, width: w, height: h });
+      }
+    } else if (dragState.type === 'create') {
+      const p = clientToCanvas(e.clientX, e.clientY);
+      dragState.currentX = p.x;
+      dragState.currentY = p.y;
+      const x = Math.min(dragState.startX, p.x);
+      const y = Math.min(dragState.startY, p.y);
+      const w = Math.abs(p.x - dragState.startX);
+      const h = Math.abs(p.y - dragState.startY);
+      preview.style.left = x + 'px'; preview.style.top = y + 'px';
+      preview.style.width = w + 'px'; preview.style.height = h + 'px';
+      if (dragState.tool === 'circle') preview.style.borderRadius = '50%';
+      else preview.style.borderRadius = '4px';
+    }
+  });
+
+  document.addEventListener('mouseup', (e) => {
+    // Point-edit drag end
+    if (editDragType && editingPathId) {
+      editDragType = null; editDragIdx = -1;
+      renderEditPoints();
+      return;
+    }
+    // Pen tool: stop handle drag
+    if (penDragging) {
+      penDragging = false;
+      penDragAnchorIdx = -1;
+      const p = clientToCanvas(e.clientX, e.clientY);
+      updatePenPreview(p.x, p.y);
+      return;
+    }
+
+    if (isPanning) {
+      isPanning = false; panStart = null;
+      container.style.cursor = activeTool === 'pan' ? 'grab' : '';
+      return;
+    }
+
+    if (!dragState) return;
+
+    if (dragState.type === 'move') {
+      const dx = (e.clientX - dragState.startX) / zoom;
+      const dy = (e.clientY - dragState.startY) / zoom;
+      const newX = dragState.origX + dx, newY = dragState.origY + dy;
+      if (objects[dragState.id]) {
+        objects[dragState.id].x = newX;
+        objects[dragState.id].y = newY;
+      }
+      send('user_move', { id: dragState.id, x: Math.round(newX), y: Math.round(newY) });
+      showProps(dragState.id);
+    } else if (dragState.type === 'resize') {
+      const el = document.getElementById('obj-' + dragState.id);
+      if (el) {
+        const x = parseFloat(el.style.left), y = parseFloat(el.style.top);
+        const w = parseFloat(el.style.width), h = parseFloat(el.style.height);
+        if (objects[dragState.id]) Object.assign(objects[dragState.id], { x, y, width: w, height: h });
+        send('user_move', { id: dragState.id, x: Math.round(x), y: Math.round(y), width: Math.round(w), height: Math.round(h) });
+        // Re-render to fix SVG
+        if (objects[dragState.id]) renderObject(objects[dragState.id]);
+        showProps(dragState.id);
+      }
+    } else if (dragState.type === 'create') {
+      preview.style.display = 'none';
+      const x = Math.min(dragState.startX, dragState.currentX);
+      const y = Math.min(dragState.startY, dragState.currentY);
+      const w = Math.abs(dragState.currentX - dragState.startX);
+      const h = Math.abs(dragState.currentY - dragState.startY);
+      if (w > 5 || h > 5) {
+        send('user_draw', {
+          shapeType: dragState.tool, // rect or circle
+          x: Math.round(x), y: Math.round(y),
+          width: Math.round(Math.max(w, 10)), height: Math.round(Math.max(h, 10)),
+          fill: fillColor.value, stroke: strokeColor.value,
+          strokeWidth: +strokeWidth.value,
+        });
+      }
+    }
+    dragState = null;
+  });
+
+  // ─── FREEHAND & PEN TOOL on SVG overlay ───
+  freehandSvg.addEventListener('mousedown', (e) => {
+    // Point edit mode takes priority
+    if (editingPathId) return; // handled by separate listener
+
+    // Pen tool: click to add anchor point, hold+drag for handles
+    if (activeTool === 'line') {
+      const p = clientToCanvas(e.clientX, e.clientY);
+      penPlaceAnchor(p.x, p.y);
+      return;
+    }
+    if (activeTool !== 'pencil') return;
+    isDrawingFreehand = true;
+    freehandPoints = [];
+    const p = clientToCanvas(e.clientX, e.clientY);
+    freehandPoints.push(p);
+    updateFreehandPreview();
+  });
+
+  freehandSvg.addEventListener('mousemove', (e) => {
+    if (editingPathId) return; // handled by point-edit listener
+    // Pen tool: handle drag or live preview on SVG overlay
+    if (penActive && activeTool === 'line') {
+      const p = clientToCanvas(e.clientX, e.clientY);
+      if (penDragging && penDragAnchorIdx >= 0) {
+        const anchor = penAnchors[penDragAnchorIdx];
+        anchor.handleOut = { x: p.x, y: p.y };
+        anchor.handleIn = { x: 2 * anchor.x - p.x, y: 2 * anchor.y - p.y };
+      }
+      updatePenPreview(p.x, p.y);
+      return;
+    }
+    if (!isDrawingFreehand) return;
+    const p = clientToCanvas(e.clientX, e.clientY);
+    freehandPoints.push(p);
+    updateFreehandPreview();
+  });
+
+  freehandSvg.addEventListener('mouseup', () => {
+    if (editingPathId) return; // handled by point-edit listener
+    if (!isDrawingFreehand) return;
+    isDrawingFreehand = false;
+    if (freehandPoints.length > 2) {
+      const xs = freehandPoints.map(p => p.x), ys = freehandPoints.map(p => p.y);
+      const minX = Math.min(...xs), minY = Math.min(...ys);
+      const maxX = Math.max(...xs), maxY = Math.max(...ys);
+      const normPoints = freehandPoints.map(p => ({ x: p.x - minX, y: p.y - minY }));
+      send('user_draw', {
+        shapeType: 'path', x: Math.round(minX), y: Math.round(minY),
+        width: Math.round(maxX - minX) || 10, height: Math.round(maxY - minY) || 10,
+        points: normPoints.map(p => ({ x: Math.round(p.x), y: Math.round(p.y) })),
+        fill: 'none', stroke: strokeColor.value, strokeWidth: +strokeWidth.value,
+      });
+    }
+    freehandSvg.innerHTML = '';
+    freehandPoints = [];
+  });
+
+  function updateFreehandPreview() {
+    if (freehandPoints.length < 2) return;
+    const d = freehandPoints.map((p, i) => (i === 0 ? 'M' : 'L') + p.x + ' ' + p.y).join(' ');
+    freehandSvg.innerHTML = `<path d="${d}" fill="none" stroke="${strokeColor.value}" stroke-width="${+strokeWidth.value / zoom}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  }
+
+  // ─── PEN / LINE TOOL (with Bezier curve support) ───
+
+  let penJustClosed = false; // prevents immediate new path after closing
+
+  function penPlaceAnchor(x, y) {
+    // Ignore the click immediately after closing a path
+    if (penJustClosed) {
+      penJustClosed = false;
+      return;
+    }
+
+    // Check if clicking near first anchor to close path
+    if (penActive && penAnchors.length >= 2) {
+      const first = penAnchors[0];
+      const dist = Math.sqrt((x - first.x) ** 2 + (y - first.y) ** 2);
+      if (dist < 15 / zoom) {
+        finalizePen(true);
+        penJustClosed = true;
+        return;
+      }
+    }
+
+    const anchor = { x, y, handleIn: null, handleOut: null };
+    if (!penActive) {
+      penActive = true;
+      penAnchors = [anchor];
+    } else {
+      penAnchors.push(anchor);
+    }
+    // Start drag to pull handles
+    penDragging = true;
+    penDragAnchorIdx = penAnchors.length - 1;
+    updatePenPreview(x, y);
+  }
+
+  function updatePenPreview(cursorX, cursorY) {
+    if (penAnchors.length === 0) return;
+    const sw = (+strokeWidth.value) / zoom;
+    const sc = strokeColor.value;
+    const hr = 3.5 / zoom; // handle radius
+    const ar = 4.5 / zoom; // anchor radius
+    const handleLineW = 1 / zoom;
+    let svg = '';
+
+    // Build the path with Bezier segments
+    if (penAnchors.length >= 2) {
+      let d = `M${penAnchors[0].x} ${penAnchors[0].y}`;
+      for (let i = 1; i < penAnchors.length; i++) {
+        const prev = penAnchors[i - 1];
+        const curr = penAnchors[i];
+        const cp1 = prev.handleOut || prev; // control point 1
+        const cp2 = curr.handleIn || curr;  // control point 2
+        // If both are the anchor itself, it's a straight line; use cubic with co-located controls
+        d += ` C${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${curr.x} ${curr.y}`;
+      }
+      svg += `<path d="${d}" fill="none" stroke="${sc}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    }
+
+    // Live segment: from last anchor to cursor (as bezier preview if last anchor has handleOut)
+    const last = penAnchors[penAnchors.length - 1];
+    if (!penDragging) {
+      // Show dashed preview line from last point to cursor
+      if (last.handleOut) {
+        // Cubic bezier preview: use last handleOut as cp1, cursor as endpoint
+        const cp1 = last.handleOut;
+        svg += `<path d="M${last.x} ${last.y} C${cp1.x} ${cp1.y}, ${cursorX} ${cursorY}, ${cursorX} ${cursorY}" fill="none" stroke="${sc}" stroke-width="${sw}" stroke-dasharray="${4/zoom}" stroke-linecap="round"/>`;
+      } else {
+        svg += `<line x1="${last.x}" y1="${last.y}" x2="${cursorX}" y2="${cursorY}" stroke="${sc}" stroke-width="${sw}" stroke-dasharray="${4/zoom}" stroke-linecap="round"/>`;
+      }
+    }
+
+    // Highlight first anchor if cursor is near it (close-path indicator)
+    if (penAnchors.length >= 2 && !penDragging) {
+      const first = penAnchors[0];
+      const dist = Math.sqrt((cursorX - first.x) ** 2 + (cursorY - first.y) ** 2);
+      if (dist < 15 / zoom) {
+        const cr = 8 / zoom;
+        svg += `<circle cx="${first.x}" cy="${first.y}" r="${cr}" fill="none" stroke="#22c55e" stroke-width="${2/zoom}" stroke-dasharray="${3/zoom}"/>`;
+      }
+    }
+
+    // Draw handle lines and dots for each anchor
+    penAnchors.forEach((a, i) => {
+      // Handle lines (thin lines from anchor to control point)
+      if (a.handleIn) {
+        svg += `<line x1="${a.x}" y1="${a.y}" x2="${a.handleIn.x}" y2="${a.handleIn.y}" stroke="#60a5fa" stroke-width="${handleLineW}"/>`;
+        svg += `<circle cx="${a.handleIn.x}" cy="${a.handleIn.y}" r="${hr}" fill="#60a5fa" stroke="#fff" stroke-width="${handleLineW}"/>`;
+      }
+      if (a.handleOut) {
+        svg += `<line x1="${a.x}" y1="${a.y}" x2="${a.handleOut.x}" y2="${a.handleOut.y}" stroke="#60a5fa" stroke-width="${handleLineW}"/>`;
+        svg += `<circle cx="${a.handleOut.x}" cy="${a.handleOut.y}" r="${hr}" fill="#60a5fa" stroke="#fff" stroke-width="${handleLineW}"/>`;
+      }
+      // Anchor dot
+      const fill = i === 0 ? '#22c55e' : '#ffffff';
+      svg += `<rect x="${a.x - ar}" y="${a.y - ar}" width="${ar*2}" height="${ar*2}" rx="${1/zoom}" fill="${fill}" stroke="${sc}" stroke-width="${1.5/zoom}"/>`;
+    });
+
+    freehandSvg.innerHTML = svg;
+  }
+
+  function finalizePen(closed) {
+    if (!penActive || penAnchors.length < 2) {
+      penActive = false; penDragging = false; penAnchors = []; freehandSvg.innerHTML = '';
+      return;
+    }
+
+    // Collect all coordinates (anchors + handles) to compute bounding box
+    const allX = [], allY = [];
+    penAnchors.forEach(a => {
+      allX.push(a.x); allY.push(a.y);
+      if (a.handleIn) { allX.push(a.handleIn.x); allY.push(a.handleIn.y); }
+      if (a.handleOut) { allX.push(a.handleOut.x); allY.push(a.handleOut.y); }
+    });
+    const minX = Math.min(...allX), minY = Math.min(...allY);
+    const maxX = Math.max(...allX), maxY = Math.max(...allY);
+    const pad = 4;
+
+    // Build SVG path data with cubic beziers, normalized to bounding box
+    const ox = minX - pad, oy = minY - pad;
+    let pathD = `M${penAnchors[0].x - ox} ${penAnchors[0].y - oy}`;
+    for (let i = 1; i < penAnchors.length; i++) {
+      const prev = penAnchors[i - 1];
+      const curr = penAnchors[i];
+      const cp1 = prev.handleOut || prev;
+      const cp2 = curr.handleIn || curr;
+      pathD += ` C${cp1.x - ox} ${cp1.y - oy}, ${cp2.x - ox} ${cp2.y - oy}, ${curr.x - ox} ${curr.y - oy}`;
+    }
+    // Close path: add segment from last anchor back to first
+    if (closed) {
+      const last = penAnchors[penAnchors.length - 1];
+      const first = penAnchors[0];
+      const cp1 = last.handleOut || last;
+      const cp2 = first.handleIn || first;
+      pathD += ` C${cp1.x - ox} ${cp1.y - oy}, ${cp2.x - ox} ${cp2.y - oy}, ${first.x - ox} ${first.y - oy} Z`;
+    }
+
+    // Store anchor data for later editing
+    const anchorData = penAnchors.map(a => ({
+      x: Math.round(a.x - ox), y: Math.round(a.y - oy),
+      handleIn: a.handleIn ? { x: Math.round(a.handleIn.x - ox), y: Math.round(a.handleIn.y - oy) } : null,
+      handleOut: a.handleOut ? { x: Math.round(a.handleOut.x - ox), y: Math.round(a.handleOut.y - oy) } : null,
+    }));
+    const normPoints = penAnchors.map(a => ({ x: Math.round(a.x - ox), y: Math.round(a.y - oy) }));
+
+    send('user_draw', {
+      shapeType: 'path',
+      x: Math.round(ox), y: Math.round(oy),
+      width: Math.round(maxX - minX + pad * 2) || 10,
+      height: Math.round(maxY - minY + pad * 2) || 10,
+      points: normPoints,
+      pathData: pathD,
+      anchors: anchorData, // full anchor+handle data for re-editing
+      closed: !!closed,
+      fill: closed ? fillColor.value : 'none',
+      stroke: strokeColor.value,
+      strokeWidth: +strokeWidth.value,
+    });
+    penActive = false; penDragging = false; penDragAnchorIdx = -1; penAnchors = []; freehandSvg.innerHTML = '';
+  }
+
+  // Double-click to finish pen path (on both canvas and SVG overlay)
+  freehandSvg.addEventListener('dblclick', (e) => {
+    // In point-edit mode: double-click anchor to convert straight→curve
+    if (editingPathId && editAnchors.length > 0) {
+      const p = clientToCanvas(e.clientX, e.clientY);
+      const threshold = 8 / zoom;
+      for (let i = 0; i < editAnchors.length; i++) {
+        const a = editAnchors[i];
+        if (Math.abs(p.x - a.x) < threshold && Math.abs(p.y - a.y) < threshold) {
+          if (!a.handleOut && !a.handleIn) {
+            // Convert to curve: add default handles
+            const handleDist = 30 / zoom;
+            a.handleOut = { x: a.x + handleDist, y: a.y };
+            a.handleIn = { x: a.x - handleDist, y: a.y };
+            // Start dragging handleOut immediately so user can position it
+            editDragType = 'handleOut';
+            editDragIdx = i;
+          } else {
+            // Already a curve point: remove handles to convert back to straight
+            a.handleOut = null;
+            a.handleIn = null;
+          }
+          renderEditPoints();
+          e.stopPropagation();
+          return;
+        }
+      }
+    }
+    if (penActive && activeTool === 'line') {
+      e.stopPropagation();
+      if (penAnchors.length > 2) penAnchors.pop();
+      finalizePen();
+    }
+  });
+  canvasEl.addEventListener('dblclick', (e) => {
+    if (penActive && activeTool === 'line') {
+      e.stopPropagation();
+      // Remove the extra point added by the second click of dblclick
+      if (penAnchors.length > 2) penAnchors.pop();
+      finalizePen();
+      return;
+    }
+
+    const target = e.target.closest('.canvas-obj');
+    if (!target) return;
+    const id = target.dataset.objId;
+    const obj = objects[id];
+    if (!obj) return;
+
+    // Double-click path object → enter point-edit mode
+    if (obj.type === 'shape' && (obj.shapeType === 'path' || obj.shapeType === 'polygon') && obj.anchors) {
+      enterPointEditMode(id, obj);
+      return;
+    }
+
+    // Double-click text/ascii → edit content
+    if (obj.type === 'text' || obj.type === 'ascii') {
+      const newText = prompt('Edit text:', obj.content);
+      if (newText !== null && newText !== obj.content) {
+        send('user_delete', { id });
+        const msg = obj.type === 'text' ? 'user_text' : 'user_ascii';
+        send(msg, { ...obj, content: newText });
+      }
+    }
+  });
+
+  // ─── POINT EDIT MODE ───
+  function enterPointEditMode(id, obj) {
+    // Reset any active pen state to prevent interference
+    if (penActive) {
+      penActive = false;
+      penAnchors = [];
+      penDragging = false;
+      penDragAnchorIdx = -1;
+    }
+    editingPathId = id;
+    editDragType = null;
+    editDragIdx = -1;
+    // Convert stored anchors (relative to obj) to absolute coordinates
+    editAnchors = (obj.anchors || []).map(a => ({
+      x: a.x + obj.x, y: a.y + obj.y,
+      handleIn: a.handleIn ? { x: a.handleIn.x + obj.x, y: a.handleIn.y + obj.y } : null,
+      handleOut: a.handleOut ? { x: a.handleOut.x + obj.x, y: a.handleOut.y + obj.y } : null,
+    }));
+    // Enable SVG overlay for point editing (don't call setTool to avoid circular deselectAll)
+    freehandSvg.classList.add('drawing');
+    // Hide the rendered object so we see the editable SVG overlay instead
+    const objEl = document.getElementById('obj-' + id);
+    if (objEl) objEl.style.opacity = '0.15';
+    renderEditPoints();
+  }
+
+  function exitPointEditMode() {
+    if (!editingPathId) return;
+    // Restore the object's visibility
+    const objEl = document.getElementById('obj-' + editingPathId);
+    if (objEl) objEl.style.opacity = '';
+    // Rebuild path from edited anchors and send update
+    const obj = objects[editingPathId];
+    if (obj && editAnchors.length >= 2) {
+      const allX = [], allY = [];
+      editAnchors.forEach(a => {
+        allX.push(a.x); allY.push(a.y);
+        if (a.handleIn) { allX.push(a.handleIn.x); allY.push(a.handleIn.y); }
+        if (a.handleOut) { allX.push(a.handleOut.x); allY.push(a.handleOut.y); }
+      });
+      const minX = Math.min(...allX), minY = Math.min(...allY);
+      const maxX = Math.max(...allX), maxY = Math.max(...allY);
+      const pad = 4;
+      const ox = minX - pad, oy = minY - pad;
+
+      let pathD = `M${editAnchors[0].x - ox} ${editAnchors[0].y - oy}`;
+      for (let i = 1; i < editAnchors.length; i++) {
+        const prev = editAnchors[i - 1], curr = editAnchors[i];
+        const cp1 = prev.handleOut || prev, cp2 = curr.handleIn || curr;
+        pathD += ` C${cp1.x - ox} ${cp1.y - oy}, ${cp2.x - ox} ${cp2.y - oy}, ${curr.x - ox} ${curr.y - oy}`;
+      }
+      if (obj.closed) {
+        const last = editAnchors[editAnchors.length - 1], first = editAnchors[0];
+        const cp1 = last.handleOut || last, cp2 = first.handleIn || first;
+        pathD += ` C${cp1.x - ox} ${cp1.y - oy}, ${cp2.x - ox} ${cp2.y - oy}, ${first.x - ox} ${first.y - oy} Z`;
+      }
+
+      const anchorData = editAnchors.map(a => ({
+        x: Math.round(a.x - ox), y: Math.round(a.y - oy),
+        handleIn: a.handleIn ? { x: Math.round(a.handleIn.x - ox), y: Math.round(a.handleIn.y - oy) } : null,
+        handleOut: a.handleOut ? { x: Math.round(a.handleOut.x - ox), y: Math.round(a.handleOut.y - oy) } : null,
+      }));
+
+      // Delete old, create new with updated path
+      send('user_delete', { id: editingPathId });
+      delete objects[editingPathId];
+      const el = document.getElementById('obj-' + editingPathId);
+      if (el) el.remove();
+
+      send('user_draw', {
+        shapeType: obj.shapeType,
+        x: Math.round(ox), y: Math.round(oy),
+        width: Math.round(maxX - minX + pad * 2) || 10,
+        height: Math.round(maxY - minY + pad * 2) || 10,
+        points: anchorData.map(a => ({ x: a.x, y: a.y })),
+        pathData: pathD,
+        anchors: anchorData,
+        closed: obj.closed,
+        fill: obj.fill, stroke: obj.stroke, strokeWidth: obj.strokeWidth,
+      });
+    }
+    editingPathId = null; editAnchors = []; editDragType = null; editDragIdx = -1;
+    freehandSvg.innerHTML = '';
+    freehandSvg.classList.remove('drawing');
+  }
+
+  function renderEditPoints() {
+    if (!editingPathId || editAnchors.length === 0) return;
+    const sw = 1.5 / zoom;
+    const ar = 5 / zoom;
+    const hr = 3.5 / zoom;
+    let svg = '';
+
+    // Draw the path
+    if (editAnchors.length >= 2) {
+      const obj = objects[editingPathId];
+      let d = `M${editAnchors[0].x} ${editAnchors[0].y}`;
+      for (let i = 1; i < editAnchors.length; i++) {
+        const prev = editAnchors[i-1], curr = editAnchors[i];
+        const cp1 = prev.handleOut || prev, cp2 = curr.handleIn || curr;
+        d += ` C${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${curr.x} ${curr.y}`;
+      }
+      if (obj && obj.closed) {
+        const last = editAnchors[editAnchors.length-1], first = editAnchors[0];
+        const cp1 = last.handleOut || last, cp2 = first.handleIn || first;
+        d += ` C${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${first.x} ${first.y} Z`;
+      }
+      svg += `<path d="${d}" fill="none" stroke="${(obj && obj.stroke) || '#3b82f6'}" stroke-width="${(obj && obj.strokeWidth || 2) / zoom}" stroke-linecap="round" pointer-events="none"/>`;
+    }
+
+    // Handle lines and control points (rendered BEFORE anchors so anchors are on top)
+    editAnchors.forEach((a, idx) => {
+      if (a.handleIn) {
+        svg += `<line x1="${a.x}" y1="${a.y}" x2="${a.handleIn.x}" y2="${a.handleIn.y}" stroke="#60a5fa" stroke-width="${sw}" pointer-events="none"/>`;
+        svg += `<circle cx="${a.handleIn.x}" cy="${a.handleIn.y}" r="${Math.max(hr, 6/zoom)}" fill="#60a5fa" stroke="#fff" stroke-width="${sw}" style="cursor:pointer" data-edit-type="handleIn" data-edit-idx="${idx}"/>`;
+      }
+      if (a.handleOut) {
+        svg += `<line x1="${a.x}" y1="${a.y}" x2="${a.handleOut.x}" y2="${a.handleOut.y}" stroke="#60a5fa" stroke-width="${sw}" pointer-events="none"/>`;
+        svg += `<circle cx="${a.handleOut.x}" cy="${a.handleOut.y}" r="${Math.max(hr, 6/zoom)}" fill="#60a5fa" stroke="#fff" stroke-width="${sw}" style="cursor:pointer" data-edit-type="handleOut" data-edit-idx="${idx}"/>`;
+      }
+    });
+    // Anchor points rendered LAST so they are on top and receive clicks first
+    editAnchors.forEach((a, idx) => {
+      const ars = Math.max(ar, 7/zoom); // ensure minimum clickable size
+      svg += `<rect x="${a.x-ars}" y="${a.y-ars}" width="${ars*2}" height="${ars*2}" rx="${1/zoom}" fill="#fff" stroke="#3b82f6" stroke-width="${sw}" style="cursor:pointer" data-edit-type="anchor" data-edit-idx="${idx}"/>`;
+    });
+
+    freehandSvg.innerHTML = svg;
+  }
+
+  // Handle point edit dragging on SVG overlay — use data attributes on SVG elements
+  freehandSvg.addEventListener('mousedown', (e) => {
+    if (!editingPathId || editAnchors.length === 0) return;
+    if (penActive || isDrawingFreehand) return;
+
+    // Always stop propagation in edit mode
+    e.stopPropagation();
+    e.preventDefault();
+
+    // Use the clicked element's data attributes to identify what was hit
+    const target = e.target;
+    const editType = target.getAttribute && target.getAttribute('data-edit-type');
+    const editIdx = target.getAttribute && target.getAttribute('data-edit-idx');
+
+    if (editType && editIdx !== null) {
+      editDragType = editType; // 'anchor', 'handleIn', or 'handleOut'
+      editDragIdx = parseInt(editIdx, 10);
+      return;
+    }
+
+    // Only exit edit mode if clicked directly on the SVG background (not on path/lines)
+    if (target === freehandSvg) {
+      exitPointEditMode();
+    }
+  });
+
+  // Point-edit drag is handled at document level (below) to avoid issues
+  // with innerHTML replacement destroying the drag target mid-drag.
+
+  // Exit point edit mode on Escape or tool switch
+  function maybeExitPointEdit() {
+    if (editingPathId) exitPointEditMode();
+  }
+
+  // ─── CONTEXT MENU ───
+  canvasEl.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    const target = e.target.closest('.canvas-obj');
+    if (!target) { contextMenu.style.display = 'none'; return; }
+    const id = target.dataset.objId;
+    selectObject(id);
+    contextMenu.style.display = 'block';
+    contextMenu.style.left = e.clientX + 'px';
+    contextMenu.style.top = e.clientY + 'px';
+
+    document.getElementById('ctx-duplicate').onclick = () => {
+      const obj = objects[id];
+      if (!obj) return;
+      const dup = { ...obj, x: obj.x + 20, y: obj.y + 20 };
+      // Send as appropriate type
+      if (obj.type === 'shape') send('user_draw', dup);
+      else if (obj.type === 'text') send('user_text', dup);
+      else if (obj.type === 'ascii') send('user_ascii', dup);
+      else if (obj.type === 'image') send('user_image', dup);
+      else if (obj.type === 'markdown') send('user_markdown', dup);
+      contextMenu.style.display = 'none';
+    };
+    document.getElementById('ctx-delete').onclick = () => {
+      send('user_delete', { id }); delete objects[id]; selectedId = null;
+      contextMenu.style.display = 'none';
+    };
+    document.getElementById('ctx-front').onclick = () => { contextMenu.style.display = 'none'; };
+    document.getElementById('ctx-back').onclick = () => { contextMenu.style.display = 'none'; };
+  });
+
+  document.addEventListener('click', () => { contextMenu.style.display = 'none'; });
+
+  // ─── KEYBOARD SHORTCUTS ───
+  let spaceHeld = false;
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+    if (e.key === ' ' && !spaceHeld) {
+      spaceHeld = true; e.preventDefault();
+      container.style.cursor = 'grab';
+    }
+    if (e.key === 'Escape') {
+      if (penActive) { finalizePen(); return; }
+      if (editingPathId) { exitPointEditMode(); return; }
+    }
+    if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteSelected(); }
+    if ((e.metaKey || e.ctrlKey) && e.key === 'z') { e.preventDefault(); send(e.shiftKey ? 'user_redo' : 'user_undo', {}); }
+    if ((e.metaKey || e.ctrlKey) && e.key === 'a') { e.preventDefault(); /* TODO: select all */ }
+
+    // Tool shortcuts
+    if (!e.metaKey && !e.ctrlKey) {
+      const shortcuts = { v: 'select', h: 'pan', r: 'rect', e: 'circle', l: 'line', p: 'pencil', t: 'text', n: 'note' };
+      if (shortcuts[e.key]) setTool(shortcuts[e.key]);
+    }
+  });
+
+  document.addEventListener('keyup', (e) => {
+    if (e.key === ' ') {
+      spaceHeld = false;
+      container.style.cursor = activeTool === 'pan' ? 'grab' : activeTool === 'select' ? 'default' : 'crosshair';
+    }
+  });
+
+  // Space + drag for temporary pan
+  container.addEventListener('mousedown', (e) => {
+    if (spaceHeld) {
+      isPanning = true;
+      panStart = { x: e.clientX - panX, y: e.clientY - panY };
+      container.style.cursor = 'grabbing';
+      e.preventDefault();
+    }
+  });
+
+  // (Double-click to edit text is handled in the pen tool dblclick handler above)
+
+  // ─── LEFT SIDEBAR: LAYERS ───
+  function renderLayerList() {
+    layerList.innerHTML = '';
+    layers.forEach(layer => {
+      const item = document.createElement('div');
+      item.className = 'sidebar-item' + (layer.id === activeLayerId ? ' active' : '');
+      const visClass = layer.visible ? '' : ' hidden';
+      item.innerHTML = `<span class="item-vis${visClass}" data-layer-id="${layer.id}">${layer.visible ? '👁' : '👁'}</span><span class="item-label">${esc(layer.name)}</span>`;
+      item.addEventListener('click', (e) => {
+        if (e.target.classList.contains('item-vis')) {
+          layer.visible = !layer.visible;
+          // Toggle visibility of objects on this layer
+          Object.values(objects).forEach(obj => {
+            if (obj.layerId === layer.id) {
+              obj.visible = layer.visible;
+              const el = document.getElementById('obj-' + obj.id);
+              if (el) el.style.display = layer.visible ? '' : 'none';
+            }
+          });
+          renderLayerList();
+          return;
+        }
+        activeLayerId = layer.id;
+        renderLayerList();
+      });
+      layerList.appendChild(item);
+    });
+  }
+
+  document.getElementById('btn-add-layer').onclick = () => {
+    const name = prompt('Layer name:');
+    if (name) send('user_create_layer', { name });
+  };
+
+  renderLayerList();
+
+  // ─── LEFT SIDEBAR: OBJECTS ───
+  function renderObjectList() {
+    objectList.innerHTML = '';
+    const typeIcons = { shape: '◻', text: 'T', image: '🖼', ascii: '≡', markdown: '¶' };
+    Object.values(objects).forEach(obj => {
+      const item = document.createElement('div');
+      item.className = 'sidebar-item' + (obj.id === selectedId ? ' selected' : '');
+      let label = obj.type;
+      if (obj.type === 'shape') label = obj.shapeType || 'shape';
+      if (obj.type === 'text') label = (obj.content || '').slice(0, 24) || 'Text';
+      if (obj.type === 'ascii') label = 'ASCII';
+      if (obj.type === 'markdown') label = 'Markdown';
+      if (obj.type === 'image') label = obj.alt || 'Image';
+      item.innerHTML = `<span class="item-icon">${typeIcons[obj.type] || '?'}</span><span class="item-label">${esc(label)}</span>`;
+      item.addEventListener('click', () => selectObject(obj.id));
+      objectList.appendChild(item);
+    });
+  }
+
+  // ─── EXPORT ───
+  document.getElementById('btn-export').onclick = (e) => {
+    e.stopPropagation();
+    const btn = document.getElementById('btn-export');
+    const rect = btn.getBoundingClientRect();
+    exportMenu.style.left = rect.left + 'px';
+    exportMenu.style.top = rect.bottom + 4 + 'px';
+    exportMenu.style.display = exportMenu.style.display === 'block' ? 'none' : 'block';
+  };
+  document.addEventListener('click', () => { exportMenu.style.display = 'none'; });
+
+  function buildExportSvg() {
+    const w = 3000, h = 2000;
+    const bg = canvasEl.style.backgroundColor || '#ffffff';
+    let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">`;
+    svg += `<rect width="${w}" height="${h}" fill="${bg}"/>`;
+
+    Object.values(objects).forEach(obj => {
+      if (!obj.visible) return;
+      const transform = obj.rotation ? ` transform="rotate(${obj.rotation} ${obj.x + obj.width/2} ${obj.y + obj.height/2})"` : '';
+      const opacity = (obj.opacity != null && obj.opacity !== 1) ? ` opacity="${obj.opacity}"` : '';
+
+      switch (obj.type) {
+        case 'shape': {
+          const f = obj.fill || 'none', s = obj.stroke || '#000', sw = obj.strokeWidth || 2;
+          switch (obj.shapeType) {
+            case 'rect':
+              svg += `<rect x="${obj.x}" y="${obj.y}" width="${obj.width}" height="${obj.height}" rx="4" fill="${f}" stroke="${s}" stroke-width="${sw}"${transform}${opacity}/>`;
+              break;
+            case 'circle':
+              svg += `<ellipse cx="${obj.x + obj.width/2}" cy="${obj.y + obj.height/2}" rx="${obj.width/2}" ry="${obj.height/2}" fill="${f}" stroke="${s}" stroke-width="${sw}"${transform}${opacity}/>`;
+              break;
+            case 'line':
+              svg += `<line x1="${obj.x}" y1="${obj.y + obj.height}" x2="${obj.x + obj.width}" y2="${obj.y}" stroke="${s}" stroke-width="${sw}" stroke-linecap="round"${transform}${opacity}/>`;
+              break;
+            case 'path': case 'polygon':
+              if (obj.pathData) {
+                // Translate the pathData to absolute position
+                svg += `<g transform="translate(${obj.x},${obj.y})"${opacity}>`;
+                svg += `<path d="${obj.pathData}" fill="${obj.closed ? f : 'none'}" stroke="${s}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"/>`;
+                svg += `</g>`;
+              } else if (obj.points && obj.points.length) {
+                const pts = obj.points.map(p => (p.x + obj.x) + ',' + (p.y + obj.y)).join(' ');
+                svg += `<polyline points="${pts}" fill="${obj.shapeType === 'polygon' ? f : 'none'}" stroke="${s}" stroke-width="${sw}" stroke-linecap="round"${transform}${opacity}/>`;
+              }
+              break;
+          }
+          break;
+        }
+        case 'text': {
+          const fontSize = obj.fontSize || 16;
+          const family = obj.fontFamily || 'sans-serif';
+          const anchor = obj.align === 'center' ? 'middle' : obj.align === 'right' ? 'end' : 'start';
+          const tx = obj.align === 'center' ? obj.x + obj.width/2 : obj.align === 'right' ? obj.x + obj.width : obj.x;
+          const fw = obj.bold ? 'bold' : 'normal';
+          const fs = obj.italic ? 'italic' : 'normal';
+          // Split text into lines
+          const lines = (obj.content || '').split('\n');
+          svg += `<text x="${tx}" y="${obj.y + fontSize}" font-size="${fontSize}" font-family="${family}" fill="${obj.color || '#000'}" text-anchor="${anchor}" font-weight="${fw}" font-style="${fs}"${opacity}>`;
+          lines.forEach((line, i) => {
+            if (i === 0) svg += esc(line);
+            else svg += `<tspan x="${tx}" dy="${fontSize * 1.2}">${esc(line)}</tspan>`;
+          });
+          svg += `</text>`;
+          break;
+        }
+        case 'ascii': {
+          const fontSize = obj.fontSize || 14;
+          svg += `<rect x="${obj.x}" y="${obj.y}" width="${obj.width}" height="${obj.height}" rx="8" fill="${obj.backgroundColor || '#1e293b'}"${opacity}/>`;
+          const lines = (obj.content || '').split('\n');
+          svg += `<text x="${obj.x + 12}" y="${obj.y + 12 + fontSize}" font-size="${fontSize}" font-family="monospace" fill="${obj.color || '#e2e8f0'}"${opacity}>`;
+          lines.forEach((line, i) => {
+            if (i === 0) svg += esc(line);
+            else svg += `<tspan x="${obj.x + 12}" dy="${fontSize * 1.3}">${esc(line)}</tspan>`;
+          });
+          svg += `</text>`;
+          break;
+        }
+        case 'image':
+          svg += `<image href="${obj.src}" x="${obj.x}" y="${obj.y}" width="${obj.width}" height="${obj.height}" preserveAspectRatio="xMidYMid ${obj.objectFit === 'cover' ? 'slice' : 'meet'}"${transform}${opacity}/>`;
+          break;
+        case 'markdown': {
+          // Render markdown as foreignObject for SVG
+          svg += `<foreignObject x="${obj.x}" y="${obj.y}" width="${obj.width}" height="${obj.height}"${opacity}>`;
+          svg += `<div xmlns="http://www.w3.org/1999/xhtml" style="font-size:${obj.fontSize||14}px;color:${obj.color||'#1e293b'};background:${obj.backgroundColor||'#f8fafc'};padding:12px;border-radius:8px;overflow:hidden;height:100%;">`;
+          svg += renderMarkdown(obj.content || '');
+          svg += `</div></foreignObject>`;
+          break;
+        }
+      }
+    });
+
+    svg += `</svg>`;
+    return svg;
+  }
+
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  document.getElementById('export-svg').onclick = (e) => {
+    e.stopPropagation();
+    exportMenu.style.display = 'none';
+    const svgStr = buildExportSvg();
+    downloadBlob(new Blob([svgStr], { type: 'image/svg+xml' }), 'scratchpad.svg');
+  };
+
+  document.getElementById('export-png').onclick = (e) => {
+    e.stopPropagation();
+    exportMenu.style.display = 'none';
+    const svgStr = buildExportSvg();
+    const img = new Image();
+    const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 3000; canvas.height = 2000;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(pngBlob => {
+        if (pngBlob) downloadBlob(pngBlob, 'scratchpad.png');
+      }, 'image/png');
+    };
+    img.src = url;
+  };
+
+  document.getElementById('export-pdf').onclick = (e) => {
+    e.stopPropagation();
+    exportMenu.style.display = 'none';
+    // PDF export via print with SVG embedded
+    const svgStr = buildExportSvg();
+    const win = window.open('', '_blank');
+    if (!win) { alert('Please allow popups to export PDF'); return; }
+    win.document.write(`<!DOCTYPE html><html><head><title>Scratchpad Export</title><style>
+      @page { size: landscape; margin: 0; }
+      body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: white; }
+      svg { max-width: 100%; max-height: 100vh; }
+    </style></head><body>${svgStr}<script>setTimeout(()=>{window.print();},300);<\/script></body></html>`);
+    win.document.close();
+  };
+
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+})();
+</script>
+</body>
+</html>

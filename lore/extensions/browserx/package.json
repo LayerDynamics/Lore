@@ -1,0 +1,39 @@
+{
+  "name": "@browserx/claude-plugin",
+  "version": "1.0.0",
+  "description": "Native BrowserX browser automation for Claude Code — SQL-like queries, screenshots, scraping, form filling, proxy control",
+  "type": "module",
+  "bin": {
+    "browserx-claude-setup": "./bin/setup.mjs"
+  },
+  "files": [
+    ".claude-plugin/",
+    "hooks/",
+    "skills/",
+    "agents/",
+    "commands/",
+    "docker/",
+    "templates/",
+    "bin/"
+  ],
+  "keywords": [
+    "claude",
+    "claude-code",
+    "browserx",
+    "browser-automation",
+    "mcp",
+    "scraping",
+    "screenshots"
+  ],
+  "author": "BrowserX",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nickshanks347/BrowserX"
+  },
+  "scripts": {
+    "postinstall": "BROWSERX_PATH=\"$BROWSERX_PATH\" node bin/setup.mjs --auto",
+    "setup": "node bin/setup.mjs",
+    "setup:path": "node bin/setup.mjs --path"
+  }
+}

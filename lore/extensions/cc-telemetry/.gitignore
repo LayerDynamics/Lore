@@ -1,0 +1,9 @@
+# Plugin-specific ignores
+.claude/*.local.md
+*.pyc
+__pycache__/
+*.log
+*.db
+*.db-wal
+*.db-shm
+.DS_Store

@@ -1,0 +1,53 @@
+# Deno
+.deno/
+deno.lock
+*.js.map
+*.ts.map
+
+# Compiled binaries
+dist/
+build/
+*.exe
+findlazy
+findlazy-mcp
+
+# Dependencies
+node_modules/
+vendor/
+
+# Cache
+.cache/
+.findlazy/cache/
+*.log
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build artifacts
+*.js
+*.mjs
+!deno.json
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS
+Thumbs.db
+resources

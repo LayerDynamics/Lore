@@ -1,0 +1,186 @@
+{
+  "version": "1.0",
+  "language": "python",
+  "patterns": [
+    {
+      "name": "pass-statement",
+      "pattern": "^\\s*pass\\s*$",
+      "type": "regex",
+      "severity": "warning",
+      "message": "Pass statement may indicate incomplete implementation",
+      "category": "deceptive",
+      "suggestion": "Replace 'pass' with actual implementation",
+      "enabled": true
+    },
+    {
+      "name": "not-implemented-error",
+      "pattern": "raise\\s+NotImplementedError",
+      "type": "regex",
+      "severity": "error",
+      "message": "NotImplementedError indicates unimplemented function",
+      "category": "deceptive",
+      "suggestion": "Implement the function",
+      "enabled": true
+    },
+    {
+      "name": "return-none",
+      "pattern": "return\\s+None",
+      "type": "regex",
+      "severity": "info",
+      "message": "Function explicitly returns None",
+      "category": "deceptive",
+      "suggestion": "Return actual value or remove return",
+      "enabled": false
+    },
+    {
+      "name": "bare-except",
+      "pattern": "except:\\s*$",
+      "type": "regex",
+      "severity": "error",
+      "message": "Bare except clause catches all exceptions",
+      "category": "deceptive",
+      "suggestion": "Catch specific exception types",
+      "enabled": true
+    },
+    {
+      "name": "empty-except-pass",
+      "pattern": "except[^:]*:\\s*pass",
+      "type": "regex",
+      "severity": "error",
+      "message": "Except block with only pass swallows errors",
+      "category": "deceptive",
+      "suggestion": "Handle exception properly or log it",
+      "enabled": true
+    },
+    {
+      "name": "print-statement",
+      "pattern": "\\bprint\\(",
+      "type": "regex",
+      "severity": "info",
+      "message": "print() statement left in code (possible debug code)",
+      "category": "placeholder",
+      "suggestion": "Remove debug print or use proper logging",
+      "enabled": false
+    },
+    {
+      "name": "ellipsis-placeholder",
+      "pattern": "^\\s*\\.\\.\\.\\s*$",
+      "type": "regex",
+      "severity": "warning",
+      "message": "Ellipsis (...) used as placeholder",
+      "category": "placeholder",
+      "suggestion": "Replace ellipsis with implementation",
+      "enabled": true
+    },
+    {
+      "name": "type-ignore-comment",
+      "pattern": "#\\s*type:\\s*ignore",
+      "type": "regex",
+      "severity": "warning",
+      "message": "type: ignore comment suppresses type checker",
+      "category": "deceptive",
+      "suggestion": "Fix the type issue instead of ignoring",
+      "enabled": true
+    },
+    {
+      "name": "any-type-hint",
+      "pattern": ":\\s*Any\\b",
+      "type": "regex",
+      "severity": "warning",
+      "message": "Type hint 'Any' bypasses type checking",
+      "category": "deceptive",
+      "suggestion": "Use specific type instead of Any",
+      "enabled": true
+    },
+    {
+      "name": "assert-false",
+      "pattern": "assert\\s+False",
+      "type": "regex",
+      "severity": "error",
+      "message": "assert False will always fail (placeholder code)",
+      "category": "placeholder",
+      "suggestion": "Remove or implement proper assertion",
+      "enabled": true
+    },
+    {
+      "name": "breakpoint-call",
+      "pattern": "\\bbreakpoint\\(\\)",
+      "type": "regex",
+      "severity": "warning",
+      "message": "breakpoint() left in code",
+      "category": "placeholder",
+      "suggestion": "Remove breakpoint()",
+      "enabled": true
+    },
+    {
+      "name": "import-pdb",
+      "pattern": "import\\s+pdb",
+      "type": "regex",
+      "severity": "warning",
+      "message": "pdb debugger import left in code",
+      "category": "placeholder",
+      "suggestion": "Remove pdb import",
+      "enabled": true
+    },
+    {
+      "name": "pdb-set-trace",
+      "pattern": "pdb\\.set_trace\\(\\)",
+      "type": "regex",
+      "severity": "warning",
+      "message": "pdb.set_trace() debugger left in code",
+      "category": "placeholder",
+      "suggestion": "Remove pdb.set_trace()",
+      "enabled": true
+    },
+    {
+      "name": "import-ipdb",
+      "pattern": "import\\s+ipdb",
+      "type": "regex",
+      "severity": "warning",
+      "message": "ipdb debugger import left in code",
+      "category": "placeholder",
+      "suggestion": "Remove ipdb import",
+      "enabled": true
+    },
+    {
+      "name": "todo-type-annotation",
+      "pattern": "#\\s*TODO:",
+      "type": "regex",
+      "severity": "info",
+      "message": "TODO comment found",
+      "category": "placeholder",
+      "suggestion": "Complete the TODO",
+      "enabled": true
+    },
+    {
+      "name": "pylint-disable",
+      "pattern": "#\\s*pylint:\\s*disable",
+      "type": "regex",
+      "severity": "info",
+      "message": "pylint disable comment (may hide issues)",
+      "category": "deceptive",
+      "suggestion": "Fix the issue instead of disabling pylint",
+      "enabled": false
+    },
+    {
+      "name": "noqa-comment",
+      "pattern": "#\\s*noqa",
+      "type": "regex",
+      "severity": "info",
+      "message": "noqa comment disables linter (may hide issues)",
+      "category": "deceptive",
+      "suggestion": "Fix the issue instead of using noqa",
+      "enabled": false
+    },
+    {
+      "name": "empty-function-body",
+      "pattern": "def\\s+\\w+\\([^)]*\\):\\s*pass",
+      "type": "regex",
+      "severity": "warning",
+      "message": "Function with only 'pass' (no implementation)",
+      "category": "deceptive",
+      "suggestion": "Implement function body",
+      "enabled": true
+    }
+  ]
+}

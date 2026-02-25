@@ -1,0 +1,156 @@
+{
+  "version": "1.0",
+  "language": "typescript",
+  "patterns": [
+    {
+      "name": "any-type-cast",
+      "pattern": "as any",
+      "type": "keyword",
+      "severity": "error",
+      "message": "Type cast to 'any' hides implementation details",
+      "category": "deceptive",
+      "suggestion": "Use proper typing instead of 'any'",
+      "enabled": true
+    },
+    {
+      "name": "any-type-annotation",
+      "pattern": ":\\s*any\\b",
+      "type": "regex",
+      "severity": "warning",
+      "message": "Type annotation 'any' bypasses type checking",
+      "category": "deceptive",
+      "suggestion": "Use specific type instead of 'any'",
+      "enabled": true
+    },
+    {
+      "name": "ts-ignore-comment",
+      "pattern": "@ts-ignore",
+      "type": "keyword",
+      "severity": "error",
+      "message": "@ts-ignore suppresses TypeScript errors",
+      "category": "deceptive",
+      "suggestion": "Fix the type error instead of ignoring it",
+      "enabled": true
+    },
+    {
+      "name": "ts-expect-error",
+      "pattern": "@ts-expect-error",
+      "type": "keyword",
+      "severity": "warning",
+      "message": "@ts-expect-error suppresses TypeScript errors",
+      "category": "deceptive",
+      "suggestion": "Fix the type error instead of expecting it",
+      "enabled": true
+    },
+    {
+      "name": "ts-nocheck",
+      "pattern": "@ts-nocheck",
+      "type": "keyword",
+      "severity": "error",
+      "message": "@ts-nocheck disables type checking for entire file",
+      "category": "deceptive",
+      "suggestion": "Enable type checking and fix errors",
+      "enabled": true
+    },
+    {
+      "name": "empty-function",
+      "pattern": "function\\s+\\w+\\s*\\([^)]*\\)\\s*\\{\\s*\\}",
+      "type": "regex",
+      "severity": "warning",
+      "message": "Empty function with no implementation",
+      "category": "deceptive",
+      "suggestion": "Implement function body",
+      "enabled": true
+    },
+    {
+      "name": "console-log",
+      "pattern": "console\\.log\\(",
+      "type": "regex",
+      "severity": "info",
+      "message": "console.log() left in code (possible debug code)",
+      "category": "placeholder",
+      "suggestion": "Remove debug console.log or use proper logging",
+      "enabled": false
+    },
+    {
+      "name": "debugger-statement",
+      "pattern": "\\bdebugger\\b",
+      "type": "keyword",
+      "severity": "warning",
+      "message": "debugger statement left in code",
+      "category": "placeholder",
+      "suggestion": "Remove debugger statement",
+      "enabled": true
+    },
+    {
+      "name": "return-null",
+      "pattern": "return\\s+null",
+      "type": "regex",
+      "severity": "info",
+      "message": "Function returns null",
+      "category": "deceptive",
+      "suggestion": "Return proper value or handle null case",
+      "enabled": false
+    },
+    {
+      "name": "return-undefined",
+      "pattern": "return\\s+undefined",
+      "type": "regex",
+      "severity": "info",
+      "message": "Function explicitly returns undefined",
+      "category": "deceptive",
+      "suggestion": "Return proper value or remove return",
+      "enabled": false
+    },
+    {
+      "name": "throw-error-unimplemented",
+      "pattern": "throw\\s+new\\s+Error\\(['\"].*[Nn]ot\\s+implemented",
+      "type": "regex",
+      "severity": "error",
+      "message": "Function throws 'not implemented' error",
+      "category": "deceptive",
+      "suggestion": "Implement the function",
+      "enabled": true
+    },
+    {
+      "name": "promise-resolve-undefined",
+      "pattern": "Promise\\.resolve\\(\\)",
+      "type": "regex",
+      "severity": "warning",
+      "message": "Promise resolves with undefined (possible incomplete)",
+      "category": "deceptive",
+      "suggestion": "Resolve with actual value",
+      "enabled": true
+    },
+    {
+      "name": "async-no-await",
+      "pattern": "async\\s+function\\s+\\w+[^{]*\\{[^}]*\\}",
+      "type": "ast",
+      "severity": "warning",
+      "message": "Async function without await (detected via AST)",
+      "category": "deceptive",
+      "suggestion": "Remove async or add await calls",
+      "enabled": true
+    },
+    {
+      "name": "empty-catch-block",
+      "pattern": "catch\\s*\\([^)]*\\)\\s*\\{\\s*\\}",
+      "type": "regex",
+      "severity": "error",
+      "message": "Empty catch block swallows errors",
+      "category": "deceptive",
+      "suggestion": "Handle the error properly",
+      "enabled": true
+    },
+    {
+      "name": "unused-function-parameter",
+      "pattern": "function\\s+\\w+\\s*\\([^)]*_\\w+",
+      "type": "regex",
+      "severity": "info",
+      "message": "Function parameter prefixed with _ (marked as unused)",
+      "category": "unused",
+      "suggestion": "Remove unused parameter or use it",
+      "enabled": false
+    }
+  ]
+}

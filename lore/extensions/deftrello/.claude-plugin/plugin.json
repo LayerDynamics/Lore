@@ -1,0 +1,8 @@
+{
+  "name": "deftrello",
+  "description": "DefTrello task management commands and MCP integration.",
+  "version": "1.0.0",
+  "author": {
+    "name": "DefTrello"
+  }
+}

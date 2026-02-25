@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "lore-gateway": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/mcp/lore/gateway.js"],
+      "description": "Lore framework gateway — exposes skills, commands, agents, registry, filesystem, and runner tools"
+    }
+  }
+}
