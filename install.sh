@@ -42,6 +42,11 @@ if ! command -v claude &>/dev/null; then
   MISSING=1
 fi
 
+if ! command -v python3 &>/dev/null; then
+  error "python3 is required for plugin registration"
+  exit 1
+fi
+
 if [ "$MISSING" -eq 1 ]; then
   echo ""
   warn "Some prerequisites are missing (see above). Continuing anyway..."
@@ -69,63 +74,121 @@ fi
 ok "Source ready at $SRC_DIR"
 echo ""
 
-# ── Symlink ─────────────────────────────────
 PLUGIN_SRC="$SRC_DIR/lore"
-TARGET_DIR="$HOME/.claude/plugins/lore"
 
-mkdir -p "$HOME/.claude/plugins"
+# ── Copy plugin to cache (like /plugin install does) ──
+CACHE_DIR="$HOME/.claude/plugins/cache/lore-marketplace/lore/${VERSION}"
 
-if [ -L "$TARGET_DIR" ]; then
-  EXISTING=$(readlink "$TARGET_DIR")
-  if [ "$EXISTING" = "$PLUGIN_SRC" ]; then
-    ok "Symlink already correct"
-  else
-    info "Updating symlink from $EXISTING → $PLUGIN_SRC"
-    rm "$TARGET_DIR"
-    ln -s "$PLUGIN_SRC" "$TARGET_DIR"
-    ok "Symlink updated"
-  fi
-elif [ -d "$TARGET_DIR" ]; then
-  error "$TARGET_DIR exists as a directory. Please remove it first:"
-  error "  rm -rf $TARGET_DIR"
-  exit 1
-else
-  ln -s "$PLUGIN_SRC" "$TARGET_DIR"
-  ok "Symlink created: $TARGET_DIR → $PLUGIN_SRC"
-fi
+mkdir -p "$CACHE_DIR"
 
-# ── Register plugin in settings ───────────
+# Copy plugin contents (following symlinks) to cache
+rsync -a --delete "$PLUGIN_SRC/" "$CACHE_DIR/" 2>/dev/null || cp -RL "$PLUGIN_SRC/." "$CACHE_DIR/"
+
+ok "Plugin cached at $CACHE_DIR"
+
+# ── Register in installed_plugins.json ──────
+INSTALLED_FILE="$HOME/.claude/plugins/installed_plugins.json"
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
+GIT_SHA=$(git -C "$SRC_DIR" rev-parse HEAD 2>/dev/null || echo "unknown")
+
+python3 -c "
+import json, os, sys
+
+installed_file = '$INSTALLED_FILE'
+cache_dir = '$CACHE_DIR'
+timestamp = '$TIMESTAMP'
+git_sha = '$GIT_SHA'
+version = '$VERSION'
+
+# Load or create
+if os.path.exists(installed_file):
+    with open(installed_file, 'r') as f:
+        data = json.load(f)
+else:
+    data = {'version': 2, 'plugins': {}}
+
+# Ensure structure
+if 'plugins' not in data:
+    data['plugins'] = {}
+
+# Register lore
+data['plugins']['lore@lore-marketplace'] = [{
+    'scope': 'user',
+    'installPath': cache_dir,
+    'version': version,
+    'installedAt': timestamp,
+    'lastUpdated': timestamp,
+    'gitCommitSha': git_sha
+}]
+
+with open(installed_file, 'w') as f:
+    json.dump(data, f, indent=2)
+    f.write('\n')
+"
+
+ok "Registered in installed_plugins.json"
+
+# ── Register in enabledPlugins ──────────────
 SETTINGS_FILE="$HOME/.claude/settings.json"
 
-if [ -f "$SETTINGS_FILE" ]; then
-  if command -v python3 &>/dev/null; then
-    if python3 -c "
-import json, sys
-with open('$SETTINGS_FILE', 'r') as f:
-    s = json.load(f)
+python3 -c "
+import json, os
+
+settings_file = '$SETTINGS_FILE'
+
+if os.path.exists(settings_file):
+    with open(settings_file, 'r') as f:
+        s = json.load(f)
+else:
+    s = {}
+
 ep = s.setdefault('enabledPlugins', {})
-if ep.get('lore@local') is True:
-    sys.exit(1)
-ep['lore@local'] = True
-with open('$SETTINGS_FILE', 'w') as f:
+ep['lore@lore-marketplace'] = True
+
+with open(settings_file, 'w') as f:
     json.dump(s, f, indent=2)
     f.write('\n')
-" 2>/dev/null; then
-      ok "Registered lore in enabledPlugins"
-    else
-      ok "Plugin already registered"
-    fi
-  else
-    warn "python3 not found — add \"lore@local\": true to enabledPlugins in $SETTINGS_FILE manually"
-  fi
-else
-  mkdir -p "$HOME/.claude"
-  echo '{"enabledPlugins":{"lore@local":true}}' | python3 -m json.tool > "$SETTINGS_FILE" 2>/dev/null || \
-    echo '{"enabledPlugins":{"lore@local":true}}' > "$SETTINGS_FILE"
-  ok "Created settings and registered lore"
-fi
+"
 
+ok "Enabled in settings"
+
+# ── Set up lore marketplace ─────────────────
+MARKETPLACE_DIR="$HOME/.claude/plugins/lore-marketplace"
+mkdir -p "$MARKETPLACE_DIR/.claude-plugin"
+
+python3 -c "
+import json
+
+marketplace = {
+    'name': 'lore-marketplace',
+    'owner': {'name': 'LayerDynamics'},
+    'metadata': {
+        'description': 'Lore plugin framework marketplace',
+        'version': '1.0.0'
+    },
+    'plugins': [{
+        'name': 'lore',
+        'source': {'source': 'url', 'url': 'https://github.com/LayerDynamics/lore.git'},
+        'description': 'Opinionated meta skills & plugin framework for deterministic results',
+        'version': '$VERSION',
+        'strict': True
+    }]
+}
+
+with open('$MARKETPLACE_DIR/.claude-plugin/marketplace.json', 'w') as f:
+    json.dump(marketplace, f, indent=2)
+    f.write('\n')
+"
+
+ok "Marketplace registered for future updates"
 echo ""
+
+# ── Remove stale symlink if exists ──────────
+SYMLINK_DIR="$HOME/.claude/plugins/lore"
+if [ -L "$SYMLINK_DIR" ]; then
+  rm "$SYMLINK_DIR"
+  info "Removed old symlink (replaced by cache install)"
+fi
 
 # ── Extensions ──────────────────────────────
 EXT_DIR="$PLUGIN_SRC/extensions"
