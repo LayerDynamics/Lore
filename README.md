@@ -124,82 +124,82 @@ Skills are the core abstraction — structured markdown workflows (each a `SKILL
 
 ---
 
-## Commands (33 across 8 namespaces)
+## Commands (33)
 
-Commands are slash-command entry points that orchestrate skills and agents into specific workflows. Each command has a description, accepted arguments, and a defined set of allowed tools.
+All commands are invoked as `/lore:<command-name>`. Each command has a description, accepted arguments, and a defined set of allowed tools.
 
-### `/lore:` — Framework Management (7 commands)
+### Framework Management
 
 | Command | Arguments | What It Does |
 | ------- | --------- | ------------ |
-| `/lore:list` | — | Lists all available skills, commands, and agents with descriptions. Globs all component directories and extracts frontmatter. |
+| `/lore:list` | — | Lists all available skills, commands, and agents with descriptions. |
 | `/lore:init` | — | Initializes lore in a project by creating/updating `.claude/settings.local.json` to include the lore plugin path. |
 | `/lore:create-skill` | `<name> [--description "..."]` | Creates a new skill from template. Validates kebab-case naming, asks rigid vs. flexible, generates `skills/<name>/SKILL.md`. |
-| `/lore:create-command` | `<name> [--namespace <ns>]` | Creates a new command. Discovers existing namespaces, lets you pick or create one, generates command `.md` with correct frontmatter. |
-| `/lore:create-agent` | `<name> [--description "..."]` | Creates a new agent with dispatch examples and tool configuration. Generates `agents/<name>.md` with frontmatter and example blocks. |
-| `/lore:create-mcp` | `<name> [--type stdio\|sse]` | Creates a new MCP server integration. Gathers runtime choice (Node/Python/Deno/Go), tools to expose, env vars needed, generates full directory structure. |
+| `/lore:create-command` | `<name>` | Creates a new command with correct frontmatter. |
+| `/lore:create-agent` | `<name> [--description "..."]` | Creates a new agent with dispatch examples and tool configuration. |
+| `/lore:create-mcp` | `<name> [--type stdio\|sse]` | Creates a new MCP server integration with full directory structure. |
 | `/lore:create-plugin` | `[description or name]` | Guided 7-phase plugin creation: discovery → component planning → design → structure → implementation → validation → documentation. |
 
-### `/code-intel:` — Deep Code Investigation (2 commands)
+### Code Investigation
 
 | Command | Arguments | What It Does |
 | ------- | --------- | ------------ |
-| `/code-intel:investigate` | `<what to investigate>` | Dispatches a `code-explorer` agent to trace execution paths. Returns raw structured findings: entry points, execution paths, key `file:line` references, open questions. |
-| `/code-intel:review` | `<topic to review>` | Decomposes the subject into 2-3 angles, dispatches `code-explorer` and `integration-mapper` in parallel, then hands findings to `review-synthesizer` for a PR-style review with Critical/Important/Minor/Strengths. |
+| `/lore:investigate` | `<what to investigate>` | Dispatches a `code-explorer` agent to trace execution paths. Returns raw structured findings: entry points, execution paths, key `file:line` references, open questions. |
+| `/lore:review` | `<topic to review>` | Dispatches `code-explorer` and `integration-mapper` in parallel, then synthesizes into a PR-style review with Critical/Important/Minor/Strengths. |
 
-### `/local:` — Local Development Tools (5 commands)
-
-| Command | Arguments | What It Does |
-| ------- | --------- | ------------ |
-| `/local:local-code-review` | `[paths...] [--file]` | Dispatches parallel `code-reviewer` agents covering six review dimensions. Synthesizes into a unified review. Writes to `REVIEW.md` with `--file`. |
-| `/local:review-files` | `<path> [path2...] [--file]` | Targeted code review on specific files/directories. Same six dimensions, scoped to exact paths. |
-| `/local:explain` | `<file, function, or concept>` | Locates the target, reads supporting context (callers, types, tests), presents a layered explanation: what, why, how, dependencies, edge cases. |
-| `/local:standup` | `[time range]` | Generates a standup from `git log` and `git status`. Produces Yesterday/Today/Blockers bullets — each under 15 words, 6-10 total. |
-| `/local:diff-review` | `[focus area]` | Reviews all staged + unstaged git changes against checklists for logic, security, completeness, and tests. Returns READY or FIX BEFORE COMMITTING. |
-
-### `/planning-ext:` — Implementation Planning (5 commands)
+### Local Development Tools
 
 | Command | Arguments | What It Does |
 | ------- | --------- | ------------ |
-| `/planning-ext:plan` | `[task description]` | Loads the `writing-plans` skill. Silently reads project context, asks inclusion/practice questions, writes plan to `docs/plans/YYYY-MM-DD-<name>.md`, offers execution handoff. |
-| `/planning-ext:continue` | `[path to plan file]` | Resumes an existing plan at the next incomplete task. Cross-references git log against plan tasks. Hands off to `subagent-driven-development` or `executing-plans`. |
-| `/planning-ext:scope` | — | Audits the current git diff against the active plan. Reports in-scope changes, out-of-scope drift, completed tasks, remaining tasks. Verdicts: CLEAN / MINOR DRIFT / SIGNIFICANT DRIFT. |
-| `/planning-ext:focus` | `[description of drift]` | Resets scope when Claude has drifted from the original request. Loads `staying-on-request`, re-anchors to the original ask. |
-| `/planning-ext:list` | — | Lists all plans in `docs/plans/` sorted by date with goal, task count, and last-modified date. |
+| `/lore:local-code-review` | `[paths...] [--file]` | Dispatches parallel `code-reviewer` agents covering six review dimensions. Writes to `REVIEW.md` with `--file`. |
+| `/lore:review-files` | `<path> [path2...] [--file]` | Targeted code review on specific files/directories. Same six dimensions, scoped to exact paths. |
+| `/lore:explain` | `<file, function, or concept>` | Locates the target, reads supporting context, presents a layered explanation: what, why, how, dependencies, edge cases. |
+| `/lore:standup` | `[time range]` | Generates a standup from `git log` and `git status`. Yesterday/Today/Blockers bullets. |
+| `/lore:diff-review` | `[focus area]` | Reviews all staged + unstaged git changes. Returns READY or FIX BEFORE COMMITTING. |
 
-### `/research:` — Feature Research (4 commands)
-
-| Command | Arguments | What It Does |
-| ------- | --------- | ------------ |
-| `/research:analyze` | `[path] [--focus <area>]` | Launches `codebase-pattern-scout` on the target. Presents architecture style, domain boundaries, similar features, extension points, naming conventions, testing patterns, and a 10-file reading order. |
-| `/research:research` | `<feature> [--depth quick\|standard\|deep]` | Full feature research workflow. Quick: codebase only. Standard: codebase + external docs + blueprint. Deep: multiple architectural comparisons, risk matrix, rollout implications. Saves to `.feature-research/`. |
-| `/research:blueprint` | `<feature> [--output markdown\|json]` | Converts existing research into an implementation blueprint. Launches `implementation-blueprint-generator`. Saves to `.feature-research/<feature>-blueprint-<date>.md`. |
-| `/research:deep-research` | `<topic> [--sources code\|web\|all]` | Multi-source deep research combining codebase analysis, official docs, GitHub issues, Stack Overflow, and academic papers. Assesses source credibility. Saves to `.feature-research/deep-<topic>-<date>.md`. |
-
-### `/quality:` — Code Quality (2 commands)
+### Implementation Planning
 
 | Command | Arguments | What It Does |
 | ------- | --------- | ------------ |
-| `/quality:scan` | `[path]` | Five-pass grep scan for TODO/FIXME, stubs, deceptive phrases, language-native stubs, and empty function bodies. Structured report by severity with CLEAN or ISSUES FOUND verdict. |
-| `/quality:fix` | `[path]` | Guided remediation session. Discovers all placeholders, triages each (implement now / ask user / skip test doubles), works through each in severity order, re-scans to confirm zero remain. |
+| `/lore:plan` | `[task description]` | Loads the `writing-plans` skill. Reads project context, asks questions, writes plan to `docs/plans/YYYY-MM-DD-<name>.md`, offers execution handoff. |
+| `/lore:continue` | `[path to plan file]` | Resumes an existing plan at the next incomplete task. Hands off to `subagent-driven-development`. |
+| `/lore:scope` | — | Audits the current git diff against the active plan. Reports in-scope vs. out-of-scope drift. |
+| `/lore:focus` | `[description of drift]` | Resets scope when Claude has drifted. Loads `staying-on-request`, re-anchors to the original ask. |
+| `/lore:planning-ext-list` | — | Lists all plans in `docs/plans/` sorted by date with goal, task count, and last-modified date. |
 
-### `/scale-review:` — Scaling and Load Review (5 commands)
-
-| Command | Arguments | What It Does |
-| ------- | --------- | ------------ |
-| `/scale-review:frame-task` | `<task or file path>` | Defines scope boundaries (input, output, dependencies, user scope), identifies constraints (time, resource, concurrency, data), states what "works at scale" means at 10x and 100x with a hard failure point. Outputs a Task Frame for other scale-review commands. |
-| `/scale-review:outline-load` | `<component path>` | Maps traffic patterns, data growth, resource consumption. Identifies entry points, traces ingress/processing/egress. Estimates load dimensions at current/10x/100x. Identifies bottlenecks (N+1, unbounded collections, global state). |
-| `/scale-review:evaluate` | `<path> [--frame <frame>]` | Analyzes time complexity, space complexity, I/O patterns, data structures, and architecture. Scores each 1-5 for a /25 overall score. Produces Critical/Important/Minor findings. |
-| `/scale-review:hone` | `<path> [--findings <eval>]` | Applies targeted optimizations based on evaluation findings: Map/Set replacements, streaming, connection pooling, batching, circuit breakers. Verifies each fix preserves behavior. |
-| `/scale-review:test-scaling` | `<path> [--level 10x\|100x\|1000x]` | Generates a `scale-test.mjs` with realistic scaled data, runs baseline then target scale level, measures wall clock time and memory. Flags super-linear growth. |
-
-### `/security-check:` — Security Scanning (3 commands)
+### Feature Research
 
 | Command | Arguments | What It Does |
 | ------- | --------- | ------------ |
-| `/security-check:scan` | `[path]` | 10-pass vulnerability scan: hardcoded secrets, passwords, private keys, SQL injection, XSS, command injection, HTTP URLs, insecure configs, path traversal, weak crypto. Severity-stratified report. |
-| `/security-check:audit` | `[path]` | 9-step dependency/config audit: npm audit, pip-audit, .env in VCS, sensitive files in git, file permissions, deprecated TLS/SSL, disabled cert verification, Docker security, missing security headers. Each finding includes remediation steps. |
-| `/security-check:fix` | `[--severity critical\|high\|all]` | Guided remediation of scan findings. Walks through each by severity: secrets → env vars, SQL → parameterized queries, XSS → output encoding, weak hashing → bcrypt/argon2. Re-scans after all fixes. |
+| `/lore:analyze` | `[path] [--focus <area>]` | Launches `codebase-pattern-scout`. Presents architecture, conventions, extension points, and a 10-file reading order. |
+| `/lore:research` | `<feature> [--depth quick\|standard\|deep]` | Full feature research workflow. Quick: codebase only. Standard: + external docs + blueprint. Deep: + risk matrix, rollout implications. Saves to `.feature-research/`. |
+| `/lore:blueprint` | `<feature> [--output markdown\|json]` | Converts research into an implementation blueprint. Saves to `.feature-research/<feature>-blueprint-<date>.md`. |
+| `/lore:deep-research` | `<topic> [--sources code\|web\|all]` | Multi-source deep research combining codebase, docs, GitHub issues, Stack Overflow, and academic papers. |
+
+### Code Quality
+
+| Command | Arguments | What It Does |
+| ------- | --------- | ------------ |
+| `/lore:quality-scan` | `[path]` | Five-pass grep scan for TODO/FIXME, stubs, deceptive phrases, language-native stubs, and empty function bodies. |
+| `/lore:quality-fix` | `[path]` | Guided remediation session. Works through each placeholder in severity order, re-scans to confirm zero remain. |
+
+### Scaling and Load Review
+
+| Command | Arguments | What It Does |
+| ------- | --------- | ------------ |
+| `/lore:frame-task` | `<task or file path>` | Defines scope boundaries, constraints, and what "works at scale" means at 10x/100x. |
+| `/lore:outline-load` | `<component path>` | Maps traffic patterns, data growth, bottlenecks. Estimates load at current/10x/100x. |
+| `/lore:evaluate` | `<path> [--frame <frame>]` | Analyzes time/space complexity, I/O patterns, architecture. Scores /25 with Critical/Important/Minor findings. |
+| `/lore:hone` | `<path> [--findings <eval>]` | Applies targeted optimizations: Map/Set replacements, streaming, pooling, batching, circuit breakers. |
+| `/lore:test-scaling` | `<path> [--level 10x\|100x\|1000x]` | Generates and runs a scale test with realistic data, flags super-linear growth. |
+
+### Security Scanning
+
+| Command | Arguments | What It Does |
+| ------- | --------- | ------------ |
+| `/lore:security-check-scan` | `[path]` | 10-pass vulnerability scan: secrets, passwords, private keys, SQLi, XSS, command injection, insecure configs, path traversal, weak crypto. |
+| `/lore:audit` | `[path]` | 9-step dependency/config audit: npm audit, pip-audit, .env in VCS, file permissions, TLS/SSL, Docker security, security headers. |
+| `/lore:security-check-fix` | `[--severity critical\|high\|all]` | Guided remediation of scan findings by severity. Re-scans after all fixes. |
 
 ---
 
@@ -400,15 +400,7 @@ lore/
 │   └── marketplace.json         # Full plugin catalog (core + 6 extensions)
 ├── skills/                      # 25 workflow skills
 │   └── <skill-name>/SKILL.md    # Each skill is a structured markdown workflow
-├── commands/                    # 33 slash commands across 8 namespaces
-│   ├── lore/                    # Framework management (7)
-│   ├── code-intel/              # Deep code investigation (2)
-│   ├── local/                   # Local development tools (5)
-│   ├── planning-ext/            # Implementation planning (5)
-│   ├── research/                # Feature research (4)
-│   ├── quality/                 # Code quality (2)
-│   ├── scale-review/            # Scaling and load review (5)
-│   └── security-check/          # Security scanning (3)
+├── commands/                    # 33 slash commands (flat .md files, all under /lore: namespace)
 ├── agents/                      # 9 subagent definitions (.md)
 ├── hooks/                       # Session hooks
 │   ├── hooks.json               # Hook configuration
