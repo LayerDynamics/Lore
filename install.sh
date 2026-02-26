@@ -94,6 +94,37 @@ else
   ok "Symlink created: $TARGET_DIR → $PLUGIN_SRC"
 fi
 
+# ── Register plugin in settings ───────────
+SETTINGS_FILE="$HOME/.claude/settings.json"
+
+if [ -f "$SETTINGS_FILE" ]; then
+  if command -v python3 &>/dev/null; then
+    if python3 -c "
+import json, sys
+with open('$SETTINGS_FILE', 'r') as f:
+    s = json.load(f)
+ep = s.setdefault('enabledPlugins', {})
+if ep.get('lore@local') is True:
+    sys.exit(1)
+ep['lore@local'] = True
+with open('$SETTINGS_FILE', 'w') as f:
+    json.dump(s, f, indent=2)
+    f.write('\n')
+" 2>/dev/null; then
+      ok "Registered lore in enabledPlugins"
+    else
+      ok "Plugin already registered"
+    fi
+  else
+    warn "python3 not found — add \"lore@local\": true to enabledPlugins in $SETTINGS_FILE manually"
+  fi
+else
+  mkdir -p "$HOME/.claude"
+  echo '{"enabledPlugins":{"lore@local":true}}' | python3 -m json.tool > "$SETTINGS_FILE" 2>/dev/null || \
+    echo '{"enabledPlugins":{"lore@local":true}}' > "$SETTINGS_FILE"
+  ok "Created settings and registered lore"
+fi
+
 echo ""
 
 # ── Extensions ──────────────────────────────
