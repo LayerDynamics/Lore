@@ -1,100 +1,291 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Lore Framework Installer
-# Copies plugin into ~/.claude/plugins/cache/local/lore/<version>/
-# and registers it in ~/.claude/settings.json under enabledPlugins.
+# ─────────────────────────────────────────────
+# Lore — Unified Installer
+# Works as both:
+#   curl -fsSL https://raw.githubusercontent.com/LayerDynamics/lore/main/install.sh | bash
+#   bash lore/bin/install.sh
+#   bash lore/bin/install.sh --from-remote /path/to/source
+# ─────────────────────────────────────────────
 
+# ── Helpers ─────────────────────────────────
+info()  { echo "  [info]  $*"; }
+warn()  { echo "  [warn]  $*"; }
+error() { echo "  [error] $*" >&2; }
+ok()    { echo "  [ok]    $*"; }
+
+# ── Resolve plugin source ────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+REMOTE_MODE=false
 
-# --from-remote: called by the top-level install.sh after cloning
-# Accepts an explicit source path as $2
 if [ "${1:-}" = "--from-remote" ]; then
+  REMOTE_MODE=true
   if [ -n "${2:-}" ]; then
     PLUGIN_DIR="$2"
   fi
 fi
 
-# Read version from plugin.json
-VERSION=$(python3 -c "import json; print(json.load(open('$PLUGIN_DIR/.claude-plugin/plugin.json'))['version'])" 2>/dev/null || echo "unknown")
+# If PLUGIN_DIR doesn't contain .claude-plugin/plugin.json, we need to clone
+if [ ! -f "$PLUGIN_DIR/.claude-plugin/plugin.json" ]; then
+  REMOTE_MODE=true
+fi
 
-CACHE_DIR="$HOME/.claude/plugins/cache/local/lore/$VERSION"
-SETTINGS_FILE="$HOME/.claude/settings.json"
+# ── Read version from plugin.json ────────────
+if [ -f "$PLUGIN_DIR/.claude-plugin/plugin.json" ]; then
+  VERSION=$(python3 -c "import json; print(json.load(open('$PLUGIN_DIR/.claude-plugin/plugin.json'))['version'])" 2>/dev/null || echo "0.1.0")
+else
+  VERSION="0.1.0"
+fi
 
-echo "Lore Framework Installer"
-echo "========================"
+# ── Banner ──────────────────────────────────
+cat <<'BANNER'
+
+  ██╗      ██████╗ ██████╗ ███████╗
+  ██║     ██╔═══██╗██╔══██╗██╔════╝
+  ██║     ██║   ██║██████╔╝█████╗
+  ██║     ██║   ██║██╔══██╗██╔══╝
+  ███████╗╚██████╔╝██║  ██║███████╗
+  ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝
+
+BANNER
+echo "  v${VERSION} — A Claude Code plugin framework"
+echo "  Skills · Commands · Agents · Hooks"
 echo ""
-echo "Plugin source: $PLUGIN_DIR"
-echo "Plugin version: $VERSION"
-echo "Cache target: $CACHE_DIR"
-echo ""
 
-# ── Remove legacy symlink if present ──────────────────────────────
+# ── Prerequisites ───────────────────────────
+MISSING=0
+
+if ! command -v git &>/dev/null; then
+  warn "git is not installed — you'll need it to receive updates"
+  MISSING=1
+fi
+
+if ! command -v claude &>/dev/null; then
+  warn "claude CLI not found — install from https://claude.ai/code"
+  MISSING=1
+fi
+
+if ! command -v python3 &>/dev/null; then
+  error "python3 is required for plugin registration"
+  exit 1
+fi
+
+if [ "$MISSING" -eq 1 ]; then
+  echo ""
+  warn "Some prerequisites are missing (see above). Continuing anyway..."
+  echo ""
+fi
+
+# ── Clone or update (remote mode) ────────────
+REPO_URL="https://github.com/LayerDynamics/lore.git"
+SRC_DIR="$HOME/.claude/plugins/_src/lore"
+GIT_SHA="unknown"
+
+if [ "$REMOTE_MODE" = true ]; then
+  mkdir -p "$HOME/.claude/plugins/_src"
+
+  if [ -d "$SRC_DIR/.git" ]; then
+    info "Existing clone found at $SRC_DIR — pulling latest..."
+    git -C "$SRC_DIR" pull --ff-only 2>/dev/null || warn "Could not pull latest (offline or diverged). Using existing copy."
+  else
+    if [ -d "$SRC_DIR" ]; then
+      warn "$SRC_DIR exists but is not a git repo — removing and re-cloning"
+      rm -rf "$SRC_DIR"
+    fi
+    info "Cloning Lore into $SRC_DIR..."
+    git clone "$REPO_URL" "$SRC_DIR"
+  fi
+
+  PLUGIN_DIR="$SRC_DIR/lore"
+  # Re-read version after clone/pull
+  VERSION=$(python3 -c "import json; print(json.load(open('$PLUGIN_DIR/.claude-plugin/plugin.json'))['version'])" 2>/dev/null || echo "0.1.0")
+  GIT_SHA=$(git -C "$SRC_DIR" rev-parse HEAD 2>/dev/null || echo "unknown")
+  ok "Source ready at $SRC_DIR"
+  echo ""
+else
+  # Local mode — try to get git sha from repo root
+  REPO_ROOT="$(cd "$PLUGIN_DIR/.." && pwd)"
+  GIT_SHA=$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || echo "unknown")
+  info "Installing from local source: $PLUGIN_DIR"
+  echo ""
+fi
+
+# ── Remove legacy symlink if present ─────────
 LEGACY_SYMLINK="$HOME/.claude/plugins/lore"
 if [ -L "$LEGACY_SYMLINK" ]; then
-  echo "Removing legacy symlink: $LEGACY_SYMLINK"
   rm "$LEGACY_SYMLINK"
+  info "Removed old symlink (replaced by cache install)"
 fi
 
-# ── Copy plugin into cache ────────────────────────────────────────
-mkdir -p "$CACHE_DIR"
+# ── Copy plugin to cache ─────────────────────
+CACHE_DIR="$HOME/.claude/plugins/cache/lore-marketplace/lore/${VERSION}"
 
-# Clean previous install at this version
 if [ -d "$CACHE_DIR" ]; then
   rm -rf "$CACHE_DIR"
-  mkdir -p "$CACHE_DIR"
 fi
+mkdir -p "$CACHE_DIR"
 
-# Copy plugin files (exclude dev-only dirs)
 rsync -a \
   --exclude='.git' \
   --exclude='tests' \
   --exclude='node_modules' \
-  "$PLUGIN_DIR/" "$CACHE_DIR/"
+  --delete \
+  "$PLUGIN_DIR/" "$CACHE_DIR/" 2>/dev/null || cp -RL "$PLUGIN_DIR/." "$CACHE_DIR/"
 
-echo "Copied plugin to cache."
+ok "Plugin cached at $CACHE_DIR"
 
-# ── Register in enabledPlugins ────────────────────────────────────
-if [ -f "$SETTINGS_FILE" ]; then
-  # Check if already registered
-  if python3 -c "
-import json, sys
-with open('$SETTINGS_FILE') as f:
-    settings = json.load(f)
-plugins = settings.get('enabledPlugins', {})
-if plugins.get('lore@local') is True:
-    sys.exit(0)
+# ── Register in installed_plugins.json ────────
+INSTALLED_FILE="$HOME/.claude/plugins/installed_plugins.json"
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
+
+python3 -c "
+import json, os
+
+installed_file = '$INSTALLED_FILE'
+cache_dir = '$CACHE_DIR'
+timestamp = '$TIMESTAMP'
+git_sha = '$GIT_SHA'
+version = '$VERSION'
+
+if os.path.exists(installed_file):
+    with open(installed_file, 'r') as f:
+        data = json.load(f)
 else:
-    sys.exit(1)
-" 2>/dev/null; then
-    echo "Already registered in enabledPlugins."
-  else
-    # Add lore@local: true
-    python3 -c "
-import json
-with open('$SETTINGS_FILE') as f:
-    settings = json.load(f)
-if 'enabledPlugins' not in settings:
-    settings['enabledPlugins'] = {}
-settings['enabledPlugins']['lore@local'] = True
-with open('$SETTINGS_FILE', 'w') as f:
-    json.dump(settings, f, indent=4)
-print('Registered lore@local in enabledPlugins.')
+    data = {'version': 2, 'plugins': {}}
+
+if 'plugins' not in data:
+    data['plugins'] = {}
+
+data['plugins']['lore@lore-marketplace'] = [{
+    'scope': 'user',
+    'installPath': cache_dir,
+    'version': version,
+    'installedAt': timestamp,
+    'lastUpdated': timestamp,
+    'gitCommitSha': git_sha
+}]
+
+with open(installed_file, 'w') as f:
+    json.dump(data, f, indent=2)
+    f.write('\n')
 "
+
+ok "Registered in installed_plugins.json"
+
+# ── Register in enabledPlugins ────────────────
+SETTINGS_FILE="$HOME/.claude/settings.json"
+
+python3 -c "
+import json, os
+
+settings_file = '$SETTINGS_FILE'
+
+if os.path.exists(settings_file):
+    with open(settings_file, 'r') as f:
+        s = json.load(f)
+else:
+    s = {}
+
+ep = s.setdefault('enabledPlugins', {})
+ep['lore@lore-marketplace'] = True
+# Remove legacy local key if present
+ep.pop('lore@local', None)
+
+with open(settings_file, 'w') as f:
+    json.dump(s, f, indent=2)
+    f.write('\n')
+"
+
+ok "Enabled in settings"
+
+# ── Set up lore marketplace ───────────────────
+MARKETPLACE_DIR="$HOME/.claude/plugins/lore-marketplace"
+mkdir -p "$MARKETPLACE_DIR/.claude-plugin"
+
+python3 -c "
+import json
+
+marketplace = {
+    'name': 'lore-marketplace',
+    'owner': {'name': 'LayerDynamics'},
+    'metadata': {
+        'description': 'Lore plugin framework marketplace',
+        'version': '1.0.0'
+    },
+    'plugins': [{
+        'name': 'lore',
+        'source': {'source': 'url', 'url': 'https://github.com/LayerDynamics/lore.git'},
+        'description': 'Opinionated meta skills & plugin framework for deterministic results',
+        'version': '$VERSION',
+        'strict': True
+    }]
+}
+
+with open('$MARKETPLACE_DIR/.claude-plugin/marketplace.json', 'w') as f:
+    json.dump(marketplace, f, indent=2)
+    f.write('\n')
+"
+
+ok "Marketplace registered for future updates"
+echo ""
+
+# ── Extensions ────────────────────────────────
+EXT_DIR="$PLUGIN_DIR/extensions"
+
+if [ -d "$EXT_DIR" ]; then
+  echo "  Available extensions:"
+  echo ""
+  echo "    browserx             — Browser automation engine"
+  echo "    cc-telemetry         — Deep telemetry and observability for Claude Code"
+  echo "    trellio              — Trello task management integration"
+  echo "    findlazy             — Detect placeholder/stub code left by AI agents"
+  echo "    mcp-trigger-gateway  — Cron, webhook, and file-watcher triggers via MCP"
+  echo "    scratchpad           — Ephemeral scratchpad workspace"
+  echo ""
+
+  SETUP_EXTENSIONS="n"
+  if [ -t 0 ]; then
+    read -r -p "  Set up extensions now? [y/N] " SETUP_EXTENSIONS
   fi
-else
-  # Create settings file with enabledPlugins
-  mkdir -p "$(dirname "$SETTINGS_FILE")"
-  python3 -c "
-import json
-settings = {'enabledPlugins': {'lore@local': True}}
-with open('$SETTINGS_FILE', 'w') as f:
-    json.dump(settings, f, indent=4)
-print('Created settings.json with lore@local enabled.')
-"
+
+  if [[ "$SETUP_EXTENSIONS" =~ ^[Yy]$ ]]; then
+    echo ""
+    for ext_dir in "$EXT_DIR"/*/; do
+      ext_name=$(basename "$ext_dir")
+      postinstall="$ext_dir/postinstall.sh"
+      if [ -f "$postinstall" ]; then
+        info "Setting up $ext_name..."
+        if bash "$postinstall"; then
+          ok "$ext_name ready"
+        else
+          warn "$ext_name setup had issues (non-fatal)"
+        fi
+      fi
+    done
+    echo ""
+  else
+    info "Skipping extensions. Run postinstall.sh in any extension later."
+    echo ""
+  fi
 fi
 
+# ── Done ──────────────────────────────────────
+ok "Lore installed successfully!"
 echo ""
-echo "Installed successfully!"
-echo "Start a new Claude Code session and use /lore:list to see available skills."
+
+if command -v claude &>/dev/null; then
+  if [ -t 0 ]; then
+    read -r -p "  Launch Claude Code with a quick tour? [Y/n] " LAUNCH
+    LAUNCH="${LAUNCH:-y}"
+    if [[ "$LAUNCH" =~ ^[Yy]$ ]]; then
+      echo ""
+      info "Starting Claude Code..."
+      exec claude --prompt "You just installed the Lore plugin framework. Welcome the user, show them what's available with /lore:list, and give a quick tour of the key skills and commands."
+    fi
+  fi
+fi
+
+echo "  Start a new Claude Code session and run /lore:list to get started."
+echo ""

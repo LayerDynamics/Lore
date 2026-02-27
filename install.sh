@@ -2,11 +2,42 @@
 set -euo pipefail
 
 # ─────────────────────────────────────────────
-# Lore — One-Liner Installer
-# curl -fsSL https://raw.githubusercontent.com/LayerDynamics/lore/main/install.sh | bash
+# Lore — Unified Installer
+# Works as both:
+#   curl -fsSL https://raw.githubusercontent.com/LayerDynamics/lore/main/install.sh | bash
+#   bash lore/bin/install.sh
+#   bash lore/bin/install.sh --from-remote /path/to/source
 # ─────────────────────────────────────────────
 
-VERSION="0.1.0"
+# ── Helpers ─────────────────────────────────
+info()  { echo "  [info]  $*"; }
+warn()  { echo "  [warn]  $*"; }
+error() { echo "  [error] $*" >&2; }
+ok()    { echo "  [ok]    $*"; }
+
+# ── Resolve plugin source ────────────────────
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PLUGIN_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+REMOTE_MODE=false
+
+if [ "${1:-}" = "--from-remote" ]; then
+  REMOTE_MODE=true
+  if [ -n "${2:-}" ]; then
+    PLUGIN_DIR="$2"
+  fi
+fi
+
+# If PLUGIN_DIR doesn't contain .claude-plugin/plugin.json, we need to clone
+if [ ! -f "$PLUGIN_DIR/.claude-plugin/plugin.json" ]; then
+  REMOTE_MODE=true
+fi
+
+# ── Read version from plugin.json ────────────
+if [ -f "$PLUGIN_DIR/.claude-plugin/plugin.json" ]; then
+  VERSION=$(python3 -c "import json; print(json.load(open('$PLUGIN_DIR/.claude-plugin/plugin.json'))['version'])" 2>/dev/null || echo "0.1.0")
+else
+  VERSION="0.1.0"
+fi
 
 # ── Banner ──────────────────────────────────
 cat <<'BANNER'
@@ -22,12 +53,6 @@ BANNER
 echo "  v${VERSION} — A Claude Code plugin framework"
 echo "  Skills · Commands · Agents · Hooks"
 echo ""
-
-# ── Helpers ─────────────────────────────────
-info()  { echo "  [info]  $*"; }
-warn()  { echo "  [warn]  $*"; }
-error() { echo "  [error] $*" >&2; }
-ok()    { echo "  [ok]    $*"; }
 
 # ── Prerequisites ───────────────────────────
 MISSING=0
@@ -53,46 +78,70 @@ if [ "$MISSING" -eq 1 ]; then
   echo ""
 fi
 
-# ── Clone or update ─────────────────────────
+# ── Clone or update (remote mode) ────────────
 REPO_URL="https://github.com/LayerDynamics/lore.git"
 SRC_DIR="$HOME/.claude/plugins/_src/lore"
+GIT_SHA="unknown"
 
-mkdir -p "$HOME/.claude/plugins/_src"
+if [ "$REMOTE_MODE" = true ]; then
+  mkdir -p "$HOME/.claude/plugins/_src"
 
-if [ -d "$SRC_DIR/.git" ]; then
-  info "Existing clone found at $SRC_DIR — pulling latest..."
-  git -C "$SRC_DIR" pull --ff-only 2>/dev/null || warn "Could not pull latest (offline or diverged). Using existing copy."
-else
-  if [ -d "$SRC_DIR" ]; then
-    warn "$SRC_DIR exists but is not a git repo — removing and re-cloning"
-    rm -rf "$SRC_DIR"
+  if [ -d "$SRC_DIR/.git" ]; then
+    info "Existing clone found at $SRC_DIR — pulling latest..."
+    git -C "$SRC_DIR" pull --ff-only 2>/dev/null || warn "Could not pull latest (offline or diverged). Using existing copy."
+  else
+    if [ -d "$SRC_DIR" ]; then
+      warn "$SRC_DIR exists but is not a git repo — removing and re-cloning"
+      rm -rf "$SRC_DIR"
+    fi
+    info "Cloning Lore into $SRC_DIR..."
+    git clone "$REPO_URL" "$SRC_DIR"
   fi
-  info "Cloning Lore into $SRC_DIR..."
-  git clone "$REPO_URL" "$SRC_DIR"
+
+  PLUGIN_DIR="$SRC_DIR/lore"
+  # Re-read version after clone/pull
+  VERSION=$(python3 -c "import json; print(json.load(open('$PLUGIN_DIR/.claude-plugin/plugin.json'))['version'])" 2>/dev/null || echo "0.1.0")
+  GIT_SHA=$(git -C "$SRC_DIR" rev-parse HEAD 2>/dev/null || echo "unknown")
+  ok "Source ready at $SRC_DIR"
+  echo ""
+else
+  # Local mode — try to get git sha from repo root
+  REPO_ROOT="$(cd "$PLUGIN_DIR/.." && pwd)"
+  GIT_SHA=$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || echo "unknown")
+  info "Installing from local source: $PLUGIN_DIR"
+  echo ""
 fi
 
-ok "Source ready at $SRC_DIR"
-echo ""
+# ── Remove legacy symlink if present ─────────
+LEGACY_SYMLINK="$HOME/.claude/plugins/lore"
+if [ -L "$LEGACY_SYMLINK" ]; then
+  rm "$LEGACY_SYMLINK"
+  info "Removed old symlink (replaced by cache install)"
+fi
 
-PLUGIN_SRC="$SRC_DIR/lore"
-
-# ── Copy plugin to cache (like /plugin install does) ──
+# ── Copy plugin to cache ─────────────────────
 CACHE_DIR="$HOME/.claude/plugins/cache/lore-marketplace/lore/${VERSION}"
 
+if [ -d "$CACHE_DIR" ]; then
+  rm -rf "$CACHE_DIR"
+fi
 mkdir -p "$CACHE_DIR"
 
-# Copy plugin contents (following symlinks) to cache
-rsync -a --delete "$PLUGIN_SRC/" "$CACHE_DIR/" 2>/dev/null || cp -RL "$PLUGIN_SRC/." "$CACHE_DIR/"
+rsync -a \
+  --exclude='.git' \
+  --exclude='tests' \
+  --exclude='node_modules' \
+  --delete \
+  "$PLUGIN_DIR/" "$CACHE_DIR/" 2>/dev/null || cp -RL "$PLUGIN_DIR/." "$CACHE_DIR/"
 
 ok "Plugin cached at $CACHE_DIR"
 
-# ── Register in installed_plugins.json ──────
+# ── Register in installed_plugins.json ────────
 INSTALLED_FILE="$HOME/.claude/plugins/installed_plugins.json"
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
-GIT_SHA=$(git -C "$SRC_DIR" rev-parse HEAD 2>/dev/null || echo "unknown")
 
 python3 -c "
-import json, os, sys
+import json, os
 
 installed_file = '$INSTALLED_FILE'
 cache_dir = '$CACHE_DIR'
@@ -100,18 +149,15 @@ timestamp = '$TIMESTAMP'
 git_sha = '$GIT_SHA'
 version = '$VERSION'
 
-# Load or create
 if os.path.exists(installed_file):
     with open(installed_file, 'r') as f:
         data = json.load(f)
 else:
     data = {'version': 2, 'plugins': {}}
 
-# Ensure structure
 if 'plugins' not in data:
     data['plugins'] = {}
 
-# Register lore
 data['plugins']['lore@lore-marketplace'] = [{
     'scope': 'user',
     'installPath': cache_dir,
@@ -128,7 +174,7 @@ with open(installed_file, 'w') as f:
 
 ok "Registered in installed_plugins.json"
 
-# ── Register in enabledPlugins ──────────────
+# ── Register in enabledPlugins ────────────────
 SETTINGS_FILE="$HOME/.claude/settings.json"
 
 python3 -c "
@@ -144,6 +190,8 @@ else:
 
 ep = s.setdefault('enabledPlugins', {})
 ep['lore@lore-marketplace'] = True
+# Remove legacy local key if present
+ep.pop('lore@local', None)
 
 with open(settings_file, 'w') as f:
     json.dump(s, f, indent=2)
@@ -152,7 +200,7 @@ with open(settings_file, 'w') as f:
 
 ok "Enabled in settings"
 
-# ── Set up lore marketplace ─────────────────
+# ── Set up lore marketplace ───────────────────
 MARKETPLACE_DIR="$HOME/.claude/plugins/lore-marketplace"
 mkdir -p "$MARKETPLACE_DIR/.claude-plugin"
 
@@ -183,15 +231,8 @@ with open('$MARKETPLACE_DIR/.claude-plugin/marketplace.json', 'w') as f:
 ok "Marketplace registered for future updates"
 echo ""
 
-# ── Remove stale symlink if exists ──────────
-SYMLINK_DIR="$HOME/.claude/plugins/lore"
-if [ -L "$SYMLINK_DIR" ]; then
-  rm "$SYMLINK_DIR"
-  info "Removed old symlink (replaced by cache install)"
-fi
-
-# ── Extensions ──────────────────────────────
-EXT_DIR="$PLUGIN_SRC/extensions"
+# ── Extensions ────────────────────────────────
+EXT_DIR="$PLUGIN_DIR/extensions"
 
 if [ -d "$EXT_DIR" ]; then
   echo "  Available extensions:"
@@ -205,7 +246,6 @@ if [ -d "$EXT_DIR" ]; then
   echo ""
 
   SETUP_EXTENSIONS="n"
-  # Only prompt if stdin is a terminal (not piped)
   if [ -t 0 ]; then
     read -r -p "  Set up extensions now? [y/N] " SETUP_EXTENSIONS
   fi
@@ -231,7 +271,7 @@ if [ -d "$EXT_DIR" ]; then
   fi
 fi
 
-# ── Launch Claude Code ──────────────────────
+# ── Done ──────────────────────────────────────
 ok "Lore installed successfully!"
 echo ""
 
