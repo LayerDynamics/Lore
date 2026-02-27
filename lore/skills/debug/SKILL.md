@@ -1,3 +1,8 @@
+---
+name: debug
+description: Use when encountering bugs, test failures, or unexpected behavior. Systematic root cause investigation before attempting any fixes.
+---
+
 # Systematic Debug Skill
 
 Use this skill when encountering bugs, test failures, or unexpected behavior.
