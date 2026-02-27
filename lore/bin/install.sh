@@ -16,8 +16,13 @@ error() { echo "  [error] $*" >&2; }
 ok()    { echo "  [ok]    $*"; }
 
 # ── Resolve plugin source ────────────────────
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGIN_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+if [ -n "${BASH_SOURCE[0]:-}" ]; then
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  PLUGIN_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+else
+  # Piped via curl — no BASH_SOURCE available
+  PLUGIN_DIR=""
+fi
 REMOTE_MODE=false
 
 if [ "${1:-}" = "--from-remote" ]; then
@@ -27,8 +32,8 @@ if [ "${1:-}" = "--from-remote" ]; then
   fi
 fi
 
-# If PLUGIN_DIR doesn't contain .claude-plugin/plugin.json, we need to clone
-if [ ! -f "$PLUGIN_DIR/.claude-plugin/plugin.json" ]; then
+# If PLUGIN_DIR is empty or doesn't contain plugin.json, we need to clone
+if [ -z "$PLUGIN_DIR" ] || [ ! -f "$PLUGIN_DIR/.claude-plugin/plugin.json" ]; then
   REMOTE_MODE=true
 fi
 
