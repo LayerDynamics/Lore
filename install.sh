@@ -233,7 +233,38 @@ with open('$MARKETPLACE_DIR/.claude-plugin/marketplace.json', 'w') as f:
     f.write('\n')
 "
 
-ok "Marketplace registered for future updates"
+ok "Marketplace directory created"
+
+# ── Register in known_marketplaces.json ───────
+KNOWN_MARKETPLACES="$HOME/.claude/plugins/known_marketplaces.json"
+
+python3 -c "
+import json, os
+
+km_file = '$KNOWN_MARKETPLACES'
+marketplace_dir = '$MARKETPLACE_DIR'
+
+if os.path.exists(km_file):
+    with open(km_file, 'r') as f:
+        km = json.load(f)
+else:
+    km = {}
+
+km['lore-marketplace'] = {
+    'source': {
+        'source': 'directory',
+        'path': marketplace_dir
+    },
+    'installLocation': marketplace_dir,
+    'lastUpdated': '$TIMESTAMP'
+}
+
+with open(km_file, 'w') as f:
+    json.dump(km, f, indent=2)
+    f.write('\n')
+"
+
+ok "Marketplace registered in known_marketplaces.json"
 echo ""
 
 # ── Extensions ────────────────────────────────
