@@ -125,10 +125,19 @@ if [ -L "$LEGACY_SYMLINK" ]; then
 fi
 
 # ── Copy plugin to cache ─────────────────────
-CACHE_DIR="$HOME/.claude/plugins/cache/lore-marketplace/lore/${VERSION}"
+# Use short git sha as cache version so every commit gets a fresh entry
+CACHE_VERSION="${GIT_SHA:0:12}"
+if [ "$CACHE_VERSION" = "unknown" ]; then
+  CACHE_VERSION="$VERSION"
+fi
 
-if [ -d "$CACHE_DIR" ]; then
-  rm -rf "$CACHE_DIR"
+CACHE_BASE="$HOME/.claude/plugins/cache/lore-marketplace/lore"
+CACHE_DIR="$CACHE_BASE/${CACHE_VERSION}"
+
+# Remove ALL old cached versions to prevent stale data
+if [ -d "$CACHE_BASE" ]; then
+  rm -rf "$CACHE_BASE"
+  info "Cleaned old cache entries"
 fi
 mkdir -p "$CACHE_DIR"
 
@@ -166,7 +175,7 @@ if 'plugins' not in data:
 data['plugins']['lore@lore-marketplace'] = [{
     'scope': 'user',
     'installPath': cache_dir,
-    'version': version,
+    'version': '$CACHE_VERSION',
     'installedAt': timestamp,
     'lastUpdated': timestamp,
     'gitCommitSha': git_sha
