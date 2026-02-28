@@ -148,7 +148,20 @@ rsync -a \
   --delete \
   "$PLUGIN_DIR/" "$CACHE_DIR/" 2>/dev/null || cp -RL "$PLUGIN_DIR/." "$CACHE_DIR/"
 
-ok "Plugin cached at $CACHE_DIR"
+# Stamp version in cached plugin.json with git sha so Claude Code detects updates
+python3 -c "
+import json, os
+pj = os.path.join('$CACHE_DIR', '.claude-plugin', 'plugin.json')
+if os.path.exists(pj):
+    with open(pj) as f:
+        p = json.load(f)
+    p['version'] = '$CACHE_VERSION'
+    with open(pj, 'w') as f:
+        json.dump(p, f, indent=2)
+        f.write('\n')
+"
+
+ok "Plugin cached at $CACHE_DIR (version: $CACHE_VERSION)"
 
 # ── Register in installed_plugins.json ────────
 INSTALLED_FILE="$HOME/.claude/plugins/installed_plugins.json"
