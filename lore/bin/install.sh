@@ -38,7 +38,7 @@ if [ -z "$PLUGIN_DIR" ] || [ ! -f "$PLUGIN_DIR/.claude-plugin/plugin.json" ]; th
 fi
 
 # ── Read version from plugin.json ────────────
-if [ -f "$PLUGIN_DIR/.claude-plugin/plugin.json" ]; then
+if [ -n "$PLUGIN_DIR" ] && [ -f "$PLUGIN_DIR/.claude-plugin/plugin.json" ]; then
   VERSION=$(python3 -c "import json; print(json.load(open('$PLUGIN_DIR/.claude-plugin/plugin.json'))['version'])" 2>/dev/null || echo "0.1.0")
 else
   VERSION="0.1.0"
@@ -117,24 +117,52 @@ else
   echo ""
 fi
 
-# ── Remove legacy symlink if present ─────────
-LEGACY_SYMLINK="$HOME/.claude/plugins/lore"
-if [ -L "$LEGACY_SYMLINK" ]; then
-  rm "$LEGACY_SYMLINK"
-  info "Removed old symlink (replaced by cache install)"
-fi
-
-# ── Copy plugin to cache ─────────────────────
-# Use short git sha as cache version so every commit gets a fresh entry
+# ── Compute cache version ────────────────────
 CACHE_VERSION="${GIT_SHA:0:12}"
 if [ "$CACHE_VERSION" = "unknown" ]; then
   CACHE_VERSION="$VERSION"
 fi
 
-CACHE_BASE="$HOME/.claude/plugins/cache/lore-marketplace/lore"
+# ── Remove legacy installs ───────────────────
+# Remove old symlink
+LEGACY_SYMLINK="$HOME/.claude/plugins/lore"
+if [ -L "$LEGACY_SYMLINK" ]; then
+  rm "$LEGACY_SYMLINK"
+  info "Removed old symlink"
+fi
+
+# Remove old lore-marketplace cache
+OLD_CACHE="$HOME/.claude/plugins/cache/lore-marketplace"
+if [ -d "$OLD_CACHE" ]; then
+  rm -rf "$OLD_CACHE"
+  info "Removed old lore-marketplace cache"
+fi
+
+# ── Copy plugin to local marketplace source ──
+# This mirrors how working @local plugins are structured:
+# local-marketplace/lore/ contains the plugin source
+LOCAL_MKT="$HOME/.claude/plugins/local-marketplace"
+PLUGIN_SRC_IN_MKT="$LOCAL_MKT/lore"
+
+# Remove old source and copy fresh
+if [ -d "$PLUGIN_SRC_IN_MKT" ]; then
+  rm -rf "$PLUGIN_SRC_IN_MKT"
+fi
+mkdir -p "$PLUGIN_SRC_IN_MKT"
+
+rsync -a \
+  --exclude='.git' \
+  --exclude='tests' \
+  --exclude='node_modules' \
+  "$PLUGIN_DIR/" "$PLUGIN_SRC_IN_MKT/" 2>/dev/null || cp -RL "$PLUGIN_DIR/." "$PLUGIN_SRC_IN_MKT/"
+
+ok "Plugin source copied to local marketplace"
+
+# ── Copy plugin to cache ─────────────────────
+CACHE_BASE="$HOME/.claude/plugins/cache/local/lore"
 CACHE_DIR="$CACHE_BASE/${CACHE_VERSION}"
 
-# Remove ALL old cached versions to prevent stale data
+# Remove ALL old cached versions
 if [ -d "$CACHE_BASE" ]; then
   rm -rf "$CACHE_BASE"
   info "Cleaned old cache entries"
@@ -145,10 +173,9 @@ rsync -a \
   --exclude='.git' \
   --exclude='tests' \
   --exclude='node_modules' \
-  --delete \
   "$PLUGIN_DIR/" "$CACHE_DIR/" 2>/dev/null || cp -RL "$PLUGIN_DIR/." "$CACHE_DIR/"
 
-# Stamp version in cached plugin.json with git sha so Claude Code detects updates
+# Stamp version in cached plugin.json so Claude Code detects updates
 python3 -c "
 import json, os
 pj = os.path.join('$CACHE_DIR', '.claude-plugin', 'plugin.json')
@@ -163,6 +190,39 @@ if os.path.exists(pj):
 
 ok "Plugin cached at $CACHE_DIR (version: $CACHE_VERSION)"
 
+# ── Register in local marketplace manifest ────
+python3 -c "
+import json, os
+
+mkt_file = '$LOCAL_MKT/.claude-plugin/marketplace.json'
+os.makedirs(os.path.dirname(mkt_file), exist_ok=True)
+
+if os.path.exists(mkt_file):
+    with open(mkt_file) as f:
+        mkt = json.load(f)
+else:
+    mkt = {
+        'name': 'local',
+        'owner': {'name': 'Local'},
+        'plugins': []
+    }
+
+# Check if lore already in plugins list
+names = [p.get('name') for p in mkt.get('plugins', [])]
+if 'lore' not in names:
+    mkt.setdefault('plugins', []).append({
+        'name': 'lore',
+        'source': './lore',
+        'description': 'Opinionated meta skills & plugin framework for deterministic results'
+    })
+    with open(mkt_file, 'w') as f:
+        json.dump(mkt, f, indent=2)
+        f.write('\n')
+    print('  [ok]    Added lore to local marketplace manifest')
+else:
+    print('  [ok]    Lore already in local marketplace manifest')
+"
+
 # ── Register in installed_plugins.json ────────
 INSTALLED_FILE="$HOME/.claude/plugins/installed_plugins.json"
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
@@ -174,7 +234,6 @@ installed_file = '$INSTALLED_FILE'
 cache_dir = '$CACHE_DIR'
 timestamp = '$TIMESTAMP'
 git_sha = '$GIT_SHA'
-version = '$VERSION'
 
 if os.path.exists(installed_file):
     with open(installed_file, 'r') as f:
@@ -185,7 +244,11 @@ else:
 if 'plugins' not in data:
     data['plugins'] = {}
 
-data['plugins']['lore@lore-marketplace'] = [{
+# Remove old lore-marketplace entry if present
+data['plugins'].pop('lore@lore-marketplace', None)
+
+# Register as lore@local (matches working plugins)
+data['plugins']['lore@local'] = [{
     'scope': 'user',
     'installPath': cache_dir,
     'version': '$CACHE_VERSION',
@@ -216,9 +279,9 @@ else:
     s = {}
 
 ep = s.setdefault('enabledPlugins', {})
-ep['lore@lore-marketplace'] = True
-# Remove legacy local key if present
-ep.pop('lore@local', None)
+ep['lore@local'] = True
+# Remove old lore-marketplace key
+ep.pop('lore@lore-marketplace', None)
 
 with open(settings_file, 'w') as f:
     json.dump(s, f, indent=2)
@@ -227,66 +290,58 @@ with open(settings_file, 'w') as f:
 
 ok "Enabled in settings"
 
-# ── Set up lore marketplace ───────────────────
-MARKETPLACE_DIR="$HOME/.claude/plugins/lore-marketplace"
-mkdir -p "$MARKETPLACE_DIR/.claude-plugin"
-
-python3 -c "
-import json
-
-marketplace = {
-    'name': 'lore-marketplace',
-    'owner': {'name': 'LayerDynamics'},
-    'metadata': {
-        'description': 'Lore plugin framework marketplace',
-        'version': '1.0.0'
-    },
-    'plugins': [{
-        'name': 'lore',
-        'source': {'source': 'url', 'url': 'https://github.com/LayerDynamics/lore.git'},
-        'description': 'Opinionated meta skills & plugin framework for deterministic results',
-        'version': '$VERSION',
-        'strict': True
-    }]
-}
-
-with open('$MARKETPLACE_DIR/.claude-plugin/marketplace.json', 'w') as f:
-    json.dump(marketplace, f, indent=2)
-    f.write('\n')
-"
-
-ok "Marketplace directory created"
-
-# ── Register in known_marketplaces.json ───────
+# ── Ensure local marketplace is in known_marketplaces ──
 KNOWN_MARKETPLACES="$HOME/.claude/plugins/known_marketplaces.json"
 
 python3 -c "
 import json, os
 
 km_file = '$KNOWN_MARKETPLACES'
-marketplace_dir = '$MARKETPLACE_DIR'
 
 if os.path.exists(km_file):
-    with open(km_file, 'r') as f:
+    with open(km_file) as f:
         km = json.load(f)
 else:
     km = {}
 
-km['lore-marketplace'] = {
-    'source': {
-        'source': 'directory',
-        'path': marketplace_dir
-    },
-    'installLocation': marketplace_dir,
-    'lastUpdated': '$TIMESTAMP'
-}
-
-with open(km_file, 'w') as f:
-    json.dump(km, f, indent=2)
-    f.write('\n')
+if 'local' not in km:
+    km['local'] = {
+        'source': {
+            'source': 'directory',
+            'path': '$LOCAL_MKT'
+        },
+        'installLocation': '$LOCAL_MKT',
+        'lastUpdated': '$TIMESTAMP'
+    }
+    with open(km_file, 'w') as f:
+        json.dump(km, f, indent=2)
+        f.write('\n')
+    print('  [ok]    Registered local marketplace in known_marketplaces.json')
+else:
+    print('  [ok]    Local marketplace already registered')
 "
 
-ok "Marketplace registered in known_marketplaces.json"
+# ── Clean up old lore-marketplace artifacts ───
+OLD_MKT="$HOME/.claude/plugins/lore-marketplace"
+if [ -d "$OLD_MKT" ]; then
+  rm -rf "$OLD_MKT"
+  info "Removed old lore-marketplace directory"
+fi
+
+python3 -c "
+import json, os
+km_file = '$KNOWN_MARKETPLACES'
+if os.path.exists(km_file):
+    with open(km_file) as f:
+        km = json.load(f)
+    if 'lore-marketplace' in km:
+        del km['lore-marketplace']
+        with open(km_file, 'w') as f:
+            json.dump(km, f, indent=2)
+            f.write('\n')
+        print('  [info]  Removed lore-marketplace from known_marketplaces.json')
+"
+
 echo ""
 
 # ── Extensions ────────────────────────────────
