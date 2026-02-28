@@ -1,43 +1,71 @@
 ---
 name: welcome
-description: Comprehensive guide to the Lore plugin framework. Shows all skills, commands, agents, extensions, and MCP integrations with usage examples. Use --help <skill-name> for detailed help on a specific skill.
+description: Comprehensive guide to the Lore plugin framework. Shows all skills, commands, agents, extensions, and MCP integrations with usage examples and live demos. Use --help <skill-name> for detailed help on any specific component.
 argument-hint: "--help <skill-name>"
 ---
 
 # Lore: Welcome
 
-You are presenting the Lore plugin framework to the user. Parse `$ARGUMENTS` to determine mode:
+Parse `$ARGUMENTS` to determine mode:
 
-- If `$ARGUMENTS` contains `--help` followed by a skill name → **Help Mode**
-- Otherwise → **Welcome Mode**
+- If `$ARGUMENTS` is empty or missing → **Welcome Mode**
+- If `$ARGUMENTS` contains `--help` followed by a name → **Help Mode**
+- If `$ARGUMENTS` is just `--help` with no name → **Help Mode** listing all available skills
 
 ---
 
 ## Welcome Mode
 
-Present the full framework overview. Read files as needed to build accurate counts but do NOT dump raw file contents — synthesize into a polished guide.
+You MUST dynamically discover and present every component. Do NOT use hardcoded lists. Follow each step exactly.
 
-### Step 1: Scan Plugin Contents
+### Step 1: Discover All Components
 
-Run these in parallel to gather counts:
+Run ALL of these Glob calls in parallel:
+
+1. `Glob: skills/*/SKILL.md` (from the lore plugin install path)
+2. `Glob: commands/*.md` (from the lore plugin install path)
+3. `Glob: agents/*.md` (from the lore plugin install path)
+
+Also check for extensions and hooks:
+4. `Bash: ls extensions/ 2>/dev/null` (from the lore plugin install path)
+5. `Read: hooks/hooks.json` (from the lore plugin install path)
+
+The plugin install path can be found by checking where this skill was loaded from. If `${CLAUDE_PLUGIN_ROOT}` is available, use it. Otherwise, check `~/.claude/plugins/cache/local/lore/` for the cached version.
+
+### Step 2: Read Every Skill's Frontmatter
+
+For EVERY skill found in Step 1, read the first 5 lines of each SKILL.md to extract the `name` and `description` fields from the YAML frontmatter. Read them in parallel batches of 10.
+
+Do NOT skip any skills. Every single one must appear in the output.
+
+### Step 3: Read Every Agent's Frontmatter
+
+For EVERY agent `.md` file found, read the first 5 lines to extract `name` and `description` from frontmatter.
+
+### Step 4: Categorize Skills
+
+Group each skill into one of these categories based on its description:
+
+- **Development & Implementation** — planning, blueprints, task framing, continuing plans
+- **Code Quality & Review** — code review, auditing, quality scanning, PR review
+- **Debugging & Investigation** — debugging, investigating, explaining, tracing
+- **Research & Analysis** — research, analysis, pattern finding, evaluation
+- **Testing** — TDD, test coverage, test scaling
+- **Security** — security scanning, vulnerability fixing
+- **Planning & Process** — writing plans, brainstorming, scoping, staying on track
+- **Documentation & Reporting** — doc writing, standups, verification
+- **Meta & Framework** — creating skills/commands/agents/plugins, no-placeholders
+
+If a skill doesn't fit neatly, use your best judgment.
+
+### Step 5: Present the Full Guide
+
+Output this structure with ALL real data from the scans:
 
 ```
-Glob: ${CLAUDE_PLUGIN_ROOT}/skills/*/SKILL.md
-Glob: ${CLAUDE_PLUGIN_ROOT}/commands/*.md
-Glob: ${CLAUDE_PLUGIN_ROOT}/agents/*.md
-Glob: ${CLAUDE_PLUGIN_ROOT}/extensions/*/
-```
-
-### Step 2: Present the Welcome Guide
-
-Output the following structure, filling in real counts and names from Step 1:
-
----
-
-```markdown
 # Welcome to Lore
 
-**Lore** is a Claude Code plugin framework that bundles skills, commands, agents, hooks, and extensions into a single installable plugin. It gives Claude structured workflows for complex tasks — debugging, planning, code review, research, and more.
+**Lore** is a Claude Code plugin framework — [N] skills, [N] agents, [N] extensions — that gives Claude structured, deterministic workflows for complex tasks.
 
 ## Quick Start
 
@@ -45,268 +73,209 @@ Output the following structure, filling in real counts and names from Step 1:
 |---------|-------------|
 | `/lore:welcome` | This guide |
 | `/lore:welcome --help <name>` | Detailed help for any skill |
-| `/lore:list` | Inventory of all components |
+| `/lore:list` | Full component inventory |
 | `/lore:init` | Initialize lore in a new project |
+| `/lore:create-skill` | Create a new skill |
 
-## Skills — Structured Workflows
+## All Skills
 
-Skills are the core abstraction. Each is a step-by-step workflow that guides Claude through complex tasks deterministically. Invoke with `/lore:<skill-name>`.
+[For each category, output a table with EVERY skill in that category:]
 
-### Development & Implementation
+### [Category Name]
 
-| Skill | When to use |
+| Skill | Description |
 |-------|-------------|
-| `plan` | Guided implementation planning with structured phases |
-| `blueprint` | Generate implementation blueprint from requirements |
-| `continue` | Resume an existing plan at the next incomplete task |
-| `scope` | Audit git diff against active plan for drift |
-| `focus` | Reset scope when Claude drifts from original request |
-| `frame-task` | Break ambiguous requests into structured task definitions |
+| `/lore:<name>` | <description from frontmatter> |
+...
 
-### Code Quality & Review
+[Repeat for ALL categories. Every skill must appear exactly once.]
 
-| Skill | When to use |
+## Agents
+
+| Agent | Description |
 |-------|-------------|
-| `review` | Deep investigation + PR-style code review |
-| `local-code-review` | Comprehensive git-free code review |
-| `review-files` | Targeted review on specific files |
-| `diff-review` | Review staged + unstaged git changes before commit |
-| `audit` | Full codebase audit for quality, security, architecture |
-| `quality-scan` | Scan for code quality issues |
-| `quality-fix` | Fix issues found by quality-scan |
-| `pre-commit-review` | Review changes before committing |
-| `code-review-methodology` | Objective code review methodology |
-| `pr-style-review` | Synthesize findings into PR-style review format |
+| `<name>` | <description from frontmatter> |
+...
 
-### Debugging & Investigation
+## Extensions
 
-| Skill | When to use |
-|-------|-------------|
-| `debug` | Systematic root cause investigation |
-| `systematic-debugging` | Extended debugging with 4-phase methodology |
-| `investigate` | Deep code exploration returning structured findings |
-| `deep-investigation` | Trace execution paths across service boundaries |
-| `explain` | Explain any code, function, or architecture |
-| `reading-unfamiliar-code` | Systematic approach to understanding new codebases |
-
-### Research & Analysis
-
-| Skill | When to use |
-|-------|-------------|
-| `research` | Structured codebase research |
-| `deep-research` | Multi-phase deep research with parallel agents |
-| `feature-research` | Research how to implement a feature in the codebase |
-| `codebase-pattern-analysis` | Analyze conventions, patterns, and extension points |
-| `analyze` | General-purpose code analysis |
-| `evaluate` | Evaluate approaches, trade-offs, and decisions |
-
-### Testing
-
-| Skill | When to use |
-|-------|-------------|
-| `test-driven-development` | TDD workflow: red, green, refactor |
-| `test-coverage-analysis` | Find untested code and coverage gaps |
-| `test-scaling` | Scale test suites for large codebases |
-
-### Security
-
-| Skill | When to use |
-|-------|-------------|
-| `security-check-scan` | Comprehensive security vulnerability scan |
-| `security-check-fix` | Fix vulnerabilities found by security-check-scan |
-
-### Planning & Process
-
-| Skill | When to use |
-|-------|-------------|
-| `writing-plans` | Write structured implementation plans |
-| `outline-load` | Load and apply an outline or spec as context |
-| `outline-understanding-user-request` | Break down ambiguous requests into structured task definitions |
-| `brainstorming` | Creative exploration before building |
-| `staying-on-request` | Prevent scope drift |
-| `lifecycle-phases` | Understand project lifecycle phases |
-| `context-engineering` | Optimize context window usage |
-| `design-outliner` | Outline system designs and architectures |
-
-### Documentation & Reporting
-
-| Skill | When to use |
-|-------|-------------|
-| `doc-writer` | Write documentation for code |
-| `standup` | Generate daily standup from git history |
-| `standup-writing` | Write standup updates |
-| `verify-before-documenting` | Verify claims before documenting them |
-| `hone` | Iteratively refine and improve content |
-
-### Meta & Framework
-
-| Skill | When to use |
-|-------|-------------|
-| `create-skill` | Create a new skill from template |
-| `create-command` | Create a new command |
-| `create-agent` | Create a new agent definition |
-| `create-mcp` | Create a new MCP server integration |
-| `create-plugin` | Guided end-to-end plugin creation |
-| `no-placeholders` | Detect and replace placeholder/stub code |
-| `subagent-development` | Build specialized subagents |
-| `dispatching-parallel-agents` | Run 2+ independent tasks in parallel |
-| `systematic-review` | Comprehensive systematic review process |
-| `verification-before-completion` | Verify work is complete before claiming done |
-| `rarv-cycle` | Read-Analyze-Respond-Verify cycle |
-| `quality-gates` | Define and enforce quality gates |
-
-## Agents — Specialized Subagents
-
-Agents are dispatched by Claude for parallel or specialized work. They run autonomously and return findings.
-
-| Agent | Specialization |
-|-------|---------------|
-| `code-explorer` | Fast codebase exploration and search |
-| `code-reviewer` | Deep objective code review |
-| `codebase-pattern-scout` | Find patterns and conventions in code |
-| `external-research-synthesizer` | Research external docs and synthesize |
-| `implementation-blueprint-generator` | Generate implementation blueprints |
-| `integration-mapper` | Map cross-module dependencies |
-| `review-synthesizer` | Synthesize review findings into reports |
-| `stub-scanner` | Find placeholder/stub code |
-| `stub-implementer` | Replace stubs with real implementations |
-
-## Extensions — Optional Sub-Plugins
-
-Extensions add specialized capabilities via MCP servers and integrations.
-
-| Extension | What it adds |
+| Extension | Description |
 |-----------|-------------|
-| `browserx` | Browser automation engine |
-| `cc-telemetry` | Deep telemetry and observability for Claude Code |
-| `trellio` | Trello task management integration |
-| `findlazy` | Detect placeholder/stub code left by AI agents |
-| `mcp-trigger-gateway` | Cron, webhook, and file-watcher triggers via MCP |
-| `scratchpad` | Ephemeral scratchpad workspace |
+...
 
-To set up extensions, run: `bash ~/.claude/plugins/_src/lore/lore/extensions/<name>/postinstall.sh`
+## Hooks
 
-## Hooks — Automatic Behaviors
-
-| Hook | Trigger | Action |
-|------|---------|--------|
-| SessionStart | New session begins | Displays welcome message |
-| Stop | Claude attempts to stop | Verifies tests pass and work is complete |
+| Event | Action |
+|-------|--------|
+| <event name> | <what the hook does> |
+...
 
 ## Common Workflows
 
-### Start a new feature
-```
-/lore:brainstorming Add user authentication
-/lore:plan Add JWT-based auth with refresh tokens
-/lore:continue
-```
+### New Feature
+1. `/lore:brainstorming` — explore the idea
+2. `/lore:plan` — write implementation plan
+3. `/lore:continue` — resume at next task
+4. `/lore:scope` — check for drift
+5. `/lore:verification-before-completion` — verify before calling it done
 
-### Debug a failing test
-```
-/lore:debug
-/lore:systematic-debugging
-```
+### Bug Fix
+1. `/lore:debug` or `/lore:systematic-debugging` — find root cause
+2. `/lore:test-driven-development` — write failing test first
+3. `/lore:diff-review` — review changes before commit
 
-### Review code before committing
-```
-/lore:diff-review
-/lore:pre-commit-review
-```
+### Code Review
+1. `/lore:local-code-review` — full project review (no git needed)
+2. `/lore:review-files <paths>` — targeted file review
+3. `/lore:diff-review` — review staged changes
+4. `/lore:quality-scan` → `/lore:quality-fix` — find and fix issues
 
-### Research how something works
-```
-/lore:investigate how does the payment flow work
-/lore:deep-research authentication architecture
-```
+### Research & Understanding
+1. `/lore:investigate <question>` — deep code exploration
+2. `/lore:deep-research <topic>` — multi-phase research
+3. `/lore:explain <code>` — explain any code or concept
+4. `/lore:reading-unfamiliar-code` — systematic codebase understanding
 
-### Create new plugin components
-```
-/lore:create-skill
-/lore:create-agent
-/lore:create-plugin
-```
+### Security Audit
+1. `/lore:security-check-scan` — find vulnerabilities
+2. `/lore:security-check-fix` — fix what was found
+
+### Building Lore Plugins
+1. `/lore:create-plugin` — guided plugin creation
+2. `/lore:create-skill` — add a skill
+3. `/lore:create-command` — add a command
+4. `/lore:create-agent` — add an agent
+5. `/lore:create-mcp` — add MCP integration
+
+## Live Demo
+
+Here are some things you can try right now:
+
+- `/lore:explain` — I'll explain any file or function in this project
+- `/lore:standup` — I'll generate a standup from recent git commits
+- `/lore:list` — I'll show the full component inventory
+- `/lore:welcome --help debug` — I'll show detailed help for the debug skill
 
 ## Getting Help
 
-- `/lore:welcome --help <skill-name>` — Detailed usage guide for any skill
-- `/lore:list` — Full component inventory with metadata
-- `/lore:explain <topic>` — Explain any code or concept
+For detailed help on any skill: `/lore:welcome --help <skill-name>`
 ```
+
+**IMPORTANT:** The output MUST include every skill discovered in Step 1. Count them and verify the count matches. If the count in the header doesn't match the number of rows in the tables, you have missed some — go back and find them.
 
 ---
 
 ## Help Mode
 
-When `$ARGUMENTS` contains `--help` followed by a skill name:
+### If `$ARGUMENTS` is `--help` with no skill name
 
-### Step 1: Parse the Skill Name
+List ALL available skills, agents, and extensions as a quick reference:
 
-Extract the skill name from arguments. Strip any `lore:` prefix if present. Examples:
-- `--help debug` → skill name is `debug`
-- `--help lore:plan` → skill name is `plan`
-- `--help systematic-debugging` → skill name is `systematic-debugging`
-
-### Step 2: Find the Skill
-
-Look for the skill in this order:
-1. `${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/SKILL.md`
-2. `${CLAUDE_PLUGIN_ROOT}/commands/<skill-name>.md`
-3. `${CLAUDE_PLUGIN_ROOT}/agents/<skill-name>.md`
-
-If not found, run:
 ```
-Glob: ${CLAUDE_PLUGIN_ROOT}/skills/*/SKILL.md
-Glob: ${CLAUDE_PLUGIN_ROOT}/commands/*.md
-Glob: ${CLAUDE_PLUGIN_ROOT}/agents/*.md
+# Lore: Available Components
+
+## Skills ([N] total)
+<bullet list of every skill name with 1-line description>
+
+## Agents ([N] total)
+<bullet list of every agent name with 1-line description>
+
+## Extensions ([N] total)
+<bullet list of every extension name>
+
+Use `/lore:welcome --help <name>` for detailed help on any component.
 ```
 
-Then list all available names and suggest the closest matches to what the user typed.
+### If `$ARGUMENTS` is `--help <skill-name>`
 
-### Step 3: Read and Present
+#### Step 1: Parse the Skill Name
 
-Read the full skill file. Extract:
-- **Name** from frontmatter or first heading
-- **Description** from frontmatter
-- **Allowed tools** from frontmatter
-- **Arguments** from `argument-hint` in frontmatter
-- **Full workflow phases** from markdown headings
+Extract the skill name. Strip any `lore:` prefix. Examples:
+- `--help debug` → `debug`
+- `--help lore:plan` → `plan`
+- `--help systematic-debugging` → `systematic-debugging`
 
-Present as a structured help page:
+#### Step 2: Find the Component
 
-```markdown
-# /lore:<skill-name>
+Search in this order:
+1. `skills/<name>/SKILL.md`
+2. `commands/<name>.md`
+3. `agents/<name>.md`
+
+If not found, scan all available components and suggest the closest matches.
+
+#### Step 3: Read the Full File
+
+Read the ENTIRE file — not just frontmatter. You need the full content to synthesize a proper help page.
+
+#### Step 4: Present Structured Help
+
+Output:
+
+```
+# /lore:<name>
 
 > <description from frontmatter>
 
 ## Usage
 
-/lore:<skill-name> <argument-hint or "no arguments required">
+/lore:<name> <argument-hint if present, otherwise "no arguments required">
 
 ## What This Skill Does
 
-<2-3 sentence summary synthesized from the skill content — not a copy-paste, a genuine summary>
+<2-3 sentence summary you write by reading and understanding the full skill content. NOT a copy-paste — a genuine synthesis explaining what the skill does and why it matters.>
 
 ## Workflow Phases
 
-<Numbered list of each major phase/step from the skill, with 1-sentence summary each>
+<Read the skill's ## headings and numbered steps. Present each phase as a numbered item with a 1-sentence summary:>
 
-## Tools Used
+1. **<Phase name>** — <what happens in this phase>
+2. **<Phase name>** — <what happens in this phase>
+...
 
-<List of allowed tools and what they're used for in this skill's context>
+## Key Rules & Principles
+
+<Extract the most important rules, constraints, or principles from the skill. These are the things that make this skill different from just "doing the task without a skill.">
+
+## When to Use
+
+- <situation 1 where this skill is the right choice>
+- <situation 2>
+- <situation 3>
+
+## When NOT to Use
+
+- <situation where a different skill would be better, and which one>
 
 ## Related Skills
 
-<List 2-4 skills that pair well with this one, with 1-line explanation of the pairing>
+- `/lore:<related>` — <why these pair well together>
+- `/lore:<related>` — <why these pair well together>
+- `/lore:<related>` — <why these pair well together>
 
 ## Examples
 
-<2-3 realistic example invocations with different argument patterns>
+<3 realistic invocations showing different use cases:>
+
+```
+/lore:<name> <example args>
+```
+<1-line explanation of what this invocation would do>
+
+```
+/lore:<name> <different example>
+```
+<1-line explanation>
+
+```
+/lore:<name> <another example>
+```
+<1-line explanation>
 ```
 
-### Step 4: Suggest Next Steps
+#### Step 5: Offer Next Steps
 
-After presenting help, suggest:
-- Related skills the user might want to explore next
-- Common workflows that chain this skill with others
-- A concrete next action the user could take right now
+After the help page, say:
+
+> Want to try it? Just run `/lore:<name>` to start.
+> For help on a related skill: `/lore:welcome --help <related-skill>`
