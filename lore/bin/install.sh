@@ -37,14 +37,7 @@ if [ -z "$PLUGIN_DIR" ] || [ ! -f "$PLUGIN_DIR/.claude-plugin/plugin.json" ]; th
   REMOTE_MODE=true
 fi
 
-# ── Read version from plugin.json ────────────
-if [ -n "$PLUGIN_DIR" ] && [ -f "$PLUGIN_DIR/.claude-plugin/plugin.json" ]; then
-  VERSION=$(python3 -c "import json; print(json.load(open('$PLUGIN_DIR/.claude-plugin/plugin.json'))['version'])" 2>/dev/null || echo "0.1.0")
-else
-  VERSION="0.1.0"
-fi
-
-# ── Banner ──────────────────────────────────
+# ── Banner (art only — version printed after source is resolved) ──
 cat <<'BANNER'
 
   ██╗      ██████╗ ██████╗ ███████╗
@@ -55,9 +48,6 @@ cat <<'BANNER'
   ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝
 
 BANNER
-echo "  v${VERSION} — A Claude Code plugin framework"
-echo "  Skills · Commands · Agents · Hooks"
-echo ""
 
 # ── Prerequisites ───────────────────────────
 MISSING=0
@@ -108,14 +98,18 @@ if [ "$REMOTE_MODE" = true ]; then
   VERSION=$(python3 -c "import json; print(json.load(open('$PLUGIN_DIR/.claude-plugin/plugin.json'))['version'])" 2>/dev/null || echo "0.1.0")
   GIT_SHA=$(git -C "$SRC_DIR" rev-parse HEAD 2>/dev/null || echo "unknown")
   ok "Source ready at $SRC_DIR"
-  echo ""
 else
   # Local mode — try to get git sha from repo root
   REPO_ROOT="$(cd "$PLUGIN_DIR/.." && pwd)"
   GIT_SHA=$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || echo "unknown")
+  VERSION=$(python3 -c "import json; print(json.load(open('$PLUGIN_DIR/.claude-plugin/plugin.json'))['version'])" 2>/dev/null || echo "0.1.0")
   info "Installing from local source: $PLUGIN_DIR"
-  echo ""
 fi
+
+# ── Banner version line (now that VERSION is resolved) ──
+echo "  v${VERSION} — A Claude Code plugin framework"
+echo "  Skills · Commands · Agents · Hooks"
+echo ""
 
 # ── Compute cache version ────────────────────
 # Use semver from plugin.json (auto-bumped by GitHub Actions on push)
