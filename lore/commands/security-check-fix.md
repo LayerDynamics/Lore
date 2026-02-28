@@ -1,9 +1,7 @@
 ---
 name: fix
 description: Guided session to remediate security findings from a scan. Works through each finding by severity, applying fixes and verifying them.
-user_invocable: true
 argument-hint: [--severity critical|high|all] [--finding <number>]
-allowed-tools: ["Read", "Edit", "Write", "Grep", "Glob", "Bash", "AskUserQuestion", "Task"]
 ---
 
 # Security Fix Session

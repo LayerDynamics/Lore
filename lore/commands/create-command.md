@@ -1,9 +1,7 @@
 ---
 name: create-command
 description: Create a new command in the lore framework with proper frontmatter, namespace, and structure.
-user_invocable: true
 argument-hint: <command-name> [--namespace <ns>] [--description "description"]
-allowed-tools: ["Read", "Write", "Glob", "Bash", "AskUserQuestion"]
 ---
 
 # Lore: Create Command

@@ -1,7 +1,6 @@
 ---
 description: Guided session to find and replace ALL placeholder, stub, mock, or dummy code in the project with real implementations. Works through each issue systematically.
 argument-hint: Optional specific file or directory to fix
-allowed-tools: ["Read", "Edit", "Write", "Grep", "Bash", "AskUserQuestion", "Skill", "Task"]
 ---
 
 # No-Placeholders: Fix Session

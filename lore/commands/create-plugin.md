@@ -1,9 +1,7 @@
 ---
 name: create-plugin
 description: Guided end-to-end plugin creation workflow — from concept through implementation, validation, and documentation.
-user_invocable: true
 argument-hint: [plugin description or name]
-allowed-tools: ["Read", "Write", "Glob", "Grep", "Bash", "AskUserQuestion", "Task"]
 ---
 
 # Lore: Create Plugin

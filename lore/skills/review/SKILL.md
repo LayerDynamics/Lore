@@ -1,7 +1,6 @@
 ---
 description: Deep investigation of a question or topic followed by a PR-style code review with Critical/Important/Minor findings and Strengths. Dispatches parallel agents to investigate, then synthesizes into a structured review.
 argument-hint: The question or topic to review (e.g., "quality scorer integration", "how editorial rules engine works")
-allowed-tools: ["Task", "Glob", "Grep", "Read", "Bash"]
 ---
 
 # Code Review: $ARGUMENTS

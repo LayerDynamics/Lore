@@ -2,7 +2,6 @@
 name: review-files
 description: Run a targeted code review on specific files or directories. No git required.
 argument-hint: "<path> [path2...] [--file]"
-allowed-tools: ["Read", "Glob", "Grep", "Bash", "Write", "Task"]
 ---
 
 # Targeted Code Review

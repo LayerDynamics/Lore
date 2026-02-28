@@ -1,7 +1,6 @@
 ---
 description: Audit project dependencies and configurations for known vulnerabilities, committed secrets, unsafe file permissions, and outdated TLS/SSL settings. Reports findings with remediation guidance.
 argument-hint: Optional path to audit (defaults to current project root)
-allowed-tools: ["Grep", "Read", "Bash", "Glob"]
 ---
 
 # Security Check: Dependency and Configuration Audit

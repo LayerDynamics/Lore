@@ -1,9 +1,7 @@
 ---
 name: frame-task
 description: Frame a task for scale review — define scope, constraints, and success criteria before evaluating scalability.
-user_invocable: true
 argument-hint: <task description or file path>
-allowed-tools: ["Read", "Grep", "Glob"]
 ---
 
 # Frame Task for Scale Review

@@ -1,7 +1,6 @@
 ---
 description: Full feature research workflow — analyze codebase patterns, consult external docs, and produce an implementation blueprint. Use when a developer needs to understand how to implement a new feature before writing any code.
 argument-hint: <feature-description> [--depth quick|standard|deep]
-allowed-tools: ["Glob", "Grep", "Read", "WebFetch", "WebSearch", "Task", "Write"]
 ---
 
 # Feature Research

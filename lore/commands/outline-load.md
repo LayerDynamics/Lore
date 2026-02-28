@@ -1,9 +1,7 @@
 ---
 name: outline-load
 description: Outline the load profile for a system or component — map traffic patterns, peak usage, data growth, and resource consumption over time.
-user_invocable: true
 argument-hint: <component or system path>
-allowed-tools: ["Read", "Grep", "Glob", "Bash"]
 ---
 
 # Outline Load Profile

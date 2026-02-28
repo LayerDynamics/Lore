@@ -1,9 +1,7 @@
 ---
 name: create-skill
 description: Create a new skill from template with guided configuration. Replaces scaffold-skill.
-user_invocable: true
 argument-hint: <skill-name> [--description "description"]
-allowed-tools: ["Read", "Write", "Glob", "Bash", "AskUserQuestion"]
 ---
 
 # Lore: Create Skill

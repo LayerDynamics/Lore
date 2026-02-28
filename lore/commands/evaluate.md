@@ -1,9 +1,7 @@
 ---
 name: evaluate
 description: Evaluate a component or system for scalability — analyze code paths, data structures, and architecture against scale criteria.
-user_invocable: true
 argument-hint: <path or component> [--frame <frame output>]
-allowed-tools: ["Read", "Grep", "Glob", "Bash", "Task"]
 ---
 
 # Scale Evaluation

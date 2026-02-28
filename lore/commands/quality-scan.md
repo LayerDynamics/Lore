@@ -1,7 +1,6 @@
 ---
 description: Scan the entire project for placeholder, stub, mock, dummy, or incomplete code patterns. Reports every instance with file path and line number.
 argument-hint: Optional path to scan (defaults to current project root)
-allowed-tools: ["Grep", "Read", "Bash", "Skill"]
 ---
 
 # No-Placeholders: Project Scan

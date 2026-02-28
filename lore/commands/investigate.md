@@ -1,7 +1,6 @@
 ---
 description: Deep code exploration returning structured findings — file paths, execution traces, integration points — without PR-style review synthesis. Use when you want raw findings to build on, not a formatted review.
 argument-hint: What to investigate (e.g., "how categorization service handles cache invalidation", "where quality_score column is written")
-allowed-tools: ["Task", "Glob", "Grep", "Read", "Bash"]
 ---
 
 # Investigation: $ARGUMENTS

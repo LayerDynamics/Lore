@@ -1,9 +1,7 @@
 ---
 name: create-agent
 description: Create a new autonomous agent in the lore framework with dispatch examples and tool configuration.
-user_invocable: true
 argument-hint: <agent-name> [--description "description"]
-allowed-tools: ["Read", "Write", "Glob", "Bash", "AskUserQuestion"]
 ---
 
 # Lore: Create Agent

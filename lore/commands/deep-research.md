@@ -1,9 +1,7 @@
 ---
 name: deep-research
 description: Multi-source deep research combining codebase analysis, external documentation, academic papers, and community knowledge. Use for complex topics requiring thorough understanding before implementation — goes deeper and wider than standard research.
-user_invocable: true
 argument-hint: <topic or question> [--sources code|web|all] [--output <path>]
-allowed-tools: ["Glob", "Grep", "Read", "WebFetch", "WebSearch", "Task", "Write", "AskUserQuestion"]
 ---
 
 # Deep Research

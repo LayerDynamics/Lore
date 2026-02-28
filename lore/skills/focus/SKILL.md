@@ -1,7 +1,6 @@
 ---
 description: Reset scope by invoking the staying-on-request skill. Call this when Claude has drifted from the original request.
 argument-hint: optional description of the drift (e.g. "you refactored auth when I asked about logging")
-allowed-tools: ["Read", "Glob", "Bash", "Skill"]
 ---
 
 # writing-plans: Focus

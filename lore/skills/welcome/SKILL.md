@@ -1,9 +1,7 @@
 ---
 name: welcome
 description: Comprehensive guide to the Lore plugin framework. Shows all skills, commands, agents, extensions, and MCP integrations with usage examples. Use --help <skill-name> for detailed help on a specific skill.
-argument-hint: [--help <skill-name>]
-user-invocable: true
-allowed-tools: ["Read", "Glob", "Grep", "Bash"]
+argument-hint: "--help <skill-name>"
 ---
 
 # Lore: Welcome

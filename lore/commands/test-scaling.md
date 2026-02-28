@@ -1,9 +1,7 @@
 ---
 name: test-scaling
 description: Test a component under simulated scale conditions — generate load scenarios and verify behavior at increasing volumes.
-user_invocable: true
 argument-hint: <path or component> [--level <10x|100x|1000x>]
-allowed-tools: ["Read", "Grep", "Glob", "Bash", "Write"]
 ---
 
 # Test Scaling

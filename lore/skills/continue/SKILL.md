@@ -1,7 +1,6 @@
 ---
 description: Resume an existing plan at the next incomplete task. If no plan file is specified, scans docs/plans/ and prompts you to choose.
 argument-hint: optional path to plan file (e.g. docs/plans/2026-02-17-auth.md)
-allowed-tools: ["Read", "Bash", "Glob", "AskUserQuestion", "Skill"]
 ---
 
 # writing-plans: Continue

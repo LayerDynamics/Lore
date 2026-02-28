@@ -1,7 +1,6 @@
 ---
 description: Guided implementation planning — reads project context, asks about inclusions and dev practices, writes a structured bite-sized plan. Arguments are optional; all workflow phases are mandatory.
 argument-hint: optional task description
-allowed-tools: ["Read", "Bash", "Write", "AskUserQuestion", "Glob", "Grep", "Skill"]
 ---
 
 # writing-plans: Plan

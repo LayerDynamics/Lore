@@ -1,9 +1,7 @@
 ---
 name: create-mcp
 description: Create a new MCP server integration in the lore framework with transport configuration and tool registration.
-user_invocable: true
 argument-hint: <server-name> [--type stdio|sse]
-allowed-tools: ["Read", "Write", "Glob", "Bash", "AskUserQuestion"]
 ---
 
 # Lore: Create MCP

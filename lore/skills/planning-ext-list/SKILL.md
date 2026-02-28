@@ -1,7 +1,6 @@
 ---
 description: List all implementation plans in docs/plans/ sorted by date, showing goal and task count for each.
 argument-hint: ""
-allowed-tools: ["Bash", "Read", "Glob"]
 ---
 
 # writing-plans: List Plans

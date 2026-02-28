@@ -1,8 +1,6 @@
 ---
 name: list
 description: List all available lore skills, commands, and agents registered in the lore framework.
-user_invocable: true
-allowed-tools: ["Glob", "Read", "Bash"]
 ---
 
 # Lore: List

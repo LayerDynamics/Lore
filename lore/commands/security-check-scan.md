@@ -1,7 +1,6 @@
 ---
 description: Scan the project for security vulnerabilities including hardcoded secrets, OWASP patterns (SQLi, XSS, command injection), and insecure configurations. Reports findings by severity.
 argument-hint: Optional path to scan (defaults to current project root)
-allowed-tools: ["Grep", "Read", "Bash", "Glob"]
 ---
 
 # Security Check: Vulnerability Scanner

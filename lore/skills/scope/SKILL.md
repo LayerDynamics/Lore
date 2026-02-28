@@ -1,7 +1,6 @@
 ---
 description: Audit the current git diff against the active plan. Reports in-scope changes, out-of-scope drift, completed tasks, and remaining tasks.
 argument-hint: ""
-allowed-tools: ["Bash", "Read", "Glob"]
 ---
 
 # writing-plans: Scope Audit

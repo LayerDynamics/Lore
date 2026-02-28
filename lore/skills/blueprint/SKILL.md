@@ -1,7 +1,6 @@
 ---
 description: Convert research notes or findings into a structured implementation blueprint. Use when research is complete and a developer needs a precise, file-level implementation plan.
 argument-hint: <feature-description> [--output markdown|json]
-allowed-tools: ["Glob", "Read", "Write", "Task"]
 ---
 
 # Implementation Blueprint Generator

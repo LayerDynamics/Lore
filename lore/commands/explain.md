@@ -1,7 +1,6 @@
 ---
 description: Explain any code, file, function, concept, or architecture in the current project. Reads the target and gives a clear, layered explanation — from purpose down to implementation details.
 argument-hint: File path, function name, concept, or question to explain
-allowed-tools: ["Read", "Grep", "Glob", "Bash"]
 ---
 
 # Explain

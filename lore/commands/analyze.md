@@ -1,7 +1,6 @@
 ---
 description: Analyze codebase architecture and patterns — maps conventions, extension points, and similar features without external research. Use when a developer needs to understand an existing codebase's structure before implementing something.
 argument-hint: [path] [--focus <area>]
-allowed-tools: ["Glob", "Grep", "Read", "Task"]
 ---
 
 # Codebase Analysis

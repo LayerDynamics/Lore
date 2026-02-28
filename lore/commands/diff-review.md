@@ -1,7 +1,6 @@
 ---
 description: Review all current git changes (staged + unstaged) before committing. Checks for bugs, security issues, unfinished code, and style inconsistencies. Focuses on the DIFF, not the whole codebase.
 argument-hint: Optional focus area (e.g. "security", "performance", "logic")
-allowed-tools: ["Bash", "Read", "Grep"]
 ---
 
 # Diff Review — Pre-Commit Quality Check

@@ -1,7 +1,6 @@
 ---
 description: Generate a concise daily standup update from recent git commits and current working state. Shows what was done, what's in progress, and any blockers.
 argument-hint: Optional time range (e.g. "yesterday", "last 2 days", "since Monday")
-allowed-tools: ["Bash", "Read", "Glob"]
 ---
 
 # Standup Generator

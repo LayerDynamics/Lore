@@ -1,9 +1,7 @@
 ---
 name: hone
 description: Hone a component for scale — apply targeted optimizations based on evaluation findings to improve scalability.
-user_invocable: true
 argument-hint: <path or component> [--findings <evaluation output>]
-allowed-tools: ["Read", "Grep", "Glob", "Edit", "Write", "Bash"]
 ---
 
 # Hone for Scale

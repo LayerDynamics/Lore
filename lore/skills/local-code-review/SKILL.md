@@ -2,7 +2,6 @@
 name: local-code-review
 description: Run a comprehensive, git-free code review. Pass file/directory paths to review specific targets, or run with no arguments for a full project review.
 argument-hint: "[paths...] [--file]"
-allowed-tools: ["Read", "Glob", "Grep", "Bash", "Write", "Task"]
 ---
 
 # Local Code Review
