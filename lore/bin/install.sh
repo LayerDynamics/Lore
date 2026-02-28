@@ -118,10 +118,8 @@ else
 fi
 
 # ── Compute cache version ────────────────────
-CACHE_VERSION="${GIT_SHA:0:12}"
-if [ "$CACHE_VERSION" = "unknown" ]; then
-  CACHE_VERSION="$VERSION"
-fi
+# Use semver from plugin.json (auto-bumped by GitHub Actions on push)
+CACHE_VERSION="$VERSION"
 
 # ── Remove legacy installs ───────────────────
 # Remove old symlink
@@ -162,11 +160,8 @@ ok "Plugin source copied to local marketplace"
 CACHE_BASE="$HOME/.claude/plugins/cache/local/lore"
 CACHE_DIR="$CACHE_BASE/${CACHE_VERSION}"
 
-# Remove ALL old cached versions
-if [ -d "$CACHE_BASE" ]; then
-  rm -rf "$CACHE_BASE"
-  info "Cleaned old cache entries"
-fi
+# Keep old cached versions alive (active sessions reference them via hook paths)
+# Only overwrite the current version's cache dir
 mkdir -p "$CACHE_DIR"
 
 rsync -a \
@@ -174,19 +169,6 @@ rsync -a \
   --exclude='tests' \
   --exclude='node_modules' \
   "$PLUGIN_DIR/" "$CACHE_DIR/" 2>/dev/null || cp -RL "$PLUGIN_DIR/." "$CACHE_DIR/"
-
-# Stamp version in cached plugin.json so Claude Code detects updates
-python3 -c "
-import json, os
-pj = os.path.join('$CACHE_DIR', '.claude-plugin', 'plugin.json')
-if os.path.exists(pj):
-    with open(pj) as f:
-        p = json.load(f)
-    p['version'] = '$CACHE_VERSION'
-    with open(pj, 'w') as f:
-        json.dump(p, f, indent=2)
-        f.write('\n')
-"
 
 ok "Plugin cached at $CACHE_DIR (version: $CACHE_VERSION)"
 

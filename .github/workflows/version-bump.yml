@@ -1,0 +1,53 @@
+name: Auto Bump Version
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'lore/**'
+      - 'install.sh'
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    # Don't run on version bump commits to avoid infinite loop
+    if: "!contains(github.event.head_commit.message, '[skip-bump]') && !contains(github.event.head_commit.message, 'chore: bump version')"
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Bump patch version
+        run: |
+          PLUGIN_JSON="lore/.claude-plugin/plugin.json"
+          CURRENT=$(python3 -c "import json; print(json.load(open('$PLUGIN_JSON'))['version'])")
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          PATCH=$((PATCH + 1))
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+
+          python3 -c "
+          import json
+          pj = '$PLUGIN_JSON'
+          with open(pj) as f:
+              data = json.load(f)
+          data['version'] = '$NEW_VERSION'
+          with open(pj, 'w') as f:
+              json.dump(data, f, indent=2)
+              f.write('\n')
+          "
+
+          echo "BUMPED_VERSION=$NEW_VERSION" >> "$GITHUB_ENV"
+          echo "Bumped version: $CURRENT → $NEW_VERSION"
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add lore/.claude-plugin/plugin.json
+          git commit -m "chore: bump version to ${BUMPED_VERSION} [skip-bump]"
+          git push
