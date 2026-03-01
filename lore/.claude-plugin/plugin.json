@@ -1,6 +1,6 @@
 {
   "name": "lore",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Opinionated meta skills & plugin framework for deterministic results",
   "author": {
     "name": "LayerDynamics"
