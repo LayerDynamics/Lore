@@ -1,21 +1,6 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-
-function parseFrontmatter(content) {
-  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-  if (!match) return { fm: null, body: content };
-  const fm = {};
-  for (const line of match[1].split('\n')) {
-    const idx = line.indexOf(':');
-    if (idx !== -1) {
-      const key = line.slice(0, idx).trim();
-      const val = line.slice(idx + 1).trim();
-      fm[key] = val;
-    }
-  }
-  const body = content.slice(match[0].length).trim();
-  return { fm, body };
-}
+import { parseFrontmatter } from './parse-frontmatter.js';
 
 export async function diagnoseSkill(skillName, loreRoot) {
   const issues = [];

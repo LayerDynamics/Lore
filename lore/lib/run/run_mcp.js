@@ -1,5 +1,22 @@
 import { spawn } from 'node:child_process';
 
+const mcpLifecycleListeners = new Set();
+
+export function onMcpLifecycle(callback) {
+  mcpLifecycleListeners.add(callback);
+  return () => mcpLifecycleListeners.delete(callback);
+}
+
+function notifyMcpLifecycle(event, config, proc) {
+  for (const listener of mcpLifecycleListeners) {
+    try {
+      listener({ event, config, pid: proc?.pid });
+    } catch {
+      // Swallow listener errors
+    }
+  }
+}
+
 /**
  * Spawn an MCP server process from config.
  * @param {Object} config - {command, args, cwd, env}
@@ -13,6 +30,13 @@ export function runMcpServer(config) {
     env: { ...process.env, ...env },
     stdio: ['pipe', 'pipe', 'pipe'],
   });
+
+  notifyMcpLifecycle('start', config, proc);
+
+  proc.once('exit', () => {
+    notifyMcpLifecycle('exit', config, proc);
+  });
+
   return proc;
 }
 
@@ -22,6 +46,7 @@ export function runMcpServer(config) {
 export function stopMcpServer(proc, timeout = 5000) {
   return new Promise((resolve) => {
     if (proc.exitCode !== null) {
+      notifyMcpLifecycle('stop', null, proc);
       resolve();
       return;
     }
@@ -53,25 +78,32 @@ export async function testMcpServer(config) {
     proc.stdin.write(`Content-Length: ${Buffer.byteLength(initRequest)}\r\n\r\n${initRequest}`);
 
     const response = await new Promise((resolve, reject) => {
-      let data = '';
+      let buffer = Buffer.alloc(0);
       const timer = setTimeout(() => reject(new Error('Timeout waiting for MCP server response')), 10000);
       proc.stdout.on('data', (chunk) => {
-        data += chunk.toString();
-        // Try to parse JSON-RPC response from the accumulated data
-        const bodyMatch = data.match(/\r\n\r\n(.+)/s);
-        if (bodyMatch) {
-          try {
-            const parsed = JSON.parse(bodyMatch[1]);
-            clearTimeout(timer);
-            resolve(parsed);
-          } catch {
-            // incomplete JSON, keep reading
-          }
+        buffer = Buffer.concat([buffer, chunk]);
+        // Parse Content-Length header from the buffer
+        const headerEnd = buffer.indexOf('\r\n\r\n');
+        if (headerEnd === -1) return;
+        const header = buffer.subarray(0, headerEnd).toString();
+        const match = header.match(/Content-Length:\s*(\d+)/i);
+        if (!match) return;
+        const contentLength = parseInt(match[1], 10);
+        const bodyStart = headerEnd + 4;
+        if (buffer.length < bodyStart + contentLength) return; // body incomplete
+        const body = buffer.subarray(bodyStart, bodyStart + contentLength).toString();
+        try {
+          const parsed = JSON.parse(body);
+          clearTimeout(timer);
+          resolve(parsed);
+        } catch (e) {
+          clearTimeout(timer);
+          reject(new Error(`Invalid JSON in MCP response: ${e.message}`));
         }
       });
       proc.on('error', (err) => { clearTimeout(timer); reject(err); });
       proc.on('exit', (code) => {
-        if (!data) { clearTimeout(timer); reject(new Error(`Server exited with code ${code}`)); }
+        if (!buffer.length) { clearTimeout(timer); reject(new Error(`Server exited with code ${code}`)); }
       });
     });
 

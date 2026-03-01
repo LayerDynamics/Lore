@@ -1,20 +1,11 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { validateSkillName } from './validate-skill-name.js';
+import { parseFrontmatter } from './parse-frontmatter.js';
 
 function parseFrontmatterRaw(content) {
-  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-  if (!match) return { raw: null, fm: null, body: content, full: content };
-  const fm = {};
-  for (const line of match[1].split('\n')) {
-    const idx = line.indexOf(':');
-    if (idx !== -1) {
-      const key = line.slice(0, idx).trim();
-      const val = line.slice(idx + 1).trim();
-      fm[key] = val;
-    }
-  }
-  const body = content.slice(match[0].length);
-  return { raw: match[1], fm, body, full: content };
+  const { raw, fm, body } = parseFrontmatter(content);
+  return { raw, fm, body, full: content };
 }
 
 function buildFrontmatter(fm) {
@@ -22,7 +13,8 @@ function buildFrontmatter(fm) {
   return `---\n${lines.join('\n')}\n---`;
 }
 
-export async function repairSkill(skillName, loreRoot) {
+export async function repairSkill(skillName, loreRoot, hooks = {}) {
+  validateSkillName(skillName);
   const mdPath = join(loreRoot, 'skills', skillName, 'SKILL.md');
   const repairs = [];
 
@@ -41,12 +33,14 @@ export async function repairSkill(skillName, loreRoot) {
       template = template.replace(/^(name:\s*).*$/m, `$1${skillName}`);
       await writeFile(mdPath, template, 'utf-8');
       repairs.push({ field: 'file', action: 'populated from template', before: '', after: template });
+      if (hooks.postRepair) await hooks.postRepair({ name: skillName, repairs });
       return { name: skillName, repairs };
     } catch {
       // template not available, create minimal content
       const minimal = `---\nname: ${skillName}\ndescription: Use when [describe trigger]\n---\n`;
       await writeFile(mdPath, minimal, 'utf-8');
       repairs.push({ field: 'file', action: 'created minimal frontmatter', before: '', after: minimal });
+      if (hooks.postRepair) await hooks.postRepair({ name: skillName, repairs });
       return { name: skillName, repairs };
     }
   }
@@ -59,6 +53,7 @@ export async function repairSkill(skillName, loreRoot) {
     const newContent = buildFrontmatter(newFm) + '\n' + content;
     await writeFile(mdPath, newContent, 'utf-8');
     repairs.push({ field: 'frontmatter', action: 'added', before: '', after: buildFrontmatter(newFm) });
+    if (hooks.postRepair) await hooks.postRepair({ name: skillName, repairs });
     return { name: skillName, repairs };
   }
 
@@ -80,6 +75,11 @@ export async function repairSkill(skillName, loreRoot) {
   if (changed) {
     const newContent = buildFrontmatter(fm) + '\n' + body;
     await writeFile(mdPath, newContent, 'utf-8');
+  }
+
+  // Post-repair hook
+  if (hooks.postRepair && repairs.length > 0) {
+    await hooks.postRepair({ name: skillName, repairs });
   }
 
   return { name: skillName, repairs };

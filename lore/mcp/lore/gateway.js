@@ -20,9 +20,7 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const LORE_ROOT = resolve(__dirname, '..', '..');
-// REPO_ROOT is one level above LORE_ROOT — used by resolve_tool.js/resolve_skill.js
-// which prepend 'lore/' internally
-const REPO_ROOT = resolve(LORE_ROOT, '..');
+// All lib functions now consistently expect loreRoot = plugin directory (LORE_ROOT)
 
 // ── Lib imports ────────────────────────────────────────────────────
 import { listSkills, listSkillNames, formatSkillTable } from '../../lib/skills/skill-list.js';
@@ -204,7 +202,7 @@ const TOOLS = {
     description: 'List all command file paths across namespaces',
     inputSchema: { type: 'object', properties: {}, required: [] },
     handler: async () => {
-      const paths = listToolPaths(REPO_ROOT);
+      const paths = listToolPaths(LORE_ROOT);
       const commands = paths.map((p) => {
         const { frontmatter } = readFrontmatter(p);
         return { path: p, name: frontmatter.name || '', description: frontmatter.description || '' };
@@ -216,7 +214,7 @@ const TOOLS = {
     description: 'List all agent file paths',
     inputSchema: { type: 'object', properties: {}, required: [] },
     handler: async () => {
-      const paths = listAgentPaths(REPO_ROOT);
+      const paths = listAgentPaths(LORE_ROOT);
       const agents = paths.map((p) => {
         const { frontmatter } = readFrontmatter(p);
         return { path: p, name: frontmatter.name || '', description: frontmatter.description || '' };
@@ -478,12 +476,12 @@ const TOOLS = {
       properties: { name: { type: 'string', description: 'Skill name' } },
       required: ['name'],
     },
-    handler: async ({ name }) => resolveSkillDir(name, REPO_ROOT),
+    handler: async ({ name }) => resolveSkillDir(name, LORE_ROOT),
   },
   lore_list_skill_paths: {
     description: 'List all skill directory paths',
     inputSchema: { type: 'object', properties: {}, required: [] },
-    handler: async () => JSON.stringify(listSkillPaths(REPO_ROOT), null, 2),
+    handler: async () => JSON.stringify(listSkillPaths(LORE_ROOT), null, 2),
   },
 
   // ── Run ────────────────────────────────────────────────────────
@@ -622,11 +620,11 @@ const TOOLS = {
     handler: async ({ type, name }) => {
       switch (type) {
         case 'skill':
-          return resolveSkill(name, REPO_ROOT);
+          return resolveSkill(name, LORE_ROOT);
         case 'command':
-          return resolveTool(name, REPO_ROOT);
+          return resolveTool(name, LORE_ROOT);
         case 'agent':
-          return resolveAgent(name, REPO_ROOT);
+          return resolveAgent(name, LORE_ROOT);
         default:
           return resolvePath(LORE_ROOT, name);
       }

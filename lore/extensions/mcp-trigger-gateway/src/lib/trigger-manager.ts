@@ -13,6 +13,16 @@ export class TriggerManager {
   constructor(storage: TriggerStorage, executor: ActionExecutor) {
     this.storage = storage;
     this.executor = executor;
+
+    // Wire chain execution back through the trigger manager
+    this.executor.setChainExecutor(async (_triggerId, event) => {
+      const result = await this.executeTrigger(event);
+      return {
+        success: result.success,
+        results: result.results,
+        error: result.error,
+      };
+    });
   }
 
   async createTrigger(input: Omit<TriggerConfig, 'id' | 'createdAt' | 'updatedAt' | 'status'>): Promise<TriggerConfig> {

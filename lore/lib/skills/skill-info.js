@@ -1,20 +1,10 @@
 import { readFile, access } from 'node:fs/promises';
 import { join } from 'node:path';
+import { parseFrontmatter as _parseFrontmatter } from './parse-frontmatter.js';
 
 function parseFrontmatter(content) {
-  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-  if (!match) return { fm: {}, body: content };
-  const fm = {};
-  for (const line of match[1].split('\n')) {
-    const idx = line.indexOf(':');
-    if (idx !== -1) {
-      const key = line.slice(0, idx).trim();
-      const val = line.slice(idx + 1).trim();
-      fm[key] = val;
-    }
-  }
-  const body = content.slice(match[0].length).replace(/^\r?\n/, '');
-  return { fm, body };
+  const { fm, body } = _parseFrontmatter(content);
+  return { fm: fm || {}, body };
 }
 
 function extractSections(body) {

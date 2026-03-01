@@ -26,9 +26,16 @@ export interface ExecutionResult {
   error?: string | undefined;
 }
 
+export type ChainExecutor = (triggerId: string, event: TriggerEvent) => Promise<{ success: boolean; results?: unknown; error?: string | undefined }>;
+
 export class ActionExecutor {
   private mcpClients: Map<string, Client> = new Map();
   private mcpServerConfigs: Map<string, McpServerConfig> = new Map();
+  private chainExecutor: ChainExecutor | null = null;
+
+  setChainExecutor(executor: ChainExecutor): void {
+    this.chainExecutor = executor;
+  }
 
   async executeActions(actions: TriggerAction[], event: TriggerEvent): Promise<ExecutionResult> {
     const results: ActionResult[] = [];
@@ -239,12 +246,43 @@ export class ActionExecutor {
 
   private async executeChain(
     action: ChainAction,
-    _event: TriggerEvent
+    event: TriggerEvent
   ): Promise<{ success: boolean; output?: unknown; error?: string | undefined }> {
-    // Chain triggers are handled by the trigger manager
+    if (!this.chainExecutor) {
+      return {
+        success: false,
+        error: 'Chain executor not configured. Call setChainExecutor() during setup.',
+      };
+    }
+
+    const chainResults: Array<{ triggerId: string; success: boolean; error?: string | undefined }> = [];
+    let allSuccess = true;
+
+    for (const triggerId of action.triggers) {
+      try {
+        const result = await this.chainExecutor(triggerId, {
+          triggerId,
+          timestamp: new Date().toISOString(),
+          payload: event.payload,
+          source: `chain:${event.triggerId}`,
+        });
+        chainResults.push({ triggerId, success: result.success, error: result.error });
+        if (!result.success) {
+          allSuccess = false;
+        }
+      } catch (error) {
+        chainResults.push({
+          triggerId,
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        allSuccess = false;
+      }
+    }
+
     return {
-      success: true,
-      output: { chainedTriggers: action.triggers },
+      success: allSuccess,
+      output: { chainedTriggers: action.triggers, chainResults },
     };
   }
 

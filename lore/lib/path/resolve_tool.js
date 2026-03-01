@@ -3,10 +3,10 @@ import { existsSync, readdirSync } from 'node:fs';
 
 /**
  * Resolve a tool/command name to its .md file path.
- * Searches across all namespaces in `lore/commands/`.
+ * Searches across all namespaces in `commands/` relative to loreRoot.
  */
 export function resolveTool(toolName, loreRoot) {
-  const commandsDir = resolve(loreRoot, 'lore', 'commands');
+  const commandsDir = resolve(loreRoot, 'commands');
   if (!existsSync(commandsDir)) {
     throw new Error(`Commands directory not found: ${commandsDir}`);
   }
@@ -23,10 +23,10 @@ export function resolveTool(toolName, loreRoot) {
 }
 
 /**
- * Resolve agent name to its .md file path in `lore/agents/`.
+ * Resolve agent name to its .md file path in `agents/` relative to loreRoot.
  */
 export function resolveAgent(agentName, loreRoot) {
-  const agentMd = resolve(loreRoot, 'lore', 'agents', `${agentName}.md`);
+  const agentMd = resolve(loreRoot, 'agents', `${agentName}.md`);
   if (!existsSync(agentMd)) {
     throw new Error(`Agent not found: ${agentName} (expected ${agentMd})`);
   }
@@ -37,7 +37,7 @@ export function resolveAgent(agentName, loreRoot) {
  * Return array of all command file paths.
  */
 export function listToolPaths(loreRoot) {
-  const commandsDir = resolve(loreRoot, 'lore', 'commands');
+  const commandsDir = resolve(loreRoot, 'commands');
   if (!existsSync(commandsDir)) return [];
   const results = [];
   const entries = readdirSync(commandsDir, { withFileTypes: true });
@@ -61,7 +61,7 @@ export function listToolPaths(loreRoot) {
  * Return array of all agent file paths.
  */
 export function listAgentPaths(loreRoot) {
-  const agentsDir = resolve(loreRoot, 'lore', 'agents');
+  const agentsDir = resolve(loreRoot, 'agents');
   if (!existsSync(agentsDir)) return [];
   return readdirSync(agentsDir, { withFileTypes: true })
     .filter(f => f.isFile() && f.name.endsWith('.md'))

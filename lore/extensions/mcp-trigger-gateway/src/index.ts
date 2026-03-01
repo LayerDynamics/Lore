@@ -14,6 +14,7 @@ import { TriggerStorage } from './lib/storage.js';
 import { ActionExecutor } from './lib/action-executor.js';
 import { TriggerManager } from './lib/trigger-manager.js';
 import { EventListener } from './listeners/event-listener.js';
+import { WatchListener } from './listeners/watch-listener.js';
 import { CronScheduler } from './cron/cron-scheduler.js';
 import {
   TriggerConfigInputSchema,
@@ -38,6 +39,7 @@ const storage = new TriggerStorage(storagePath);
 const executor = new ActionExecutor();
 const manager = new TriggerManager(storage, executor);
 const eventListener = new EventListener();
+const watchListener = new WatchListener();
 const cronScheduler = new CronScheduler();
 
 // Initialize storage
@@ -52,6 +54,10 @@ cronScheduler.on(async (event) => {
   await manager.executeTrigger(event);
 });
 
+watchListener.on(async (event) => {
+  await manager.executeTrigger(event);
+});
+
 // Load active triggers
 const activeTriggers = await storage.getActive();
 for (const trigger of activeTriggers) {
@@ -59,7 +65,10 @@ for (const trigger of activeTriggers) {
     eventListener.registerTrigger(trigger);
   } else if (trigger.type === 'cron') {
     cronScheduler.registerTrigger(trigger);
+  } else if (trigger.type === 'watch') {
+    watchListener.registerTrigger(trigger);
   }
+  // 'manual' triggers need no listener — they fire via execute_trigger tool
 }
 
 // Create MCP server
@@ -224,7 +233,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           eventListener.registerTrigger(trigger);
         } else if (trigger.type === 'cron') {
           cronScheduler.registerTrigger(trigger);
+        } else if (trigger.type === 'watch') {
+          watchListener.registerTrigger(trigger);
         }
+        // 'manual' triggers need no listener — they fire via execute_trigger tool
 
         return {
           content: [
@@ -319,6 +331,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           eventListener.registerTrigger(trigger);
         } else if (trigger.type === 'cron') {
           cronScheduler.registerTrigger(trigger);
+        } else if (trigger.type === 'watch') {
+          watchListener.registerTrigger(trigger);
         }
 
         return {
@@ -338,6 +352,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         // Unregister from listeners
         eventListener.unregisterTrigger(id);
         cronScheduler.unregisterTrigger(id);
+        watchListener.unregisterTrigger(id);
 
         return {
           content: [
@@ -420,6 +435,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 const shutdown = async () => {
   console.error('Shutting down MCP Trigger Gateway...');
   await eventListener.stop();
+  await watchListener.stop();
   cronScheduler.stop();
   await server.close();
   process.exit(0);

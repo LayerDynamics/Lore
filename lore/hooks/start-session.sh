@@ -54,7 +54,8 @@ if [ -d "$TRELLIO_DIR/repo" ] && [ -f "$TRELLIO_DIR/repo/package.json" ]; then
 fi
 
 # ── Output session info ────────────────────────────────────────────
-echo "Lore Framework v1.0.0"
+LORE_VERSION=$(grep '"version"' "$PLUGIN_ROOT/.claude-plugin/plugin.json" | sed 's/.*"version": *"//;s/".*//')
+echo "Lore Framework v${LORE_VERSION:-unknown}"
 echo ""
 echo "Extensions:"
 check_extension "browserx"
