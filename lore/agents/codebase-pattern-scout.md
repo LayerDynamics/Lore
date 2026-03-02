@@ -29,7 +29,7 @@ Finding extension points in an unfamiliar system is exactly what this agent does
 </commentary>
 </example>
 
-model: inherit
+model: opus
 color: blue
 tools: ["Glob", "Grep", "Read", "Bash"]
 ---

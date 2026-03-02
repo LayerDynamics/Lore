@@ -29,7 +29,7 @@ User has research context and needs it organized into a blueprint format for use
 </commentary>
 </example>
 
-model: inherit
+model: opus
 color: green
 tools: ["Read", "Write"]
 ---

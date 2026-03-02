@@ -38,7 +38,7 @@ Pre-merge cleanup of stubs — stub-implementer handles both finding and fixing.
 </commentary>
 </example>
 
-model: inherit
+model: opus
 color: green
 tools: ["Read", "Edit", "Write", "Grep", "Glob", "Bash"]
 ---

@@ -5,7 +5,7 @@ whenToUse: >
   Use when the user wants a code review that doesn't depend on git, PRs, or diffs.
   Trigger when asked to review code objectively, look at code with fresh eyes,
   or audit code quality in any directory.
-model: sonnet
+model: opus
 color: blue
 tools:
   - Read

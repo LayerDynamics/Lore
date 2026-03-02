@@ -28,7 +28,7 @@ assistant: \"I'll use review-synthesizer with your provided findings to score an
 Review-synthesizer can work from any source of findings — not just pipeline agents. When findings are already gathered, dispatch this agent directly with the content in the prompt.
 </commentary>
 </example>"
-model: inherit
+model: opus
 color: magenta
 tools: ["Read", "Grep"]
 ---

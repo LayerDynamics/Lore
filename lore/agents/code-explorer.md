@@ -28,7 +28,7 @@ assistant: \"I'll use code-explorer to grep all write sites for auto_decision ac
 Finding all write sites for a DB column requires systematic grep + read of query contexts.
 </commentary>
 </example>"
-model: inherit
+model: opus
 color: blue
 tools: ["Glob", "Grep", "Read", "Bash"]
 ---

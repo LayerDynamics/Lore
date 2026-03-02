@@ -38,7 +38,7 @@ Proactive verification before tests — stub-scanner checks for all stub pattern
 </commentary>
 </example>
 
-model: inherit
+model: opus
 color: yellow
 tools: ["Glob", "Grep", "Read", "Bash"]
 ---

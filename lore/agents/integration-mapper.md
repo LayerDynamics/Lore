@@ -28,7 +28,7 @@ assistant: \"I'll use integration-mapper to find every external call, DB write, 
 Full integration audit requires finding HTTP calls, DB operations, and Redis/event interactions.
 </commentary>
 </example>"
-model: inherit
+model: opus
 color: green
 tools: ["Glob", "Grep", "Read", "Bash"]
 ---

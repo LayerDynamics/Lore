@@ -69,7 +69,7 @@ assistant: \"Let me launch the <agent-name> agent to <action>.\"
 <Why this agent is appropriate.>
 </commentary>
 </example>"
-model: inherit
+model: opus
 tools: [<selected-tools>]
 ---
 

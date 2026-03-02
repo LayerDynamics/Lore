@@ -39,7 +39,7 @@ whenToUse: |
 tools:
   - Bash
   - Read
-model: sonnet
+model: opus
 color: blue
 ---
 
