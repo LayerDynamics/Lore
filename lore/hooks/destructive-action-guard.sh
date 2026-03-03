@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # destructive-action-guard.sh — PreToolUse hook for Bash tool
-# Blocks destructive commands like rm -rf, git push --force, git reset --hard
+# Tiered protection:
+#   HARD BLOCK (exit 2): catastrophic local actions (rm -rf /, dd to device, mkfs)
+#   APPROVAL REQUIRED (exit 2 with clear message): destructive but intentional actions
+#   User sees the warning and can approve/deny in Claude Code
 set -euo pipefail
 
 INPUT=$(cat)
@@ -21,75 +24,83 @@ if [ -z "$COMMAND" ]; then
   exit 0
 fi
 
-# Normalize: collapse whitespace, strip leading whitespace for matching
+# Normalize: collapse whitespace for matching
 NORM_CMD=$(echo "$COMMAND" | tr '\n' ' ' | sed 's/  */ /g')
 
-# Check for destructive patterns
-BLOCKED=""
+# ── TIER 1: HARD BLOCK — catastrophic, never intentional ──────────
+HARD_BLOCK=""
 
-# rm with recursive+force flags — block ALL targets, not just specific paths
-# Catches: rm -rf, rm -fr, rm --recursive --force, rm -r -f, etc.
+# rm -rf on root or home
+if echo "$NORM_CMD" | grep -qE '\brm\s+(-[a-zA-Z]*r[a-zA-Z]*f|-[a-zA-Z]*f[a-zA-Z]*r)\s+(\/|\/\*|~\s|~\/\s)\s*($|;|\|)'; then
+  HARD_BLOCK="rm -rf on root/home directory"
+fi
+
+# dd writing to block devices
+if echo "$NORM_CMD" | grep -qE '\bdd\s+.*of=\/dev\/'; then
+  HARD_BLOCK="dd write to block device"
+fi
+
+# mkfs (format filesystem)
+if echo "$NORM_CMD" | grep -qE '\bmkfs\b'; then
+  HARD_BLOCK="mkfs (format filesystem)"
+fi
+
+# chmod/chown -R on root
+if echo "$NORM_CMD" | grep -qE '\b(chmod|chown)\s+-R\s+.*\s+\/\s*($|;)'; then
+  HARD_BLOCK="recursive chmod/chown on root"
+fi
+
+if [ -n "$HARD_BLOCK" ]; then
+  echo "HARD BLOCK: ${HARD_BLOCK}. This action is never safe. Command: ${COMMAND}" >&2
+  exit 2
+fi
+
+# ── TIER 2: APPROVAL REQUIRED — destructive but sometimes intentional ──
+WARN=""
+
+# rm -rf (any target)
 if echo "$NORM_CMD" | grep -qE '\brm\s+(-[a-zA-Z]*r[a-zA-Z]*f|-[a-zA-Z]*f[a-zA-Z]*r|--recursive\s+--force|--force\s+--recursive|-r\s+-f|-f\s+-r)\b'; then
-  BLOCKED="rm -rf (recursive force delete)"
+  WARN="rm -rf (recursive force delete)"
 fi
 
-# rm on critical paths even without -rf (e.g. rm -r /)
-if echo "$NORM_CMD" | grep -qE '\brm\s+.*\s+(\/|\/\*|~\/|~|\.\.|\.\/\.\.)(\s|$|;|\|)'; then
-  BLOCKED="rm on critical path"
-fi
-
-# git push --force (including --force-with-lease which is safer but still destructive)
-if echo "$NORM_CMD" | grep -qE '\bgit\s+push\s+.*(-f\b|--force\b|--force-with-lease\b)'; then
-  BLOCKED="git push --force"
+# git push --force
+if [ -z "$WARN" ] && echo "$NORM_CMD" | grep -qE '\bgit\s+push\s+.*(-f\b|--force\b|--force-with-lease\b)'; then
+  WARN="git push --force"
 fi
 
 # git reset --hard
-if echo "$NORM_CMD" | grep -qE '\bgit\s+reset\s+.*--hard'; then
-  BLOCKED="git reset --hard"
+if [ -z "$WARN" ] && echo "$NORM_CMD" | grep -qE '\bgit\s+reset\s+.*--hard'; then
+  WARN="git reset --hard"
 fi
 
 # git checkout . or git restore . (discards all unstaged changes)
-if echo "$NORM_CMD" | grep -qE '\bgit\s+(checkout|restore)\s+\.\s*($|;|\|)'; then
-  BLOCKED="git checkout/restore . (discard all changes)"
+if [ -z "$WARN" ] && echo "$NORM_CMD" | grep -qE '\bgit\s+(checkout|restore)\s+\.\s*($|;|\|)'; then
+  WARN="git checkout/restore . (discard all changes)"
 fi
 
 # git clean -f (removes untracked files)
-if echo "$NORM_CMD" | grep -qE '\bgit\s+clean\s+.*(-[a-zA-Z]*f|--force)'; then
-  BLOCKED="git clean -f"
+if [ -z "$WARN" ] && echo "$NORM_CMD" | grep -qE '\bgit\s+clean\s+.*(-[a-zA-Z]*f|--force)'; then
+  WARN="git clean -f (remove untracked files)"
 fi
 
 # git branch -D (force delete branch)
-if echo "$NORM_CMD" | grep -qE '\bgit\s+branch\s+.*-D'; then
-  BLOCKED="git branch -D"
+if [ -z "$WARN" ] && echo "$NORM_CMD" | grep -qE '\bgit\s+branch\s+.*-D'; then
+  WARN="git branch -D (force delete branch)"
 fi
 
-# drop database/table/schema
-if echo "$NORM_CMD" | grep -qiE '\bDROP\s+(DATABASE|TABLE|SCHEMA)\b'; then
-  BLOCKED="DROP DATABASE/TABLE"
+# DROP DATABASE/TABLE/SCHEMA
+if [ -z "$WARN" ] && echo "$NORM_CMD" | grep -qiE '\bDROP\s+(DATABASE|TABLE|SCHEMA)\b'; then
+  WARN="DROP DATABASE/TABLE/SCHEMA"
 fi
 
-# chmod/chown on root or broad paths
-if echo "$NORM_CMD" | grep -qE '\b(chmod|chown)\s+(-R\s+)?.*\s+\/(\s|$|;)'; then
-  BLOCKED="chmod/chown on root"
+# Redirect overwrite to system paths (only top-level, not inside quotes)
+if [ -z "$WARN" ] && echo "$NORM_CMD" | grep -qE '^[^"'\'']*>\s*\/etc\/|^[^"'\'']*>\s*\/dev\/'; then
+  WARN="redirect overwrite to system path"
 fi
 
-# dd writing to block devices or disk
-if echo "$NORM_CMD" | grep -qE '\bdd\s+.*of=\/dev\/'; then
-  BLOCKED="dd write to device"
-fi
-
-# mkfs on any device
-if echo "$NORM_CMD" | grep -qE '\bmkfs'; then
-  BLOCKED="mkfs (format filesystem)"
-fi
-
-# truncate or overwrite critical files via redirection
-if echo "$NORM_CMD" | grep -qE '>\s*\/etc\/|>\s*\/dev\/'; then
-  BLOCKED="redirect overwrite to system path"
-fi
-
-if [ -n "$BLOCKED" ]; then
-  echo "BLOCKED: Destructive action detected — ${BLOCKED}. Command: ${COMMAND}" >&2
+if [ -n "$WARN" ]; then
+  echo "APPROVAL REQUIRED: ${WARN}" >&2
+  echo "Command: ${COMMAND}" >&2
   exit 2
 fi
 
