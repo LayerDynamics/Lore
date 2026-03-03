@@ -81,5 +81,57 @@ else
   echo "Trellio repo: not available (run postinstall.sh in extensions/trellio)"
 fi
 
+# ── Log rotation (retain 30 days) ─────────────────────────────────
+RETENTION_DAYS=${LORE_LOG_RETENTION_DAYS:-30}
+python3 -c "
+import os, time, glob
+
+retention_secs = ${RETENTION_DAYS} * 86400
+cutoff = time.time() - retention_secs
+removed = 0
+
+log_dirs = [
+    os.path.expanduser('~/.claude/telemetry'),
+    os.path.expanduser('~/.claude/agent-logs'),
+    os.path.expanduser('~/.claude/session-summaries'),
+]
+
+for log_dir in log_dirs:
+    if not os.path.isdir(log_dir):
+        continue
+    for f in glob.glob(os.path.join(log_dir, '*.jsonl')):
+        try:
+            if os.path.getmtime(f) < cutoff:
+                os.remove(f)
+                removed += 1
+        except OSError:
+            pass
+
+# Clean stale WIP files (older than 4 hours)
+wip_cutoff = time.time() - 14400
+for f in glob.glob('/tmp/lore-wip-*'):
+    if f.endswith('.lock'):
+        continue
+    try:
+        if os.path.getmtime(f) < wip_cutoff:
+            os.remove(f)
+    except OSError:
+        pass
+
+# Clean stale span files (older than 4 hours)
+span_dir = '/tmp/lore-agent-spans'
+if os.path.isdir(span_dir):
+    for f in os.listdir(span_dir):
+        fpath = os.path.join(span_dir, f)
+        try:
+            if os.path.getmtime(fpath) < wip_cutoff:
+                os.remove(fpath)
+        except OSError:
+            pass
+
+if removed:
+    print(f'Log rotation: removed {removed} files older than ${RETENTION_DAYS} days')
+" 2>/dev/null || true
+
 echo ""
 echo "Use /lore:list to see available skills, commands, and agents."
