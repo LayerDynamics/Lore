@@ -14,6 +14,7 @@ tools:
   - Glob
   - Grep
   - Bash
+telemetry: standard  # verbose|standard|quiet — controls telemetry detail level
 ---
 
 # Agent Name

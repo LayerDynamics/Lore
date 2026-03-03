@@ -37,9 +37,9 @@ trap 'rm -rf "$LOCK_DIR"' EXIT
 
 ACTIVE=$(wc -l < "$WIP_FILE" | tr -d ' ')
 
-if [ "$ACTIVE" -ge "$MAX_WIP" ]; then
-  echo "Concurrency guard: ${ACTIVE}/${MAX_WIP} agents active. Consider waiting for completions." >&2
-  exit 2
+# Advisory only — never block agent dispatch
+if [ "$ACTIVE" -ge 10 ]; then
+  echo "Concurrency notice: ${ACTIVE} agents active."
 fi
 
 exit 0

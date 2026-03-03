@@ -63,10 +63,13 @@ def make_event(
     status: str = "ok",
     duration_ms: int = None,
     meta: dict = None,
+    span_id: str = None,
+    parent_span_id: str = None,
+    agent_name: str = None,
 ) -> dict:
     """Build a standardized telemetry event dict."""
     session_id = os.environ.get("CLAUDE_SESSION_ID", None)
-    return {
+    event = {
         "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z",
         "session_id": session_id,
         "event": event_type,
@@ -76,6 +79,13 @@ def make_event(
         "duration_ms": duration_ms,
         "meta": meta or {},
     }
+    if span_id is not None:
+        event["span_id"] = span_id
+    if parent_span_id is not None:
+        event["parent_span_id"] = parent_span_id
+    if agent_name is not None:
+        event["agent_name"] = agent_name
+    return event
 
 
 def read_stdin_json() -> dict:
@@ -168,7 +178,14 @@ def cmd_query(args_str: str) -> None:
         duration = ev.get("duration_ms")
         meta = ev.get("meta", {})
 
+        agent_name = ev.get("agent_name") or ""
+        span = ev.get("span_id") or ""
+
         parts_out = [f"[{ts}] {event_type}"]
+        if agent_name:
+            parts_out.append(f"agent={agent_name}")
+        if span:
+            parts_out.append(f"span={span}")
         if tool:
             parts_out.append(f"tool={tool}")
         if skill:

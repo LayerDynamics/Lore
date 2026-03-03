@@ -23,9 +23,19 @@ def main():
         else:
             truncated_input = {"raw": truncate_value(tool_input)}
 
+        # Agent-specific telemetry for Task tool
+        agent_name = None
+        span_id = None
+        if tool_name == "Task":
+            import hashlib
+            agent_name = tool_input.get("subagent_type") or tool_input.get("description", "")[:50] or None
+            span_id = hashlib.sha256(json.dumps(tool_input, sort_keys=True).encode()).hexdigest()[:8]
+
         event = make_event(
             event_type="PreToolUse",
             tool=tool_name,
+            agent_name=agent_name,
+            span_id=span_id,
             meta={
                 "cwd": ctx.get("cwd"),
                 "input_keys": list(tool_input.keys()) if isinstance(tool_input, dict) else [],

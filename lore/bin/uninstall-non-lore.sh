@@ -153,11 +153,57 @@ done
 
 echo "  [ok]    Cleaned $removed_dirs directories"
 
-# --- Step 4: Clean up marketplace registrations (optional) ---
-KNOWN_MARKETPLACES="${CLAUDE_DIR}/plugins/known_marketplaces.json"
-if [ -f "$KNOWN_MARKETPLACES" ]; then
-  echo "  [step]  Keeping marketplace registrations (for future use)"
-fi
+# --- Step 4: Remove non-local marketplace source repos ---
+echo "  [step]  Removing external marketplace source repos..."
+
+MARKETPLACE_DIR="${CLAUDE_DIR}/plugins/marketplaces"
+removed_marketplaces=0
+
+for marketplace in "$MARKETPLACE_DIR"/*/; do
+  marketplace_name=$(basename "$marketplace")
+  if [ "$marketplace_name" = "local" ]; then
+    echo "  [keep]  Keeping local marketplace"
+    continue
+  fi
+  if [ -d "$marketplace" ]; then
+    rm -rf "$marketplace"
+    echo "  [ok]    Removed marketplace: $marketplace_name/"
+    ((removed_marketplaces++))
+  fi
+done
+
+echo "  [ok]    Removed $removed_marketplaces external marketplaces"
+
+# --- Step 5: Clean orphaned hooks from settings.json ---
+echo "  [step]  Cleaning orphaned hook references..."
+
+python3 -c "
+import json, os
+path = os.path.expanduser('$SETTINGS_FILE')
+with open(path) as f:
+    data = json.load(f)
+hooks = data.get('hooks', {})
+removed = 0
+for event in list(hooks.keys()):
+    entries = hooks[event]
+    cleaned = []
+    for entry in entries:
+        hook_list = entry.get('hooks', [])
+        filtered = [h for h in hook_list if 'CLAUDE_PLUGIN_ROOT' not in h.get('command', '')]
+        if filtered:
+            entry['hooks'] = filtered
+            cleaned.append(entry)
+        else:
+            removed += len(hook_list)
+    if cleaned:
+        hooks[event] = cleaned
+    else:
+        del hooks[event]
+data['hooks'] = hooks
+with open(path, 'w') as f:
+    json.dump(data, f, indent=2)
+print(f'  [ok]    Removed {removed} orphaned hook references')
+" 2>/dev/null || echo "  [warn]  Could not clean hooks (python3 required)"
 
 echo ""
 echo "  ════════════════════════════════════════════"
