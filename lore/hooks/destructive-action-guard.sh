@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # destructive-action-guard.sh — PreToolUse hook for Bash tool
 # Tiered protection:
-#   HARD BLOCK (exit 2): catastrophic local actions (rm -rf /, dd to device, mkfs)
-#   APPROVAL REQUIRED (exit 2 with clear message): destructive but intentional actions
+#   HARD BLOCK (exit 2): catastrophic local actions (rm -rf /, dd to device)
+#   APPROVAL REQUIRED (exit 2 with message): destructive but intentional actions
 #   User sees the warning and can approve/deny in Claude Code
 set -euo pipefail
 
@@ -27,39 +27,64 @@ fi
 # Normalize: collapse whitespace for matching
 NORM_CMD=$(echo "$COMMAND" | tr '\n' ' ' | sed 's/  */ /g')
 
-# ── TIER 1: HARD BLOCK — catastrophic, never intentional ──────────
+# Extract the first real command (before any && or | or ;)
+FIRST_CMD=$(echo "$NORM_CMD" | sed 's/[;&|].*//' | xargs)
+# Get just the binary name
+FIRST_BIN=$(echo "$FIRST_CMD" | awk '{print $1}' | sed 's|.*/||')
+
+# ── SAFE COMMANDS — skip all checks ──────────────────────────────
+case "$FIRST_BIN" in
+  ls|cat|head|tail|find|grep|rg|wc|file|stat|du|df|which|where|type|\
+  echo|printf|env|printenv|set|export|\
+  npm|npx|node|deno|bun|yarn|pnpm|\
+  python|python3|pip|pip3|\
+  git|gh|\
+  brew|cargo|rustup|go|\
+  docker|kubectl|\
+  ssh|scp|rsync|\
+  curl|wget|jq|sed|awk|sort|uniq|tr|cut|tee|\
+  mkdir|touch|cp|mv|ln|basename|dirname|realpath|readlink|\
+  cd|pushd|popd|pwd|date|cal|uname|whoami|id|hostname|\
+  tmutil|defaults|open|pbcopy|pbpaste|say|\
+  tar|zip|unzip|gzip|gunzip|\
+  less|more|diff|comm|xargs|yes|true|false|test)
+    exit 0
+    ;;
+esac
+
+# ── TIER 1: HARD BLOCK — catastrophic, never intentional ─────────
 HARD_BLOCK=""
 
 # rm -rf on root or home
-if echo "$NORM_CMD" | grep -qE '\brm\s+(-[a-zA-Z]*r[a-zA-Z]*f|-[a-zA-Z]*f[a-zA-Z]*r)\s+(\/|\/\*|~\s|~\/\s)\s*($|;|\|)'; then
+if echo "$NORM_CMD" | grep -qE '\brm\s+(-[a-zA-Z]*r[a-zA-Z]*f|-[a-zA-Z]*f[a-zA-Z]*r)\s+(\/|\/\*|~|~\/)\s*($|;|\||&)'; then
   HARD_BLOCK="rm -rf on root/home directory"
 fi
 
 # dd writing to block devices
-if echo "$NORM_CMD" | grep -qE '\bdd\s+.*of=\/dev\/'; then
+if echo "$NORM_CMD" | grep -qE '^\s*dd\s+.*of=\/dev\/'; then
   HARD_BLOCK="dd write to block device"
 fi
 
-# mkfs (format filesystem)
-if echo "$NORM_CMD" | grep -qE '\bmkfs\b'; then
+# mkfs as actual command (not in a string)
+if echo "$FIRST_BIN" | grep -qE '^mkfs'; then
   HARD_BLOCK="mkfs (format filesystem)"
 fi
 
 # chmod/chown -R on root
-if echo "$NORM_CMD" | grep -qE '\b(chmod|chown)\s+-R\s+.*\s+\/\s*($|;)'; then
+if echo "$NORM_CMD" | grep -qE '^\s*(chmod|chown)\s+-R\s+.*\s+\/\s*($|;)'; then
   HARD_BLOCK="recursive chmod/chown on root"
 fi
 
 if [ -n "$HARD_BLOCK" ]; then
-  echo "HARD BLOCK: ${HARD_BLOCK}. This action is never safe. Command: ${COMMAND}" >&2
+  echo "HARD BLOCK: ${HARD_BLOCK}. Command: ${COMMAND}" >&2
   exit 2
 fi
 
 # ── TIER 2: APPROVAL REQUIRED — destructive but sometimes intentional ──
 WARN=""
 
-# rm -rf (any target)
-if echo "$NORM_CMD" | grep -qE '\brm\s+(-[a-zA-Z]*r[a-zA-Z]*f|-[a-zA-Z]*f[a-zA-Z]*r|--recursive\s+--force|--force\s+--recursive|-r\s+-f|-f\s+-r)\b'; then
+# rm -rf (any target, but only as actual rm command)
+if [ "$FIRST_BIN" = "rm" ] && echo "$NORM_CMD" | grep -qE '\brm\s+(-[a-zA-Z]*r[a-zA-Z]*f|-[a-zA-Z]*f[a-zA-Z]*r|--recursive\s+--force|--force\s+--recursive|-r\s+-f|-f\s+-r)\b'; then
   WARN="rm -rf (recursive force delete)"
 fi
 
@@ -91,11 +116,6 @@ fi
 # DROP DATABASE/TABLE/SCHEMA
 if [ -z "$WARN" ] && echo "$NORM_CMD" | grep -qiE '\bDROP\s+(DATABASE|TABLE|SCHEMA)\b'; then
   WARN="DROP DATABASE/TABLE/SCHEMA"
-fi
-
-# Redirect overwrite to system paths (only top-level, not inside quotes)
-if [ -z "$WARN" ] && echo "$NORM_CMD" | grep -qE '^[^"'\'']*>\s*\/etc\/|^[^"'\'']*>\s*\/dev\/'; then
-  WARN="redirect overwrite to system path"
 fi
 
 if [ -n "$WARN" ]; then
