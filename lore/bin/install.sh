@@ -25,11 +25,16 @@ else
 fi
 REMOTE_MODE=false
 
-if [ "${1:-}" = "--from-remote" ]; then
-  REMOTE_MODE=true
-  if [ -n "${2:-}" ]; then
-    PLUGIN_DIR="$2"
-  fi
+WITH_EXTENSIONS=false
+for arg in "$@"; do
+  case "$arg" in
+    --from-remote) REMOTE_MODE=true ;;
+    --with-extensions) WITH_EXTENSIONS=true ;;
+  esac
+done
+
+if [ "$REMOTE_MODE" = true ] && [ -n "${2:-}" ] && [ "${2:-}" != "--with-extensions" ]; then
+  PLUGIN_DIR="$2"
 fi
 
 # If PLUGIN_DIR is empty or doesn't contain plugin.json, we need to clone
@@ -334,30 +339,19 @@ if [ -d "$EXT_DIR" ]; then
   echo "    scratchpad           — Ephemeral scratchpad workspace"
   echo ""
 
-  SETUP_EXTENSIONS="n"
-  if [ -t 0 ]; then
-    read -r -p "  Set up extensions now? [y/N] " SETUP_EXTENSIONS
-  fi
-
-  if [[ "$SETUP_EXTENSIONS" =~ ^[Yy]$ ]]; then
-    echo ""
-    for ext_dir in "$EXT_DIR"/*/; do
-      ext_name=$(basename "$ext_dir")
-      postinstall="$ext_dir/postinstall.sh"
-      if [ -f "$postinstall" ]; then
-        info "Setting up $ext_name..."
-        if bash "$postinstall"; then
-          ok "$ext_name ready"
-        else
-          warn "$ext_name setup had issues (non-fatal)"
-        fi
+  for ext_dir in "$EXT_DIR"/*/; do
+    ext_name=$(basename "$ext_dir")
+    postinstall="$ext_dir/postinstall.sh"
+    if [ -f "$postinstall" ]; then
+      info "Setting up $ext_name..."
+      if bash "$postinstall"; then
+        ok "$ext_name ready"
+      else
+        warn "$ext_name setup had issues (non-fatal)"
       fi
-    done
-    echo ""
-  else
-    info "Skipping extensions. Run postinstall.sh in any extension later."
-    echo ""
-  fi
+    fi
+  done
+  echo ""
 fi
 
 # ── Done ──────────────────────────────────────
