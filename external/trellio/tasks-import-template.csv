@@ -1,0 +1,6 @@
+title,list,energy,priority,time_estimate,task_type,due_date,quick_win
+"Review quarterly goals",this_week,3,High,1h,Planning,2026-02-20,false
+"Fix authentication bug",today,4,High,3h,Bug Fix,2026-02-17,false
+"Update documentation",this_week,2,Medium,2h,Documentation,,true
+"Refactor user service",this_week,4,Medium,4h,Refactoring,,false
+"Deploy to staging",today,3,High,30m,Deployment,2026-02-17,true

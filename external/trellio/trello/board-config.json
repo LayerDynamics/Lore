@@ -1,0 +1,94 @@
+{
+  "board": {
+    "name": "ADHD Productivity Board",
+    "defaultLists": false,
+    "prefs_permissionLevel": "org"
+  },
+  "lists": [
+    { "name": "\ud83d\udccb Reference", "pos": "bottom" },
+    { "name": "\ud83d\udcc5 This Week", "pos": "bottom" },
+    { "name": "\u2b50 Today", "pos": "bottom" },
+    { "name": "\ud83d\udd25 Doing", "pos": "bottom" },
+    { "name": "\u2705 Done", "pos": "bottom" }
+  ],
+  "labels": [
+    { "name": "\ud83d\udd34 High Energy", "color": "red" },
+    { "name": "\ud83d\udfe0 Medium Energy", "color": "orange" },
+    { "name": "\ud83d\udfe2 Low Energy", "color": "green" },
+    { "name": "\ud83d\udfe3 Brain Dead", "color": "purple" },
+    { "name": "\u26a0\ufe0f Due Soon", "color": "yellow" }
+  ],
+  "customFields": [
+    {
+      "name": "Time Estimate",
+      "type": "list",
+      "options": ["5 min", "15 min", "30 min", "1 hour", "2+ hours"]
+    },
+    {
+      "name": "Task Type",
+      "type": "list",
+      "options": ["Deep Work", "Communication", "Admin", "Creative"]
+    },
+    {
+      "name": "Priority",
+      "type": "list",
+      "options": [
+        "\ud83d\udd25 Urgent+Important",
+        "\u2b50 Important",
+        "\u26a1 Urgent",
+        "\ud83d\udccb Backlog"
+      ]
+    },
+    {
+      "name": "Quick Win",
+      "type": "checkbox"
+    }
+  ],
+  "referenceCards": [
+    {
+      "name": "*** Checklist Templates",
+      "list": "\ud83d\udccb Reference",
+      "checklists": [
+        {
+          "name": "Task Kickoff",
+          "items": [
+            "Clarify the deliverable (what does 'done' look like?)",
+            "Set a realistic due date",
+            "Identify blockers or dependencies",
+            "Add energy label and time estimate"
+          ]
+        },
+        {
+          "name": "Weekly Review",
+          "items": [
+            "Review what got Done this week (celebrate wins)",
+            "Check This Week for stale cards (anything older than 7 days)",
+            "Decide: keep, reschedule, or kill each stale card",
+            "Set 3-5 priorities for next week",
+            "Update the board \u2014 move cards, update due dates"
+          ]
+        },
+        {
+          "name": "Delegation Handoff",
+          "items": [
+            "Write clear description of what's needed",
+            "Set due date and add assignee",
+            "Add Priority field",
+            "Share card link with assignee",
+            "Set a reminder to check in"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "\ud83d\udccc Team Agreements",
+      "list": "\ud83d\udccb Reference",
+      "desc": "HOW WE USE THIS BOARD:\n- Add new tasks to This Week with a priority label\n- Move your own cards to Doing when you start\n- Move to Done when complete \u2014 Butler handles the rest\n- Weekly review every Friday"
+    },
+    {
+      "name": "\ud83d\udd17 Key Links",
+      "list": "\ud83d\udccb Reference",
+      "desc": "Add your team's shared docs, repos, dashboards here."
+    }
+  ]
+}

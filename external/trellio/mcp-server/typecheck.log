@@ -1,0 +1,4 @@
+
+> deftrello-mcp-server@1.0.0 typecheck
+> tsc --noEmit
+

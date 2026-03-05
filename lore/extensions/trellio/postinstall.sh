@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Trellio Extension Postinstall
-# Clones the trellio repo locally so its code is available for the plugin.
+# Links to the local trellio source and builds the MCP server.
 
 set -euo pipefail
 
@@ -16,53 +16,72 @@ error()   { echo -e "${RED}[trellio]${NC} $1"; }
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$SCRIPT_DIR/repo"
-REPO_URL="https://github.com/LayerDynamics/trellio.git"
+
+# Find the trellio source — check common locations
+TRELLIO_SOURCES=(
+  "$SCRIPT_DIR/../../../external/trellio"
+  "$HOME/lore/external/trellio"
+  "$HOME/trellio"
+)
+
+TRELLIO_SRC=""
+for src in "${TRELLIO_SOURCES[@]}"; do
+  if [ -d "$src/mcp-server" ]; then
+    TRELLIO_SRC="$(cd "$src" && pwd)"
+    break
+  fi
+done
 
 echo ""
 log "Trellio Postinstall"
 echo ""
 
-# Skip if already cloned
-if [ -d "$REPO_DIR" ] && [ -f "$REPO_DIR/package.json" ]; then
-  log "Repo already cloned at $REPO_DIR"
+if [ -z "$TRELLIO_SRC" ]; then
+  # Fallback: try cloning from GitHub
+  REPO_URL="https://github.com/LayerDynamics/trellio.git"
+  if [ -d "$REPO_DIR" ] && [ -d "$REPO_DIR/mcp-server" ]; then
+    log "Repo already at $REPO_DIR"
+    success "Trellio ready."
+    exit 0
+  fi
 
-  # Pull latest
-  log "Pulling latest changes..."
-  cd "$REPO_DIR"
-  git pull --ff-only 2>/dev/null || log "Could not fast-forward (may have local changes)"
-  cd "$SCRIPT_DIR"
-
-  success "Trellio repo up to date."
-  exit 0
+  log "No local source found. Cloning from $REPO_URL..."
+  git clone --depth 1 "$REPO_URL" "$REPO_DIR" 2>/dev/null || {
+    error "Could not clone trellio. Place source at external/trellio in the lore repo."
+    exit 1
+  }
+  TRELLIO_SRC="$REPO_DIR"
 fi
 
-# Check for git
-if ! command -v git &>/dev/null; then
-  error "git is not installed. Cannot clone trellio repo."
-  exit 1
+# Symlink if source is external
+if [ "$TRELLIO_SRC" != "$REPO_DIR" ]; then
+  if [ -L "$REPO_DIR" ]; then
+    rm "$REPO_DIR"
+  fi
+  if [ -d "$REPO_DIR" ]; then
+    log "Repo dir exists but source moved. Updating symlink."
+    rm -r "$REPO_DIR"
+  fi
+  ln -s "$TRELLIO_SRC" "$REPO_DIR"
+  log "Symlinked $REPO_DIR → $TRELLIO_SRC"
 fi
 
-# Clone
-log "Cloning trellio from $REPO_URL..."
-git clone --depth 1 "$REPO_URL" "$REPO_DIR"
+# Build MCP server if needed
+if [ -d "$TRELLIO_SRC/mcp-server" ]; then
+  cd "$TRELLIO_SRC/mcp-server"
 
-# Verify
-if [ -f "$REPO_DIR/package.json" ]; then
-  success "Trellio repo cloned successfully."
-else
-  error "Clone succeeded but package.json not found."
-  exit 1
-fi
+  if [ ! -d "node_modules" ]; then
+    log "Installing npm dependencies..."
+    npm install 2>/dev/null || log "npm install skipped (non-critical)"
+  fi
 
-# Install npm deps if node is available
-if command -v npm &>/dev/null; then
-  log "Installing npm dependencies..."
-  cd "$REPO_DIR"
-  npm install --production 2>/dev/null || log "npm install skipped (non-critical)"
-  cd "$SCRIPT_DIR"
+  if [ ! -f "dist/index.js" ]; then
+    log "Building MCP server..."
+    npm run build 2>/dev/null || log "Build skipped (run manually: cd mcp-server && npm run build)"
+  fi
 fi
 
 echo ""
 success "Postinstall complete."
-echo -e "${DIM}Trellio code is now available at: $REPO_DIR${NC}"
+echo -e "${DIM}Trellio source: $TRELLIO_SRC${NC}"
 echo ""

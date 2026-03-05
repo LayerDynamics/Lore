@@ -1,0 +1,9 @@
+{
+  "UserPromptSubmit": [
+    {
+      "type": "prompt",
+      "prompt": "Detect if user query involves: (1) Board switching ('switch to X board', 'use team board'), (2) Multi-board operations ('compare boards', 'move between boards'), (3) Board creation ('create board', 'new board'). If detected: Suggest relevant command (/trellio:board-select, /trellio:board-list, /trellio:board-create) with 1-line explanation. Keep suggestions brief (1-2 lines max).",
+      "timeout": 5
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "tasks": [
+    {
+      "title": "Review quarterly goals",
+      "list": "this_week",
+      "energy": 3,
+      "priority": "High",
+      "time_estimate": "1h",
+      "task_type": "Planning",
+      "due_date": "2026-02-20",
+      "quick_win": false
+    },
+    {
+      "title": "Fix authentication bug",
+      "list": "today",
+      "energy": 4,
+      "priority": "High",
+      "time_estimate": "3h",
+      "task_type": "Bug Fix",
+      "due_date": "2026-02-17",
+      "quick_win": false
+    },
+    {
+      "title": "Update documentation",
+      "list": "this_week",
+      "energy": 2,
+      "priority": "Medium",
+      "time_estimate": "2h",
+      "task_type": "Documentation",
+      "quick_win": true
+    },
+    {
+      "title": "Refactor user service",
+      "list": "this_week",
+      "energy": 4,
+      "priority": "Medium",
+      "time_estimate": "4h",
+      "task_type": "Refactoring",
+      "quick_win": false
+    },
+    {
+      "title": "Deploy to staging",
+      "list": "today",
+      "energy": 3,
+      "priority": "High",
+      "time_estimate": "30m",
+      "task_type": "Deployment",
+      "due_date": "2026-02-17",
+      "quick_win": true
+    }
+  ]
+}

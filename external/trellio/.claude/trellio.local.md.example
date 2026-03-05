@@ -1,0 +1,50 @@
+---
+current_board_id: "your_board_id_here"
+default_board_id: "your_board_id_here"
+boards:
+  - name: "Personal Tasks"
+    id: "your_board_id_here"
+    lists:
+      reference: "list_id_1"
+      this_week: "list_id_2"
+      today: "list_id_3"
+      doing: "list_id_4"
+      done: "list_id_5"
+wip_limits:
+  doing: 2
+  today: 5
+  this_week: 20
+n8n:
+  enabled: true
+  base_url: "https://n8n.ddtool.tech"
+mcp_cron:
+  enabled: false
+---
+
+# DefTrello Board Configuration
+
+This file stores your board preferences and is never committed to git.
+
+## Setup Instructions
+
+1. Copy this file to `.claude/deftrello.local.md` (remove .example)
+2. Update `current_board_id` and `default_board_id` with your Trello board ID
+3. Add your boards to the `boards` array
+4. Get board ID from Trello board URL: trello.com/b/YOUR_BOARD_ID/board-name
+5. Get list IDs using: `/deftrello:board-list` command
+
+## Fields
+
+- **current_board_id**: The board currently being used for operations
+- **default_board_id**: Fallback board when no board specified
+- **boards**: Registry of known boards with list ID mappings
+- **wip_limits**: Work-in-progress limits (customize per your workflow)
+- **n8n**: n8n integration settings
+- **mcp_cron**: Enable MCP-CRON integration for scheduled tasks
+
+## Usage
+
+Commands will automatically use `current_board_id` unless you specify a different board.
+
+Switch boards with: `/deftrello:board-select`
+List all boards with: `/deftrello:board-list`

@@ -1,0 +1,18 @@
+{
+  "name": "trellio",
+  "version": "2.0.0",
+  "description": "Trello MCP server plugin with board management, task automation, and productivity tools",
+  "author": {
+    "name": "Ryan O'Boyle"
+  },
+  "homepage": "https://github.com/LayerDynamics/trellio",
+  "repository": "https://github.com/LayerDynamics/trellio",
+  "license": "MIT",
+  "keywords": [
+    "trello",
+    "productivity",
+    "task-management",
+    "mcp",
+    "multi-board"
+  ]
+}
