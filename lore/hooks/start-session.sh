@@ -47,11 +47,18 @@ elif [ -n "${BROWSERX_PATH:-}" ] && [ -d "$BROWSERX_PATH" ]; then
 fi
 
 # ── Trellio repo check ───────────────────────────────────────────
-TRELLIO_DIR="$PLUGIN_ROOT/extensions/trellio"
 TRELLIO_REPO=""
-if [ -d "$TRELLIO_DIR/repo" ] && [ -f "$TRELLIO_DIR/repo/package.json" ]; then
-  TRELLIO_REPO="local"
-fi
+TRELLIO_SEARCH=(
+  "$HOME/lore/external/trellio"
+  "$PLUGIN_ROOT/../../../external/trellio"
+  "$PLUGIN_ROOT/extensions/trellio/repo"
+)
+for _t in "${TRELLIO_SEARCH[@]}"; do
+  if [ -d "$_t/mcp-server" ]; then
+    TRELLIO_REPO="local"
+    break
+  fi
+done
 
 # ── Output session info ────────────────────────────────────────────
 LORE_VERSION=$(grep '"version"' "$PLUGIN_ROOT/.claude-plugin/plugin.json" | sed 's/.*"version": *"//;s/".*//')

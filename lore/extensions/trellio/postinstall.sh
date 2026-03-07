@@ -53,19 +53,6 @@ if [ -z "$TRELLIO_SRC" ]; then
   TRELLIO_SRC="$REPO_DIR"
 fi
 
-# Symlink if source is external
-if [ "$TRELLIO_SRC" != "$REPO_DIR" ]; then
-  if [ -L "$REPO_DIR" ]; then
-    rm "$REPO_DIR"
-  fi
-  if [ -d "$REPO_DIR" ]; then
-    log "Repo dir exists but source moved. Updating symlink."
-    rm -r "$REPO_DIR"
-  fi
-  ln -s "$TRELLIO_SRC" "$REPO_DIR"
-  log "Symlinked $REPO_DIR → $TRELLIO_SRC"
-fi
-
 # Build MCP server if needed
 if [ -d "$TRELLIO_SRC/mcp-server" ]; then
   cd "$TRELLIO_SRC/mcp-server"
