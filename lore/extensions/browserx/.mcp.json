@@ -1,8 +1,9 @@
 {
-  "browserx": {
-    "type": "stdio",
-    "command": "deno",
-    "args": ["task", "mcp:start"],
-    "cwd": "${BROWSERX_PATH:-./}"
+  "mcpServers": {
+    "browserx": {
+      "command": "deno",
+      "args": ["task", "mcp:start"],
+      "cwd": "/Users/ryanoboyle/lore/lore/extensions/browserx/repo"
+    }
   }
 }
