@@ -74,7 +74,7 @@ Output this structure with ALL real data from the scans:
 | `/lore:welcome` | This guide |
 | `/lore:welcome --help <name>` | Detailed help for any skill |
 | `/lore:list` | Full component inventory |
-| `/lore:init` | Initialize lore in a new project |
+| `/lore:setup` | Initialize lore in a new project |
 | `/lore:create-skill` | Create a new skill |
 
 ## All Skills

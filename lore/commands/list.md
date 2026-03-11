@@ -44,7 +44,7 @@ Output a structured list:
 
 | Namespace | Command | Description |
 |-----------|---------|-------------|
-| lore | /lore:init | Initialize lore in a project |
+| lore | /lore:setup | Initialize lore in a project |
 | lore | /lore:list | List all available components |
 | code-intel | /code-intel:investigate | Deep code exploration |
 | ... | ... | ... |

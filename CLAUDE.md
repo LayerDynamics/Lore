@@ -39,7 +39,7 @@ Lore follows the Claude Code plugin structure: `plugin.json` declares the plugin
 
 **Skills** are the core abstraction — structured markdown workflows (e.g., TDD, debugging, brainstorming) that guide Claude through complex tasks deterministically. Each skill lives in `skills/<name>/SKILL.md`.
 
-**Commands** are slash-command entry points (e.g., `/lore:init`, `/code-intel:review`). Each namespace is a subdirectory under `commands/`.
+**Commands** are slash-command entry points (e.g., `/lore:setup`, `/code-intel:review`). Each namespace is a subdirectory under `commands/`.
 
 **Agents** define specialized subagents for parallel work. They are markdown files in `agents/`.
 

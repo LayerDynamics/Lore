@@ -60,7 +60,7 @@ Structured workflows that guide Claude through complex tasks:
 
 Slash commands organized by namespace:
 
-- `/lore:init`, `/lore:list`, `/lore:scaffold-skill`
+- `/lore:setup`, `/lore:list`, `/lore:scaffold-skill`
 - `/code-intel:investigate`, `/code-intel:review`
 - `/local:local-code-review`, `/local:review-files`, `/local:explain`, `/local:standup`, `/local:diff-review`
 - `/planning-ext:plan`, `/planning-ext:continue`, `/planning-ext:scope`, `/planning-ext:focus`, `/planning-ext:list`

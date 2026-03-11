@@ -1,5 +1,5 @@
 ---
-name: init
+name: setup
 description: Initialize lore in a project by creating .claude/settings.local.json pointing to the lore plugin.
 ---
 

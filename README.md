@@ -133,7 +133,7 @@ All commands are invoked as `/lore:<command-name>`. Each command has a descripti
 | Command | Arguments | What It Does |
 | ------- | --------- | ------------ |
 | `/lore:list` | — | Lists all available skills, commands, and agents with descriptions. |
-| `/lore:init` | — | Initializes lore in a project by creating/updating `.claude/settings.local.json` to include the lore plugin path. |
+| `/lore:setup` | — | Initializes lore in a project by creating/updating `.claude/settings.local.json` to include the lore plugin path. |
 | `/lore:create-skill` | `<name> [--description "..."]` | Creates a new skill from template. Validates kebab-case naming, asks rigid vs. flexible, generates `skills/<name>/SKILL.md`. |
 | `/lore:create-command` | `<name>` | Creates a new command with correct frontmatter. |
 | `/lore:create-agent` | `<name> [--description "..."]` | Creates a new agent with dispatch examples and tool configuration. |
