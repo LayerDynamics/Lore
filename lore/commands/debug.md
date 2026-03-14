@@ -70,11 +70,35 @@ Before attempting ANY fix:
 
 1. **Create Failing Test Case** - Simplest possible reproduction
 2. **Implement Single Fix** - ONE change at a time
-3. **Verify Fix** - Run actual tests/commands
+3. **Run verification immediately** — execute the failing test/command
 
-4. **If 3+ Fixes Failed: Question Architecture**
+## Phase 5: Verification Loop (MANDATORY)
+
+**The first fix is NEVER assumed correct.** Every fix must pass through this loop.
+
+1. **Run the exact failing scenario again**
+   - Execute the same command, test, or operation that originally failed
+   - Do not skip this. Do not assume. RUN IT.
+
+2. **Evaluate:**
+   - **PASS** — Error gone, no new errors → Phase 6
+   - **PARTIAL** — Error changed or new breakage → return to Phase 3 with new evidence
+   - **FAIL** — Same error → hypothesis was wrong, return to Phase 1. Do NOT retry same fix with variations.
+
+3. **Run broader verification**
+   ```bash
+   # Run the full test suite or affected module tests
+   # Run the exact command that was originally failing
+   # Check for regressions
+   ```
+   Show the actual output. No assumptions.
+
+4. **Repeat until clean** — no "good enough", either it works or it doesn't
+
+5. **If 3+ Fixes Failed: Question Architecture**
    - Each fix reveals new problem in different place = wrong architecture
-   - STOP and question fundamentals before more fixes
+   - STOP and present findings to the human before continuing
+   - Do NOT silently try a fourth approach
 
 ## Red Flags - STOP and Return to Phase 1
 
@@ -84,18 +108,11 @@ If you catch yourself thinking:
 - "I don't fully understand but this might work"
 - "Here are the main problems: [lists fixes without investigation]"
 - Proposing solutions before tracing data flow
+- **"It should work now"** — without running verification
+- **"This fix is straightforward, no need to test"** — ALWAYS test
 
-## Verification Before Completion
+## Phase 6: After Verified Fix
 
-**NEVER claim a fix works without running verification:**
-
-```bash
-# For TypeScript/Deno
-deno task check
-deno test --allow-all path/to/relevant/tests
-
-# For the actual scenario
-# Run the exact command that was failing
-```
-
-Show the actual output. No assumptions.
+- Document root cause and what evidence confirmed the fix
+- Ensure regression test is committed
+- Show the user passing verification output — proof, not promises

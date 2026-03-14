@@ -95,13 +95,37 @@ Before attempting any fix:
 
 1. **Write a failing test** that reproduces the bug
 2. **Implement a single fix** addressing the root cause
-3. **Run verification** -- test passes, no regressions
+3. **Run verification immediately** — execute the test, command, or operation that was failing
 
-4. **If three or more fixes have failed:**
-   - Stop attempting patches
+## Phase 5: Verification Loop (MANDATORY)
+
+**The first fix is NEVER assumed correct.** Every fix must pass through this loop before being considered done.
+
+1. **Run the exact failing scenario again**
+   - Execute the same command, test, or operation that originally failed
+   - Do not skip this. Do not assume. RUN IT.
+
+2. **Evaluate the result:**
+   - **PASS** — The original error is gone AND no new errors appeared → proceed to Phase 6
+   - **PARTIAL** — Original error changed but something else broke → return to Phase 3 with new evidence. The fix exposed a deeper issue.
+   - **FAIL** — Same error persists → the hypothesis was wrong. Return to Phase 1 with what you learned. Do NOT retry the same fix with minor variations.
+
+3. **Run broader verification**
+   - Run the full test suite (or at minimum, all tests in the affected module)
+   - Check for regressions: did fixing this break something else?
+   - If regressions appear, they are YOUR responsibility — fix them before proceeding
+
+4. **Repeat until clean**
+   - This loop continues until verification passes cleanly
+   - There is no "good enough" — either it works or it doesn't
+   - Every iteration must produce NEW evidence, not repeat the same attempt
+
+5. **If three or more fix attempts have failed:**
+   - Stop attempting patches entirely
    - Question whether the architecture is fundamentally wrong
    - Each fix revealing a new problem in a different location is a signal of structural issues
-   - Discuss with the human before continuing
+   - Present your findings and discuss with the human before continuing
+   - Do NOT silently try a fourth approach
 
 ## Red Flags: Return to Phase 1
 
@@ -112,6 +136,9 @@ If you catch yourself thinking any of these, stop:
 - "Here are the problems:" (listing fixes without investigation)
 - Proposing solutions before tracing data flow
 - "One more fix attempt" after two failures
+- **"It should work now"** — without running verification
+- **"This fix is straightforward, no need to test"** — ALWAYS test
+- **"The test passed so we're done"** — run broader verification too
 
 ## Common Rationalizations
 
@@ -122,11 +149,14 @@ If you catch yourself thinking any of these, stop:
 | "I see the problem, let me fix it" | Seeing symptoms is not understanding root cause. |
 | "Multiple fixes at once saves time" | Cannot isolate what worked. Introduces new bugs. |
 | "One more attempt" (after 2+) | Three failures means architectural problem. Stop fixing, start questioning. |
+| "It should work now" | Should is not evidence. Run the verification. Show the output. |
+| "The fix is obvious" | Obvious fixes that aren't verified cause the worst regressions. |
 
-## After the Fix
+## Phase 6: After Verified Fix
 
-- Document what the root cause was
+- Document what the root cause was and what evidence confirmed the fix
 - Ensure the regression test is committed
 - If the issue was environmental or timing-dependent, add monitoring or logging for future investigation
+- Show the user the passing verification output — proof, not promises
 
 <!-- Inspired by Superpowers Systematic Debugging skill (obra) -->
