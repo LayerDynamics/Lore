@@ -68,4 +68,4 @@ Present a structured task frame:
 - Failure point: [description]
 ```
 
-This frame feeds into `/scale-review:evaluate` and `/scale-review:test-scaling`.
+This frame feeds into `/scale-review:evaluate` and `/lore:testing --mode scale`.

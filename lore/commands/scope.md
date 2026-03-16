@@ -3,7 +3,7 @@ description: Audit the current git diff against the active plan. Reports in-scop
 argument-hint: ""
 ---
 
-# writing-plans: Scope Audit
+# plan: Scope Audit
 
 Run a full scope audit comparing what has actually changed in git against what the active plan says should change. Nothing is filtered or omitted from the report.
 

@@ -54,7 +54,7 @@ Group each skill into one of these categories based on its description:
 - **Security** — security scanning, vulnerability fixing
 - **Planning & Process** — writing plans, brainstorming, scoping, staying on track
 - **Documentation & Reporting** — doc writing, standups, verification
-- **Meta & Framework** — creating skills/commands/agents/plugins, no-placeholders
+- **Meta & Framework** — creating skills/commands/agents/plugins, quality-scan
 
 If a skill doesn't fit neatly, use your best judgment.
 
@@ -75,7 +75,7 @@ Output this structure with ALL real data from the scans:
 | `/lore:welcome --help <name>` | Detailed help for any skill |
 | `/lore:list` | Full component inventory |
 | `/lore:setup` | Initialize lore in a new project |
-| `/lore:create-skill` | Create a new skill |
+| `/lore:create` | Create a new skill, command, or agent |
 
 ## All Skills
 
@@ -120,31 +120,27 @@ Output this structure with ALL real data from the scans:
 5. `/lore:verification-before-completion` — verify before calling it done
 
 ### Bug Fix
-1. `/lore:debug` or `/lore:systematic-debugging` — find root cause
-2. `/lore:test-driven-development` — write failing test first
+1. `/lore:debug` — find root cause
+2. `/lore:testing --mode tdd` — write failing test first
 3. `/lore:diff-review` — review changes before commit
 
 ### Code Review
-1. `/lore:local-code-review` — full project review (no git needed)
-2. `/lore:review-files <paths>` — targeted file review
-3. `/lore:diff-review` — review staged changes
+1. `/lore:review` — full project review or targeted file review
+2. `/lore:diff-review` — review staged changes
 4. `/lore:quality-scan` → `/lore:quality-fix` — find and fix issues
 
 ### Research & Understanding
 1. `/lore:investigate <question>` — deep code exploration
-2. `/lore:deep-research <topic>` — multi-phase research
+2. `/lore:research <topic>` — multi-phase research
 3. `/lore:explain <code>` — explain any code or concept
-4. `/lore:reading-unfamiliar-code` — systematic codebase understanding
+4. `/lore:analyze` — systematic codebase understanding
 
 ### Security Audit
-1. `/lore:security-check-scan` — find vulnerabilities
-2. `/lore:security-check-fix` — fix what was found
+1. `/lore:security` — find and fix vulnerabilities
 
 ### Building Lore Plugins
 1. `/lore:create-plugin` — guided plugin creation
-2. `/lore:create-skill` — add a skill
-3. `/lore:create-command` — add a command
-4. `/lore:create-agent` — add an agent
+2. `/lore:create` — add a skill, command, or agent
 5. `/lore:create-mcp` — add MCP integration
 
 ## Live Demo
@@ -193,7 +189,7 @@ Use `/lore:welcome --help <name>` for detailed help on any component.
 Extract the skill name. Strip any `lore:` prefix. Examples:
 - `--help debug` → `debug`
 - `--help lore:plan` → `plan`
-- `--help systematic-debugging` → `systematic-debugging`
+- `--help debug` → `debug`
 
 #### Step 2: Find the Component
 

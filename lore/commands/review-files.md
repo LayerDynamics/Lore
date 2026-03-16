@@ -16,7 +16,7 @@ You are performing a focused, git-free code review on specific files or director
 
 3. **Understand context**: Briefly check surrounding code (imports, callers, types) to understand how the target code fits into the larger project. Don't review the entire project — just enough context to evaluate the targets.
 
-4. **Dispatch the code-reviewer agent**: Use the Task tool with the `local-code-review:code-reviewer` agent, providing it the specific file paths to review. For small reviews (1-3 files), a single agent is fine. For larger targeted reviews, dispatch parallel agents by focus area.
+4. **Dispatch the code-reviewer agent**: Use the Task tool with the `review:code-reviewer` agent, providing it the specific file paths to review. For small reviews (1-3 files), a single agent is fine. For larger targeted reviews, dispatch parallel agents by focus area.
 
 5. **Review comprehensively across all dimensions**:
    - **Quality**: Code smells, anti-patterns, complexity, naming, duplication, dead code

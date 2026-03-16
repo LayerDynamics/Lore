@@ -3,23 +3,121 @@ description: Guided implementation planning — reads project context, asks abou
 argument-hint: optional task description
 ---
 
-# writing-plans: Plan
+# Writing Plans
 
-**Load the writing-plans skill first** using the Skill tool.
+**Announce at start:** "Using plan to create the implementation plan."
 
 ## Starting Context
 
-If `$ARGUMENTS` is provided, treat it as the task description — use it to pre-fill Phase 1 context in the skill. Do NOT skip any discovery phases; the arguments only provide a head start.
+If `$ARGUMENTS` is provided, treat it as the task description — use it to pre-fill Phase 1 context. Do NOT skip any discovery phases; the arguments only provide a head start.
 
-If `$ARGUMENTS` is empty, begin the skill from scratch with no pre-filled context.
+If `$ARGUMENTS` is empty, begin from scratch with no pre-filled context.
+
+## Phase 1: Read Project Context (silent, no output)
+
+Before asking anything:
+1. Check for `CLAUDE.md` in the working directory and any parent up to `~/` — note the tech stack, conventions, testing approach, and any required patterns.
+2. Run `git log --oneline -5` to understand recent work direction.
+3. Identify the primary language/framework from file extensions in the working directory.
+
+## Phase 2: Ask the User (AskUserQuestion — one at a time)
+
+Ask these questions using the AskUserQuestion tool. Do NOT skip. Do NOT combine into one message.
+
+**Question 1 — User-specified inclusions:**
+Ask: "Are there specific skills, practices, or steps this plan must include or follow?"
+- Build options dynamically from what you found in CLAUDE.md + project context
+- Always offer: "No extras — just standard plan" and "Other (I'll type it)"
+- Common options to offer when relevant: TDD, specific testing frameworks (Vitest, pytest, Go test), plugin-dev patterns, MCP integration, hook development, agent development, SDK app setup, architecture constraints
+
+**Question 2 — Development practices:**
+Ask: "Which development practices should this plan enforce?" (multiSelect: true)
+- TDD (write failing test first, then implementation)
+- Typed interfaces first (define types/schemas before logic)
+- Contract-first (define API/interface before implementation)
+- No specific practice required
+
+**Question 3 — Skill inclusions (conditional):**
+Only ask if the task involves any of: plugins, Claude Code extensions, MCP servers, agents, hooks, or SDK apps.
+Ask: "Which plugin-dev skills should this plan reference?"
+Map answers to @ syntax references for the plan:
+- Plugin structure → `@plugin-dev:plugin-structure`
+- Plugin settings → `@plugin-dev:plugin-settings`
+- MCP integration → `@plugin-dev:mcp-integration`
+- Hook development → `@plugin-dev:hook-development`
+- Agent development → `@plugin-dev:agent-development`
+- SDK app setup → `@agent-sdk-dev:new-sdk-app`
+
+## Phase 3: Write the Plan
+
+Save to `docs/plans/YYYY-MM-DD-<feature-name>.md`.
+
+### Every plan MUST start with:
+
+```markdown
+# [Feature Name] Implementation Plan
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:execute to implement this plan task-by-task.
+> **Scope guard:** Do ONLY what is listed here. If you discover adjacent issues, note them as a TODO and continue. Do NOT fix them.
+
+**Goal:** [One sentence]
+**Architecture:** [2-3 sentences]
+**Tech Stack:** [Key technologies]
+**Practices:** [TDD / typed-first / contract-first / none — from Phase 2 answers]
+**Required skills:** [@ references from Phase 2 answers, or none]
+
+---
+```
+
+### Task structure (bite-sized — each step 2-5 minutes):
+
+For TDD tasks:
+
+```markdown
+### Task N: [Name]
+
+**Files:**
+- Create: `exact/path/file.ts`
+- Modify: `exact/path/existing.ts:45-67`
+- Test: `exact/path/test.ts`
+
+**Step 1: Write the failing test**
+[exact test code]
+
+**Step 2: Run to verify it fails**
+`[exact command]` → Expected: FAIL
+
+**Step 3: Write minimal implementation**
+[exact implementation code]
+
+**Step 4: Run to verify it passes**
+`[exact command]` → Expected: PASS
+
+**Step 5: Commit**
+`git add [files] && git commit -m "[type]: [description]"`
+```
+
+### Remember
+- Exact file paths always (no "something like" or "e.g.")
+- Complete code in the plan (not "add validation logic")
+- Exact commands with expected output
+- DRY, YAGNI — remove anything not strictly needed for the request
+- Reference skills with @ syntax if they were requested
+
+## Phase 4: Execution Handoff
+
+After saving the plan, offer:
+
+> **"Plan saved to `docs/plans/<filename>.md`. Two execution options:**
+>
+> **1. Subagent-Driven (this session)** — Fresh subagent per task, review between tasks
+> **2. Parallel Session (separate)** — Open new session, use `superpowers:execute`
+>
+> **Which?"**
+
+- If Subagent-Driven → invoke `superpowers:execute`
+- If Parallel Session → guide to new session with `superpowers:execute`
 
 ## Run the Full Workflow
 
-Execute all four phases of the writing-plans skill without skipping:
-
-1. **Phase 1** — Read CLAUDE.md, git log, file types (silent)
-2. **Phase 2** — Ask all inclusion/practice questions via AskUserQuestion
-3. **Phase 3** — Write the plan to `docs/plans/YYYY-MM-DD-<name>.md`
-4. **Phase 4** — Offer execution handoff (subagent-driven or parallel session)
-
-No phase is optional. No question is skippable.
+Execute all four phases without skipping. No phase is optional. No question is skippable.

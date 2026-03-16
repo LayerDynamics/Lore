@@ -9,7 +9,7 @@ description: Use when tracing how something works in the codebase, investigating
 
 Load this skill before any deep codebase exploration. It gives you a systematic methodology for tracing code in the pew.news multi-service architecture — following call chains across service boundaries, understanding data transformations, and surfacing the findings needed for a review.
 
-Chain with the `superpowers:dispatching-parallel-agents` skill (from the superpowers plugin) when you have 3+ independent paths to investigate simultaneously. Chain with the `code-intel:pr-style-review` skill when you have findings ready to format into a structured review.
+Chain with the `superpowers:dispatching-parallel-agents` skill (from the superpowers plugin) when you have 3+ independent paths to investigate simultaneously. Chain with the `code-intel:review` skill when you have findings ready to format into a structured review.
 
 ## Phase 1: Orient
 

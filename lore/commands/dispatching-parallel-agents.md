@@ -228,9 +228,9 @@ More agents does not mean faster. Each agent has startup overhead. The sweet spo
 
 ## Integration with Other Skills
 
-- **systematic-review**: Dispatches parallel agents for multi-module reviews (one agent per module)
-- **subagent-development**: Sequential task execution with review — use when tasks depend on each other
-- **writing-plans**: Can produce task lists where independent tasks are flagged for parallel dispatch
+- **review**: Dispatches parallel agents for multi-module reviews (one agent per module)
+- **execute**: Sequential task execution with review — use when tasks depend on each other
+- **plan**: Can produce task lists where independent tasks are flagged for parallel dispatch
 
 ## Remember
 

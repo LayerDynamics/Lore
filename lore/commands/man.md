@@ -83,13 +83,13 @@ Search for the component in this order, stopping at the first match. If `--type`
 ### 3b. Fuzzy Matching
 
 If no exact match is found:
-- Search for files containing the name as a substring (e.g., `debug` matches `systematic-debugging`)
+- Search for files containing the name as a substring (e.g., `debug` matches `deep-dive-debugging`)
 - Search across all categories unless `--type` restricts it
 - If multiple matches are found, list them and ask the user to pick one:
   ```
   Multiple matches for "debug":
-    1. skill: systematic-debugging
-    2. command: debug
+    1. skill: debug
+    2. command: deep-dive-debugging
     3. agent: (none)
   Which one? (or re-run with --type)
   ```

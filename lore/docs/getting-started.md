@@ -33,7 +33,7 @@ Try the TDD workflow on a new feature:
 
 1. Start Claude Code in your project
 2. Ask Claude to implement a feature
-3. Claude will automatically use `test-driven-development` to write tests first
+3. Claude will automatically use the `testing` skill (TDD mode) to write tests first
 
 Or invoke explicitly:
 

@@ -83,7 +83,7 @@ Document all decisions and the reasoning. These are the most important outputs o
 
 ## Phase 5: Produce Blueprint
 
-**Invoke the `implementation-blueprint-generator` agent** with the synthesized findings from Phase 4.
+**Invoke the `blueprint-generator` agent** with the synthesized findings from Phase 4.
 
 The blueprint should include:
 - Files to create (with full paths and purpose)

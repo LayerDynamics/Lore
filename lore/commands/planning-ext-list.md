@@ -3,7 +3,7 @@ description: List all implementation plans in docs/plans/ sorted by date, showin
 argument-hint: ""
 ---
 
-# writing-plans: List Plans
+# plan: List Plans
 
 Show all saved implementation plans. Every plan is listed — nothing filtered.
 
@@ -14,7 +14,7 @@ Run:
 ls -lt docs/plans/*.md 2>/dev/null
 ```
 
-If no plans found, output: "No plans found in docs/plans/. Run /writing-plans:plan to create one."
+If no plans found, output: "No plans found in docs/plans/. Run /lore:plan to create one."
 Then stop.
 
 ## Step 2: Read Each Plan

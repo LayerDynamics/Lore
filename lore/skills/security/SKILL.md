@@ -1,17 +1,30 @@
 ---
-description: Scan the project for security vulnerabilities including hardcoded secrets, OWASP patterns (SQLi, XSS, command injection), and insecure configurations. Reports findings by severity.
-argument-hint: Optional path to scan (defaults to current project root)
+name: security
+description: Scan the project for security vulnerabilities (hardcoded secrets, OWASP patterns, insecure configurations) and remediate findings by severity.
+argument-hint: Optional path to scan, or --fix to enter fix mode, or --severity critical|high|all to filter
 ---
 
-# Security Check: Vulnerability Scanner
+# Security — Scan and Fix
+
+Comprehensive security scanning and remediation. Phase 1 scans for vulnerabilities; Phase 2 fixes them.
+
+**Arguments:** $ARGUMENTS
+
+- If `$ARGUMENTS` contains `--fix`, skip to Phase 2 (Fix).
+- If `$ARGUMENTS` contains `--severity`, use it as a filter in both phases.
+- Otherwise, run Phase 1 (Scan). A path argument scopes the scan target.
+
+---
+
+## Phase 1: Scan
 
 Perform a comprehensive security scan of the project for hardcoded secrets, OWASP vulnerability patterns, and insecure configurations. Report every finding with file path, line number, and severity.
 
-## Scan Target
+### Scan Target
 
-If `$ARGUMENTS` is provided, scan that path. Otherwise scan the current working directory.
+If `$ARGUMENTS` provides a path (not a flag), scan that path. Otherwise scan the current working directory.
 
-## Exclusions
+### Exclusions
 
 All scans exclude: `node_modules`, `.git`, `dist`, `build`, `__pycache__`, `.next`, `coverage`, `vendor`
 
@@ -21,8 +34,6 @@ EXCLUDE="node_modules|\.git|dist/|build/|__pycache__|\.next|coverage|vendor"
 ```
 
 ---
-
-## Scan Steps
 
 ### Step 1: Hardcoded Secrets — API Keys and Tokens
 
@@ -215,7 +226,7 @@ grep -rn \
 
 ---
 
-## Output Format
+### Scan Report
 
 After running all scans, produce a structured report:
 
@@ -250,13 +261,106 @@ After running all scans, produce a structured report:
 **Verdict**: [CLEAN / X FINDINGS — REMEDIATION REQUIRED]
 ```
 
-## After the Report
-
-If findings exist, ask the user:
+After the report, if findings exist, ask the user:
 > "I found [N] security issue(s). Would you like me to remediate them now, starting with the most critical?"
 
-If the user says yes, work through each finding:
-1. Explain the specific risk
-2. Propose the fix (e.g., move secret to env var, use parameterized query, enable HTTPS)
-3. Apply the fix
-4. Do NOT mark an issue resolved until the fix is actually in place
+If the user says yes, proceed to Phase 2.
+
+---
+
+## Phase 2: Fix
+
+Systematically remediate security findings from Phase 1 or a previous scan.
+
+### Step 1: Locate Scan Results
+
+Check conversation history for a recent security scan report (Phase 1 output).
+
+If no scan results are found:
+> No scan results found in this session. Run this skill without `--fix` first, or describe the security issue you want to fix.
+
+### Step 2: Parse Arguments
+
+Extract from `$ARGUMENTS`:
+- Severity filter: `--severity critical` (critical only), `--severity high` (critical + high), `--severity all` (default — all findings)
+- Specific finding: `--finding <number>` to fix a single finding from the report
+
+### Step 3: Prioritize Findings
+
+Order findings for remediation:
+1. **Critical** — secrets exposure, active injection vectors, missing auth
+2. **High** — weak crypto, missing rate limiting, overly permissive CORS
+3. **Medium** — missing headers, verbose errors, informational leaks
+4. **Low** — best practice improvements
+
+### Step 4: Fix Each Finding
+
+For each finding in priority order:
+
+#### 4a. Read the Affected Code
+Read the file and surrounding context to understand the vulnerability in its full context.
+
+#### 4b. Determine the Fix
+- **Secrets in code** — Move to environment variables, add to `.gitignore`, rotate the exposed secret
+- **SQL injection** — Use parameterized queries or ORM methods
+- **Command injection** — Use safe APIs (e.g., `execFile` instead of `exec`, array args instead of string)
+- **XSS** — Apply output encoding, use framework auto-escaping, add CSP headers
+- **Weak hashing** — Upgrade to bcrypt/argon2/scrypt with proper salt
+- **Missing auth** — Add authentication middleware to unprotected routes
+- **Permissive CORS** — Restrict to specific allowed origins
+- **Debug mode** — Ensure production configs disable debug
+- **Dependency vulns** — Update affected packages to patched versions
+
+#### 4c. Apply the Fix
+Use Edit to apply the minimal, targeted fix. Do not refactor surrounding code.
+
+#### 4d. Verify the Fix
+After applying:
+- Re-run the specific Grep pattern that detected the original finding
+- Confirm the vulnerable pattern no longer matches
+- Check that the fix does not break existing functionality (run tests if available)
+
+#### 4e. Document What Changed
+Keep a running log:
+```
+Fixed: [file:line] — [what was wrong] → [what was done]
+```
+
+### Step 5: Handle Findings Requiring User Input
+
+Some fixes need user decisions:
+
+```
+Finding: Hardcoded API key in config/api.js:14
+To fix this properly, I need to know:
+1. Where should the key be stored? (environment variable, secrets manager, etc.)
+2. Has this key been exposed in version control? (if so, it should be rotated)
+3. What is the environment variable name convention for this project?
+```
+
+Ask the user and proceed with their answer.
+
+### Step 6: Verification Pass
+
+After all findings are addressed:
+
+1. Re-run the scan patterns from Phase 1 Steps 1-10
+2. Report how many findings were fixed vs. remaining
+3. For any remaining findings, explain why they weren't fixed (needs user input, requires infrastructure change, etc.)
+
+### Step 7: Summary
+
+```markdown
+## Security Fix Summary
+
+**Fixed**: [N] findings
+**Remaining**: [M] findings (requiring user input or infrastructure changes)
+
+### Changes Made
+| File | Line | Finding | Fix Applied |
+|------|------|---------|-------------|
+| ... | ... | ... | ... |
+
+### Still Needs Attention
+- [finding and what's needed to fix it]
+```

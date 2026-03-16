@@ -3,7 +3,7 @@ description: Resume an existing plan at the next incomplete task. If no plan fil
 argument-hint: optional path to plan file (e.g. docs/plans/2026-02-17-auth.md)
 ---
 
-# writing-plans: Continue
+# plan: Continue
 
 Resume an existing implementation plan from where it left off.
 
@@ -32,7 +32,7 @@ Confirm: "Ready to execute Task N: [name]? (yes to proceed)"
 ## Step 4: Execute
 
 Hand off to execution:
-- If staying in this session: invoke `superpowers:subagent-driven-development`
-- If opening a new session: guide user to open new session and invoke `superpowers:executing-plans`
+- If staying in this session: invoke `superpowers:execute`
+- If opening a new session: guide user to open new session and invoke `superpowers:execute`
 
 Do not skip either the confirmation in Step 3 or the execution handoff in Step 4.
