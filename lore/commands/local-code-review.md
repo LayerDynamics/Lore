@@ -17,7 +17,7 @@ You are performing a comprehensive, git-free code review with completely fresh e
 
 1. **Discover the project**: Use Glob and Read to understand the project structure, language(s), framework(s), and entry points. Start with common indicators: package.json, Cargo.toml, go.mod, pyproject.toml, Makefile, README, etc.
 
-2. **Dispatch parallel review agents**: Use the Task tool with the `local-code-review:code-reviewer` agent to run parallel reviews. For targeted reviews, scope agents to the specified paths. For full reviews, cover the entire project.
+2. **Dispatch parallel review agents**: Use the Task tool with the `review:code-reviewer` agent to run parallel reviews. For targeted reviews, scope agents to the specified paths. For full reviews, cover the entire project.
 
    Review dimensions:
    - **Quality**: Code smells, anti-patterns, complexity, naming, duplication, dead code

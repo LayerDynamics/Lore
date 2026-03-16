@@ -16,7 +16,7 @@ Conduct a structured, multi-pass review of an entire module or codebase where ev
 - Auditing a codebase before a release, handoff, or migration
 - The review scope exceeds 3 files
 - You need to guarantee full coverage (no file left unread)
-- Single-file review skills (code-review-methodology, pr-style-review) are insufficient for the scope
+- Single-file review skills (review) are insufficient for the scope
 
 ## Core Principles
 
@@ -187,9 +187,9 @@ Use the `superpowers:dispatching-parallel-agents` skill when the file count exce
 ## Integration with Other Skills
 
 - **Before this skill**: Use `verify-before-documenting` if you need to understand what exists
-- **During Pass 1-3**: Use `code-review-methodology` criteria as the evaluation framework per file
-- **After this skill**: Use `pr-style-review` format if findings need to be presented as a formal review
-- **For fixes**: Chain into `writing-plans` to turn critical/high findings into an implementation plan
+- **During Pass 1-3**: Use `review` criteria as the evaluation framework per file
+- **After this skill**: Use `review` format if findings need to be presented as a formal review
+- **For fixes**: Chain into `plan` to turn critical/high findings into an implementation plan
 
 ## Quick Reference
 

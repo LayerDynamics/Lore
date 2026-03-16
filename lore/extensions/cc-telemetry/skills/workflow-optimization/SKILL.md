@@ -168,7 +168,7 @@ Analysis:
 Recommendations:
 1. **Stop re-reading files**: After Read, remember content for 5 minutes
 2. **Batch your edits**: Plan all changes, then make them in one Edit
-3. **Reduce errors**: Use /test-driven-development skill before writing code
+3. **Reduce errors**: Use /testing skill (TDD mode) before writing code
 
 Expected impact: 30% faster sessions, 9% fewer errors
 

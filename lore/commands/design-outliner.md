@@ -21,7 +21,7 @@ Produce a structured system design outline that defines **what the components ar
 ## Skill Chain Position
 
 ```
-brainstorming → design-outliner → implementation-blueprint → code
+brainstorming → design → blueprint → code
      (why)          (what)              (how)              (build)
 ```
 
@@ -190,7 +190,7 @@ Assemble into a single document:
 [Anything the design cannot resolve — these become research tasks]
 
 ## Next Step
-→ Use `implementation-blueprint` to convert this design into file-level build plan
+→ Use `blueprint` to convert this design into file-level build plan
 ```
 
 ### Step 8: Validate the Design

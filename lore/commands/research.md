@@ -21,7 +21,7 @@ If the feature description is absent or ambiguous, ask for clarification before 
 
 ### Step 2: Load the Feature Research Skill
 
-Invoke the `feature-research:feature-research` skill. Follow it exactly for the selected depth level.
+Invoke the `research` skill. Follow it exactly for the selected depth level.
 
 ### Step 3: Execute Research Phases
 
@@ -31,14 +31,14 @@ Follow the skill through all applicable phases for the selected depth:
 - Phase 1: Frame the research question
 - Phase 2: Codebase analysis via `codebase-pattern-scout` agent only
 - Skip Phase 3 (no external research)
-- Simplified blueprint via `implementation-blueprint-generator` agent
+- Simplified blueprint via `blueprint-generator` agent
 
 **Standard** (default):
 - Phase 1: Frame the research question
 - Phase 2: Codebase analysis via `codebase-pattern-scout` agent
 - Phase 3: External research via `external-research-synthesizer` agent (if external dependencies identified)
 - Phase 4: Synthesize findings
-- Phase 5: Full blueprint via `implementation-blueprint-generator` agent
+- Phase 5: Full blueprint via `blueprint-generator` agent
 
 **Deep** (--depth deep):
 - All 5 phases
@@ -53,7 +53,7 @@ Create the `.feature-research/` directory in the project root if it doesn't exis
 Save the research report to:
 `.feature-research/[kebab-feature-name]-[YYYY-MM-DD].md`
 
-The `implementation-blueprint-generator` agent will save the blueprint alongside it.
+The `blueprint-generator` agent will save the blueprint alongside it.
 
 ### Step 5: Present Summary
 
@@ -62,7 +62,7 @@ After completing research, summarize:
 - Location of the research report and blueprint
 - Top 1-3 risks identified
 - Any open questions that need user input before implementation
-- Suggested next step: "Run `/feature-research:blueprint [feature]` to regenerate the blueprint, or begin implementation following the blueprint."
+- Suggested next step: "Run `/lore:blueprint [feature]` to regenerate the blueprint, or begin implementation following the blueprint."
 
 ## Tips
 

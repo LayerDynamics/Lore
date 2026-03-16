@@ -81,4 +81,4 @@ After each optimization:
 - Behavior: [unchanged/changed — explain]
 ```
 
-After honing, run `/scale-review:test-scaling` to validate improvements.
+After honing, run `/lore:testing --mode scale` to validate improvements.

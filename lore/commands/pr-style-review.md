@@ -9,7 +9,7 @@ description: Use when synthesizing codebase investigation findings into structur
 
 Load this skill when you have completed a codebase investigation and need to format findings into a structured review. This skill defines how to evaluate, score, and present technical findings the way a principal engineer would in a PR review.
 
-This is the synthesis phase — it comes after `deep-investigation`, not before. Never write a review about code you haven't read.
+This is the synthesis phase — it comes after `investigate`, not before. Never write a review about code you haven't read.
 
 Chain with the `superpowers:receiving-code-review` skill (from the superpowers plugin) when the user will be implementing fixes from the review you produce.
 

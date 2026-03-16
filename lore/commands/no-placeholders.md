@@ -117,7 +117,7 @@ See `references/fix-patterns.md` for before/after code examples in TypeScript, P
 
 ## Integration with Other Workflows
 
-### Writing Plans (`/writing-plans`)
+### Writing Plans (`/plan`)
 - Plans must not contain tasks phrased as "mock X for now" or "stub Y temporarily"
 - Every planned task must include a real implementation strategy
 - "TBD" implementation details are not acceptable in plans

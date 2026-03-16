@@ -5,7 +5,7 @@ description: Use when you have a spec or requirements for a multi-step task and 
 
 # Writing Plans
 
-**Announce at start:** "Using writing-plans to create the implementation plan."
+**Announce at start:** "Using plan to create the implementation plan."
 
 ## Phase 1: Read Project Context (silent, no output)
 
@@ -51,7 +51,7 @@ Save to `docs/plans/YYYY-MM-DD-<feature-name>.md`.
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:execute to implement this plan task-by-task.
 > **Scope guard:** Do ONLY what is listed here. If you discover adjacent issues, note them as a TODO and continue. Do NOT fix them.
 
 **Goal:** [One sentence]
@@ -105,9 +105,9 @@ After saving the plan, offer:
 > **"Plan saved to `docs/plans/<filename>.md`. Two execution options:**
 >
 > **1. Subagent-Driven (this session)** — Fresh subagent per task, review between tasks
-> **2. Parallel Session (separate)** — Open new session, use `superpowers:executing-plans`
+> **2. Parallel Session (separate)** — Open new session, use `superpowers:execute`
 >
 > **Which?"**
 
-- If Subagent-Driven → invoke `superpowers:subagent-driven-development`
-- If Parallel Session → guide to new session with `superpowers:executing-plans`
+- If Subagent-Driven → invoke `superpowers:execute`
+- If Parallel Session → guide to new session with `superpowers:execute`

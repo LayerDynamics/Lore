@@ -52,9 +52,7 @@ Config file: .claude/settings.local.json
 
 Available commands:
   /lore:list            — List all available lore skills, commands, and agents
-  /lore:create-skill    — Create a new skill from template
-  /lore:create-command  — Create a new command
-  /lore:create-agent    — Create a new agent
+  /lore:create          — Create a new skill, command, or agent
   /lore:create-mcp      — Create a new MCP server integration
   /lore:create-plugin   — Guided end-to-end plugin creation
 ```

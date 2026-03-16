@@ -40,8 +40,8 @@ Structured workflows that guide Claude through complex tasks:
 
 | Skill | Purpose |
 |-------|---------|
-| `test-driven-development` | Red-green-refactor TDD workflow |
-| `systematic-debugging` | Methodical bug investigation |
+| `testing` | TDD, coverage analysis, and scale testing |
+| `debug` | Methodical bug investigation |
 | `brainstorming` | Structured exploration before building |
 | `verification-before-completion` | Verify before claiming done |
 | `lifecycle-phases` | Clarify → Plan → Execute → Review |

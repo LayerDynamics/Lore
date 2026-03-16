@@ -4,9 +4,9 @@ Lore stands on the shoulders of excellent frameworks. The following projects ins
 
 ## Superpowers
 
-- **TDD workflow** — The test-driven-development skill reimplements the red-green-refactor discipline
+- **TDD workflow** — The testing skill (TDD mode) reimplements the red-green-refactor discipline
 - **Brainstorming** — Structured exploration before building
-- **Subagent-driven development** — Parallel task execution patterns
+- **Subagent-driven development** — Parallel task execution patterns (now in execute skill)
 - **Systematic debugging** — Methodical bug investigation approach
 - **Verification before completion** — Verify before claiming done
 
