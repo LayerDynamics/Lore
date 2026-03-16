@@ -19,7 +19,7 @@ Extract from `$ARGUMENTS`:
 
 ### Step 2: Load the Codebase Pattern Analysis Skill
 
-Invoke the `analyze` skill for orientation and extraction methodology.
+Invoke the `feature-research:codebase-pattern-analysis` skill for orientation and extraction methodology.
 
 ### Step 3: Launch codebase-pattern-scout Agent
 
@@ -50,5 +50,5 @@ Present the structured findings from the agent plus insights from the direct fil
 
 - `--focus` narrows the search to a specific concept (e.g., `--focus storage` focuses on storage-related code)
 - Without `--focus`, the agent maps the full architecture
-- Results can feed directly into `/lore:research` or `/lore:blueprint`
+- Results can feed directly into `/feature-research:research` or `/feature-research:blueprint`
 - To search for where a specific concept appears: use `Grep` directly before launching the agent

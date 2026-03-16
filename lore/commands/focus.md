@@ -3,13 +3,13 @@ description: Reset scope by invoking the staying-on-request skill. Call this whe
 argument-hint: optional description of the drift (e.g. "you refactored auth when I asked about logging")
 ---
 
-# plan: Focus
+# writing-plans: Focus
 
 Invoke the staying-on-request skill immediately. Run the full skill — do not summarize or abbreviate it.
 
 ## Step 1: Load the Skill
 
-Use the Skill tool to load `plan:staying-on-request`.
+Use the Skill tool to load `writing-plans:staying-on-request`.
 
 ## Step 2: Acknowledge the Drift (if $ARGUMENTS provided)
 

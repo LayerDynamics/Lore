@@ -40,6 +40,6 @@ Add project-specific CLAUDE.md instructions that reference Lore skills:
 
 ```markdown
 # Project Instructions
-- Always use the testing skill (TDD mode) for new features
+- Always use the test-driven-development skill for new features
 - Skip brainstorming for bugfixes under 20 lines
 ```

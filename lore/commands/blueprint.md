@@ -19,7 +19,7 @@ Extract from `$ARGUMENTS`:
 
 ### Step 2: Load the Implementation Blueprint Skill
 
-Invoke the `research:blueprint` skill for blueprint structure and quality standards.
+Invoke the `feature-research:implementation-blueprint` skill for blueprint structure and quality standards.
 
 ### Step 3: Find Existing Research
 
@@ -30,9 +30,9 @@ Glob: .feature-research/*.md
 ```
 
 - If files exist matching the feature description: read them — they are the primary input
-- If no matching files exist: ask the user to provide research context, or offer to run `/lore:research` first
+- If no matching files exist: ask the user to provide research context, or offer to run `/feature-research:research` first
 
-### Step 4: Launch Blueprint Generation
+### Step 4: Launch implementation-blueprint-generator Agent
 
 Provide the agent with:
 - The feature description
@@ -55,7 +55,7 @@ If open questions require user input, ask them before ending the session.
 
 ## Tips
 
-- Run `/lore:research` before this command for comprehensive research + blueprint in one workflow
+- Run `/feature-research:research` before this command for comprehensive research + blueprint in one workflow
 - Use this command alone when you've done your own research and need it structured
 - The blueprint references specific files — verify file paths exist before implementation starts
 - If a blueprint already exists for this feature, the agent will note what's changed since last time

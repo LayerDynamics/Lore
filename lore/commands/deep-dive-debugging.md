@@ -7,7 +7,7 @@ argument-hint: "<bug description or failing test/command>"
 # Deep Dive Debugging: $ARGUMENTS
 
 This is the nuclear option for debugging. Use when:
-- Standard `/lore:debug` hasn't solved it
+- Standard `/lore:debug` or `/lore:systematic-debugging` hasn't solved it
 - The bug spans multiple modules, services, or layers
 - Previous fix attempts have made things worse
 - You don't understand WHY the bug exists, not just WHAT it is

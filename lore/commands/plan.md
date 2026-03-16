@@ -3,9 +3,9 @@ description: Guided implementation planning — reads project context, asks abou
 argument-hint: optional task description
 ---
 
-# plan: Plan
+# writing-plans: Plan
 
-**Load the plan skill first** using the Skill tool.
+**Load the writing-plans skill first** using the Skill tool.
 
 ## Starting Context
 
@@ -15,7 +15,7 @@ If `$ARGUMENTS` is empty, begin the skill from scratch with no pre-filled contex
 
 ## Run the Full Workflow
 
-Execute all four phases of the plan skill without skipping:
+Execute all four phases of the writing-plans skill without skipping:
 
 1. **Phase 1** — Read CLAUDE.md, git log, file types (silent)
 2. **Phase 2** — Ask all inclusion/practice questions via AskUserQuestion
