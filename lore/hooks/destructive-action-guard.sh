@@ -38,9 +38,8 @@ case "$FIRST_BIN" in
   echo|printf|env|printenv|set|export|\
   npm|npx|node|deno|bun|yarn|pnpm|\
   python|python3|pip|pip3|\
-  git|gh|\
+  gh|\
   brew|cargo|rustup|go|\
-  docker|kubectl|\
   ssh|scp|rsync|\
   curl|wget|jq|sed|awk|sort|uniq|tr|cut|tee|\
   mkdir|touch|cp|mv|ln|basename|dirname|realpath|readlink|\
@@ -51,6 +50,55 @@ case "$FIRST_BIN" in
     exit 0
     ;;
 esac
+
+# ── SAFE SUBCOMMANDS — allow non-destructive git/docker/kubectl ───
+if [ "$FIRST_BIN" = "git" ]; then
+  GIT_SUB=$(echo "$FIRST_CMD" | awk '{print $2}')
+  case "$GIT_SUB" in
+    status|log|diff|show|branch|tag|remote|fetch|pull|add|commit|\
+    merge|rebase|cherry-pick|bisect|blame|shortlog|describe|\
+    ls-files|ls-tree|rev-parse|config|init|clone|worktree|\
+    stash) # bare "git stash" (save) is safe; drop/clear caught in tier 2
+      # But check for destructive stash subcommands
+      if [ "$GIT_SUB" = "stash" ] && echo "$NORM_CMD" | grep -qE '\bgit\s+stash\s+(drop|clear)\b'; then
+        : # fall through to tier 2
+      else
+        exit 0
+      fi
+      ;;
+    push)
+      # Only safe if no --force/-f flag
+      if ! echo "$NORM_CMD" | grep -qE '(-f\b|--force\b|--force-with-lease\b)'; then
+        exit 0
+      fi
+      ;;
+  esac
+fi
+
+if [ "$FIRST_BIN" = "docker" ]; then
+  DOCKER_SUB=$(echo "$FIRST_CMD" | awk '{print $2}')
+  case "$DOCKER_SUB" in
+    ps|images|logs|inspect|exec|run|build|pull|push|tag|login|logout|\
+    compose|network|volume)
+      # volume is safe except "volume rm"
+      if [ "$DOCKER_SUB" = "volume" ] && echo "$NORM_CMD" | grep -qE '\bvolume\s+rm\b'; then
+        : # fall through
+      else
+        exit 0
+      fi
+      ;;
+  esac
+fi
+
+if [ "$FIRST_BIN" = "kubectl" ]; then
+  KUBE_SUB=$(echo "$FIRST_CMD" | awk '{print $2}')
+  case "$KUBE_SUB" in
+    get|describe|logs|exec|port-forward|apply|create|scale|rollout|\
+    config|top|explain|api-resources|version)
+      exit 0
+      ;;
+  esac
+fi
 
 # ── TIER 1: HARD BLOCK — catastrophic, never intentional ─────────
 HARD_BLOCK=""
@@ -83,9 +131,34 @@ fi
 # ── TIER 2: APPROVAL REQUIRED — destructive but sometimes intentional ──
 WARN=""
 
-# rm -rf (any target, but only as actual rm command)
-if [ "$FIRST_BIN" = "rm" ] && echo "$NORM_CMD" | grep -qE '\brm\s+(-[a-zA-Z]*r[a-zA-Z]*f|-[a-zA-Z]*f[a-zA-Z]*r|--recursive\s+--force|--force\s+--recursive|-r\s+-f|-f\s+-r)\b'; then
-  WARN="rm -rf (recursive force delete)"
+# rm — ANY use of rm requires approval (all deletion is destructive)
+if [ "$FIRST_BIN" = "rm" ]; then
+  WARN="rm (file/directory deletion)"
+fi
+
+# unlink (another way to delete files)
+if [ -z "$WARN" ] && [ "$FIRST_BIN" = "unlink" ]; then
+  WARN="unlink (file deletion)"
+fi
+
+# shred / srm (secure delete)
+if [ -z "$WARN" ] && echo "$FIRST_BIN" | grep -qE '^(shred|srm)$'; then
+  WARN="${FIRST_BIN} (secure file deletion)"
+fi
+
+# rmdir
+if [ -z "$WARN" ] && [ "$FIRST_BIN" = "rmdir" ]; then
+  WARN="rmdir (directory deletion)"
+fi
+
+# trash / trash-put (trash-cli)
+if [ -z "$WARN" ] && echo "$FIRST_BIN" | grep -qE '^(trash|trash-put)$'; then
+  WARN="${FIRST_BIN} (move to trash)"
+fi
+
+# rm anywhere in a pipeline (e.g. xargs rm, find -exec rm, find -delete)
+if [ -z "$WARN" ] && echo "$NORM_CMD" | grep -qE '(\|\s*xargs\s+rm\b|exec\s+rm\b|-delete\b)'; then
+  WARN="piped/exec deletion (rm via pipeline or find -delete)"
 fi
 
 # git push --force
@@ -113,9 +186,29 @@ if [ -z "$WARN" ] && echo "$NORM_CMD" | grep -qE '\bgit\s+branch\s+.*-D'; then
   WARN="git branch -D (force delete branch)"
 fi
 
+# git stash drop / git stash clear (destroys stashed work)
+if [ -z "$WARN" ] && echo "$NORM_CMD" | grep -qE '\bgit\s+stash\s+(drop|clear)\b'; then
+  WARN="git stash drop/clear (destroys stashed work)"
+fi
+
 # DROP DATABASE/TABLE/SCHEMA
 if [ -z "$WARN" ] && echo "$NORM_CMD" | grep -qiE '\bDROP\s+(DATABASE|TABLE|SCHEMA)\b'; then
   WARN="DROP DATABASE/TABLE/SCHEMA"
+fi
+
+# DELETE FROM / TRUNCATE (database row deletion)
+if [ -z "$WARN" ] && echo "$NORM_CMD" | grep -qiE '\b(DELETE\s+FROM|TRUNCATE\s+(TABLE)?)\b'; then
+  WARN="DELETE FROM / TRUNCATE (database row deletion)"
+fi
+
+# docker rm / docker rmi / docker volume rm / docker system prune
+if [ -z "$WARN" ] && echo "$NORM_CMD" | grep -qE '\bdocker\s+(rm|rmi|volume\s+rm|system\s+prune|container\s+rm|image\s+rm)\b'; then
+  WARN="docker resource deletion"
+fi
+
+# kubectl delete
+if [ -z "$WARN" ] && echo "$NORM_CMD" | grep -qE '\bkubectl\s+delete\b'; then
+  WARN="kubectl delete (cluster resource deletion)"
 fi
 
 if [ -n "$WARN" ]; then

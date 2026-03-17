@@ -291,6 +291,22 @@ def cmd_daemon(args, conn):
         return
 
 
+def cmd_dashboard(args, conn):
+    """Launch the web dashboard as a subprocess."""
+    dashboard_script = Path(__file__).resolve().parent.parent / "app" / "dashboard.py"
+    if not dashboard_script.exists():
+        print(f"Dashboard not found at {dashboard_script}")
+        sys.exit(1)
+    cmd = [sys.executable, str(dashboard_script), "--port", str(args.port)]
+    if args.no_open:
+        cmd.append("--no-open")
+    try:
+        proc = subprocess.run(cmd)
+        sys.exit(proc.returncode)
+    except KeyboardInterrupt:
+        pass
+
+
 # ---------------------------------------------------------------------------
 # Argument parsing
 # ---------------------------------------------------------------------------
@@ -337,6 +353,11 @@ def build_parser() -> argparse.ArgumentParser:
         nargs="?", default="status",
     )
 
+    # dashboard
+    p_dash = sub.add_parser("dashboard", help="Launch web dashboard")
+    p_dash.add_argument("--port", type=int, default=7900, help="Port (default: 7900)")
+    p_dash.add_argument("--no-open", action="store_true", help="Don't auto-open browser")
+
     return ap
 
 
@@ -354,6 +375,7 @@ def main() -> None:
         "stats":    cmd_stats,
         "live":     cmd_live,
         "daemon":   cmd_daemon,
+        "dashboard": cmd_dashboard,
     }
 
     if args.command is None:
