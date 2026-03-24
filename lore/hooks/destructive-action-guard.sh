@@ -131,14 +131,16 @@ fi
 # ── TIER 2: APPROVAL REQUIRED — destructive but sometimes intentional ──
 WARN=""
 
-# rm — ANY use of rm requires approval (all deletion is destructive)
+# rm — flag for awareness but allow (user can deny in Claude Code prompt)
+# Hard blocks above already catch rm -rf on root/home
 if [ "$FIRST_BIN" = "rm" ]; then
-  WARN="rm (file/directory deletion)"
+  echo "NOTE: rm command will delete files: ${COMMAND}" >&2
+  exit 0
 fi
 
-# unlink (another way to delete files)
-if [ -z "$WARN" ] && [ "$FIRST_BIN" = "unlink" ]; then
-  WARN="unlink (file deletion)"
+# unlink (another way to delete files) — allow, let Claude Code permission system handle
+if [ "$FIRST_BIN" = "unlink" ]; then
+  exit 0
 fi
 
 # shred / srm (secure delete)
@@ -146,9 +148,9 @@ if [ -z "$WARN" ] && echo "$FIRST_BIN" | grep -qE '^(shred|srm)$'; then
   WARN="${FIRST_BIN} (secure file deletion)"
 fi
 
-# rmdir
-if [ -z "$WARN" ] && [ "$FIRST_BIN" = "rmdir" ]; then
-  WARN="rmdir (directory deletion)"
+# rmdir — allow, let Claude Code permission system handle
+if [ "$FIRST_BIN" = "rmdir" ]; then
+  exit 0
 fi
 
 # trash / trash-put (trash-cli)
