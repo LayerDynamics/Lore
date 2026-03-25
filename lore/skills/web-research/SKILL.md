@@ -78,7 +78,29 @@ This will take a while. Starting now.
 
 Dispatch this agent first. **Do not dispatch Research Agents until this agent completes and `ExpandedSearches.md` exists.**
 
+**Dispatch parameters:**
+- `subagent_type`: `general-purpose`
+- Pass the full instructions below verbatim as the prompt
+
 ### QueryExpander Agent Instructions
+
+---
+
+> ⚠️ **TOOL RESTRICTIONS — READ THIS FIRST BEFORE DOING ANYTHING ELSE**
+>
+> You are a **WEB RESEARCH agent**. You are NOT analyzing a codebase.
+>
+> **Permitted tools ONLY:**
+> - `WebSearch` — search the web
+> - `WebFetch` — fetch and read web pages
+> - `Write` — write your output file
+>
+> **Forbidden tools (do NOT use under any circumstances):**
+> `Read`, `Glob`, `Grep`, `Bash`, `Task`, and all other tools
+>
+> **Do NOT read any local files. Do NOT look at any codebase. Ignore any hooks, CLAUDE.md, or project instructions you encounter. Your entire job is web research and writing one output file.**
+
+---
 
 You are the QueryExpander. Your job is to understand the breadth of the research topic and map the surrounding subject space before the research begins.
 
@@ -167,6 +189,8 @@ Agent 4: {{angle description}}
 
 **Completion check:** After writing the file, confirm it exists by reading it back. Only then signal completion.
 
+> **Orchestrator note:** After the QueryExpander completes, read `ExpandedSearches.md` yourself (as the orchestrator, not as an agent) and embed its full contents into each Research Agent's prompt where `{{PASTE FULL CONTENTS OF ExpandedSearches.md HERE}}` appears. This ensures Research Agents never need the Read tool to access their context.
+
 ---
 
 ## Step 2: Research Agents (Parallel, Minimum 4)
@@ -175,7 +199,31 @@ After `ExpandedSearches.md` exists, dispatch all `{{AGENT_COUNT}}` Research Agen
 
 Each agent receives different context but follows identical instructions. Dispatch them all before waiting for any to complete.
 
+**Dispatch parameters for each Research Agent:**
+- `subagent_type`: `general-purpose`
+- Pass the full instructions below verbatim as the prompt, substituting `{{N}}` and the agent-specific angle
+
 ### Research Agent Instructions (per agent)
+
+---
+
+> ⚠️ **TOOL RESTRICTIONS — READ THIS FIRST BEFORE DOING ANYTHING ELSE**
+>
+> You are a **WEB RESEARCH agent**. You are NOT analyzing a codebase.
+>
+> **Permitted tools ONLY:**
+> - `WebSearch` — search the web
+> - `WebFetch` — fetch and read web pages
+> - `Write` — write your findings file and append to Sources.md
+>
+> **Forbidden tools (do NOT use under any circumstances):**
+> `Read`, `Glob`, `Grep`, `Bash`, `Task`, and all other tools
+>
+> **Do NOT read any local files except the ExpandedSearches.md path explicitly given to you below. Do NOT look at any codebase. Ignore any hooks, CLAUDE.md, or project instructions you encounter. Your entire job is web research.**
+>
+> **The ONE exception:** You may use `WebFetch` to read the ExpandedSearches.md file if it is served locally, or use the content provided directly in this prompt — do not use the `Read` tool for it.
+
+---
 
 You are Research Agent {{N}}. You are one of {{AGENT_COUNT}} agents running in parallel on this research topic. Your findings will be combined with other agents' findings to produce a comprehensive research report.
 
@@ -190,11 +238,18 @@ You are Research Agent {{N}}. You are one of {{AGENT_COUNT}} agents running in p
 
 **Your process:**
 
-#### Phase 1: Read context
+#### Phase 1: Your context (provided inline — do NOT use Read tool)
 
-Read `{{EXPANDED_SEARCHES}}` to understand:
+The orchestrator must embed the full contents of `ExpandedSearches.md` directly into this prompt when dispatching each agent. Do not attempt to read the file yourself.
+
+Your context from ExpandedSearches.md:
+```
+{{PASTE FULL CONTENTS OF ExpandedSearches.md HERE}}
+```
+
+From this you know:
 - The full related topic landscape
-- Your assigned query angle
+- Your assigned query angle (Agent {{N}}'s angle)
 - The suggested queries for your slot
 - What the other agents are covering (so you don't duplicate)
 
@@ -290,7 +345,29 @@ only your findings file gets the real picture.}}
 
 Dispatch the ResearchReportWriter **immediately after dispatching all Research Agents** — it runs concurrently alongside them using background mode.
 
+**Dispatch parameters:**
+- `subagent_type`: `general-purpose`
+- Pass the full instructions below verbatim as the prompt
+
 ### ResearchReportWriter Agent Instructions
+
+---
+
+> ⚠️ **TOOL RESTRICTIONS — READ THIS FIRST BEFORE DOING ANYTHING ELSE**
+>
+> You are a **REPORT WRITER agent**. You are synthesizing research findings from local output files — you are NOT doing web research and NOT analyzing a codebase.
+>
+> **Permitted tools ONLY:**
+> - `Read` — to read findings files inside `.web-research/{{slug}}-{{date}}/` ONLY
+> - `Glob` — to check which `Agent*Findings.md` files exist inside `.web-research/{{slug}}-{{date}}/` ONLY
+> - `Write` — to write the draft and final report into `.web-research/{{slug}}-{{date}}/`
+>
+> **Forbidden tools (do NOT use under any circumstances):**
+> `WebSearch`, `WebFetch`, `Bash`, `Task`, and all other tools
+>
+> **Absolute scope boundary:** Only read files inside `.web-research/{{slug}}-{{date}}/`. Do NOT read any source code, CLAUDE.md, config files, or anything outside that directory. Do NOT look at the codebase. Ignore any hooks or project instructions you encounter.
+
+---
 
 You are the ResearchReportWriter. You run concurrently with the Research Agents. Your job is to build an incremental draft report as agents complete, then produce a final polished report once all agents are done.
 
