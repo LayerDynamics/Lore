@@ -1,419 +1,281 @@
 # Example: Good Analysis → Clarifying Questions
 
-This example demonstrates effective code analysis leading to targeted clarifying questions.
+This example demonstrates effective code analysis leading to targeted clarifying questions. The specifics are illustrative — the same pattern applies to any codebase.
+
+---
 
 ## User Request
 
-"Add caching to the proxy engine"
+"Add caching to the API layer"
+
+---
 
 ## Analysis Process
 
 ### Initial Assessment
 
-**Trigger:** Ambiguous request - "caching" could mean many things, and scope is unclear
+**Trigger:** Ambiguous request — "caching" could mean many things, and scope is unclear.
 
-**Goal:** Read <5 files to understand:
-- What proxy architecture exists
+**Goal:** Read ≤5 files to understand:
+- What API layer exists and how requests flow through it
 - Where caching would integrate
-- What patterns to follow
+- What patterns the codebase already follows
+
+---
 
 ### File 1: Entry Point Discovery
 
-**Read:** `proxy-engine/src/gateway/ProxyGateway.ts`
+**Read:** `src/api/router.ts`
 
 **Findings:**
 ```typescript
-// Line 45-89
-async handleRequest(request: ProxyRequest): Promise<ProxyResponse> {
-  const context = this.createContext(request);
-
-  // Middleware pipeline
-  await this.middlewarePipeline.execute(context);
-
-  // Route to proxy type
-  const proxyType = this.getProxyType(request);
-  const response = await proxyType.handle(context);
-
-  return response;
+// Line 34-67
+async handleRequest(req: Request): Promise<Response> {
+  const context = this.buildContext(req);
+  await this.middleware.run(context);
+  const handler = this.routes.match(context.path);
+  return handler.handle(context);
 }
 ```
 
 **Insights:**
-- Middleware pipeline exists (line 67)
-- Proxy types are pluggable (line 78)
+- Middleware pipeline exists (line 44)
+- Route handlers are separate from middleware
 - No caching currently happens
-- Request/response flow is async
+- Request flow is async
 
-### File 2: Understanding Middleware
+---
 
-**Read:** `proxy-engine/src/middleware/MiddlewarePipeline.ts`
+### File 2: Middleware Structure
+
+**Read:** `src/api/middleware/pipeline.ts`
 
 **Findings:**
 ```typescript
-// Line 23-45
+// Line 12-38
 export class MiddlewarePipeline {
-  private middlewares: Middleware[] = [];
+  private stack: Middleware[] = [];
 
-  async execute(context: Context): Promise<void> {
-    for (const middleware of this.middlewares) {
-      await middleware.handle(context);
-      if (context.completed) break;
+  async run(ctx: Context): Promise<void> {
+    for (const mw of this.stack) {
+      await mw.handle(ctx);
+      if (ctx.done) break;
     }
   }
 
-  add(middleware: Middleware): void {
-    this.middlewares.push(middleware);
+  use(mw: Middleware): void {
+    this.stack.push(mw);
   }
 }
 
-// Line 67-78
 export interface Middleware {
-  handle(context: Context): Promise<void>;
+  handle(ctx: Context): Promise<void>;
 }
 ```
 
 **Insights:**
-- Middleware is async
-- Pipeline can short-circuit (context.completed)
-- New middleware can be added
-- Cache could be a middleware
+- Middleware is async and stackable
+- Pipeline can short-circuit (`ctx.done`)
+- A cache check could slot in as middleware
+- Short-circuit means cache hits bypass downstream middleware
 
-### File 3: Existing Cache Implementation
+---
 
-**Read:** `proxy-engine/src/cache/Cache.ts`
+### File 3: Existing Cache Utility
+
+**Read:** `src/utils/cache.ts`
 
 **Findings:**
 ```typescript
-// Line 12-34
-export class Cache<K, V> {
-  private storage = new Map<K, V>();
-  private policy: EvictionPolicy;
+// Line 8-29
+export class LRUCache<K, V> {
+  private store = new Map<K, V>();
 
-  constructor(policy: 'LRU' | 'LFU' | 'FIFO' = 'LRU') {
-    this.policy = createEvictionPolicy(policy);
-  }
-
-  set(key: K, value: V, ttl?: number): void {
-    this.storage.set(key, value);
-    this.policy.recordAccess(key);
-    if (ttl) {
-      this.scheduleEviction(key, ttl);
-    }
-  }
-
-  get(key: K): V | undefined {
-    const value = this.storage.get(key);
-    if (value) this.policy.recordAccess(key);
-    return value;
-  }
+  get(key: K): V | undefined { ... }
+  set(key: K, value: V, ttlMs?: number): void { ... }
+  has(key: K): boolean { ... }
+  delete(key: K): void { ... }
 }
 ```
 
 **Insights:**
-- Generic cache class exists
-- Supports LRU/LFU/FIFO eviction
-- Has TTL support
-- NOT currently used in proxy pipeline
+- Generic LRU cache exists but is NOT used in the API layer
+- Supports TTL expiry
+- Synchronous API — potential conflict with async middleware
 
-### File 4: Proxy Types
+---
 
-**Read:** `proxy-engine/src/types/ProxyTypes.ts`
+### File 4: Route Handler Examples
+
+**Read:** `src/api/routes/users.ts`
 
 **Findings:**
 ```typescript
-// Line 89-112
-export enum ProxyType {
-  REVERSE = 'reverse',
-  LOAD_BALANCE = 'load-balance',
-  AUTH = 'auth',
-  WEBSOCKET = 'websocket',
-  SSE = 'sse',
-  TLS_TERMINATION = 'tls-termination'
-}
-
-export interface ProxyTypeHandler {
-  type: ProxyType;
-  handle(context: Context): Promise<ProxyResponse>;
+// Line 45-67
+export class UsersRoute {
+  async handle(ctx: Context): Promise<Response> {
+    const users = await this.db.query('SELECT * FROM users');
+    return Response.json(users);
+  }
 }
 ```
 
 **Insights:**
-- 6 different proxy types
-- Each has own handler
-- Question: Does caching apply to all types?
-- WebSocket and SSE might not be cacheable
+- Handlers call the database directly
+- No existing caching logic per handler
+- Multiple similar routes likely have the same pattern
 
-### File 5: Configuration
+---
 
-**Read:** `proxy-engine/src/config/ProxyConfig.ts`
+### File 5: Route Registration
+
+**Read:** `src/api/routes/index.ts`
 
 **Findings:**
 ```typescript
-// Line 23-45
-export interface ProxyConfig {
-  port: number;
-  middleware?: MiddlewareConfig[];
-  proxyTypes?: ProxyTypeConfig[];
-  connectionPool?: ConnectionPoolConfig;
-  metrics?: MetricsConfig;
-  // No cache config currently
-}
+// Line 12-28
+router.get('/users',    UsersRoute)
+router.get('/products', ProductsRoute)
+router.get('/orders',   OrdersRoute)
+router.post('/users',   CreateUserRoute)
+router.post('/orders',  CreateOrderRoute)
 ```
 
 **Insights:**
-- No cache configuration exists yet
-- Would need to add CacheConfig
-- Should it be top-level or middleware config?
+- Mix of GET (likely cacheable) and POST (likely not cacheable) routes
+- 5 routes currently — scope question: which ones?
+- POST routes modify state, caching GET responses may not apply
+
+---
 
 ## Data Flow Analysis
 
-### Current Flow (without caching)
-
+### Current Flow (no caching)
 ```
 1. Request arrives
-   ↓
-2. ProxyGateway.handleRequest()
-   ↓
-3. Create Context
-   ↓
-4. Middleware Pipeline executes (auth, logging, etc.)
-   ↓
-5. Route to ProxyType handler
-   ↓
-6. Handler makes upstream request
-   ↓
-7. Response returned
+2. Router.handleRequest() builds context
+3. Middleware pipeline runs (auth, logging, etc.)
+4. Route handler executes
+5. Handler queries database
+6. Response returned
 ```
 
-**Data structures:**
-- `ProxyRequest`: { method, url, headers, body }
-- `ProxyResponse`: { statusCode, headers, body, timing }
-- `Context`: { request, response, metadata, completed }
+### Potential Cache Integration Options
 
-### Potential Flow (with caching)
-
-**Option A: Cache as Middleware**
+**Option A: Cache middleware (before routing)**
 ```
 1. Request arrives
-2. ProxyGateway.handleRequest()
-3. Create Context
-4. Middleware Pipeline:
-   → CacheMiddleware checks cache
-   → If HIT: set response, mark completed
-   → If MISS: continue pipeline
-5. Route to ProxyType handler (if not completed)
-6. Handler makes upstream request
-7. CacheMiddleware stores response
-8. Response returned
+2. Router.handleRequest()
+3. Middleware runs → CacheMiddleware checks cache
+   → HIT: set response + short-circuit (ctx.done = true)
+   → MISS: continue pipeline
+4. Route handler queries DB (on miss only)
+5. CacheMiddleware stores response for next time
 ```
 
-**Option B: Cache within ProxyType**
+**Option B: Cache inside each route handler**
 ```
-[Same as current, but each ProxyType handles own caching]
-- Issue: Duplication across types
-- Issue: Can't disable caching globally
+[Each handler individually checks/sets cache]
+- Requires updating every handler
+- Allows per-route cache configuration
+- More duplication
 ```
 
-**Option C: Cache at Gateway level**
+**Option C: Cache at the router level (before middleware)**
 ```
-1. Request arrives
-2. ProxyGateway checks cache first
-3. If HIT: return immediately
-4. If MISS: proceed with normal flow + cache response
-- Issue: Bypasses middleware (auth might not run)
+[Router checks cache before even running middleware]
+- Bypasses auth middleware — security risk
+- Fastest path but most dangerous
 ```
+
+---
 
 ## Impact Analysis
 
-### Files Requiring Modification
+**Files to modify:**
+1. `src/api/middleware/pipeline.ts` — add cache middleware hook point
+2. `src/utils/cache.ts` — extend for HTTP response caching (async API?)
+3. `src/api/router.ts` or individual routes — integrate cache
 
-**Primary:**
-1. `proxy-engine/src/gateway/ProxyGateway.ts` - Integrate cache
-2. `proxy-engine/src/cache/Cache.ts` - Extend for HTTP caching
-3. `proxy-engine/src/config/ProxyConfig.ts` - Add cache config
+**Files to create:**
+4. `src/api/middleware/cache.ts` — CacheMiddleware implementation
+5. `src/api/middleware/cache.test.ts` — tests
 
-**Secondary (if cache as middleware):**
-4. `proxy-engine/src/middleware/CacheMiddleware.ts` - NEW FILE
-5. `proxy-engine/src/middleware/mod.ts` - Export new middleware
+**Pattern conflict found:**
+- `LRUCache` has synchronous `get()` / `set()`
+- Middleware pipeline `await`s each step
+- If cache grows (e.g., disk-backed later), sync would block — needs resolution
 
-**Supporting:**
-6. `proxy-engine/src/types.ts` - Add cache-related types
-7. `proxy-engine/tests/cache.test.ts` - NEW TEST FILE
-
-### Affected Systems
-
-- **Proxy Engine**: Primary change ✓
-- **ConnectionPool**: May need coordination (cache + connection reuse)
-- **Metrics**: Should track cache hits/misses
-- **Runtime**: May expose cache config in RuntimeConfig
-- **MCP Server**: Proxy tools might get cache options
-
-### Pattern Conflicts
-
-**Async consistency:**
-- Middleware: async ✓
-- Cache.get(): synchronous ❌
-- **Conflict:** Need async cache.get() for cache middleware
-
-**Configuration pattern:**
-- ProxyConfig uses plain objects ✓
-- Cache uses constructor params ❌
-- **Conflict:** Should CacheConfig be object-based?
-
-**Lifecycle:**
-- ConnectionPool has explicit checkout/return
-- Cache has no cleanup mechanism
-- **Conflict:** Who manages cache lifecycle?
+---
 
 ## Complexity Assessment
 
 **Scope:** Medium
-- Touches multiple files (5-7)
-- Requires new middleware or gateway modification
-- Configuration changes needed
+- Touches 3–5 files
+- Requires new middleware
+- Configuration changes likely needed
 
 **Risk:** Medium
-- Pattern conflict with async/sync cache
-- Lifecycle management unclear
-- Multiple integration approaches possible
+- Async/sync conflict with existing cache utility
+- POST routes must NOT be cached — easy to get wrong
+- Cache invalidation not addressed in the request
 
 **Unknowns:**
-- Which proxy types should be cacheable?
-- Should cache respect HTTP Cache-Control headers?
-- Where should cache lifecycle be managed?
-- How to handle cache invalidation?
+- Which routes should be cached?
+- Should cache respect HTTP headers (Cache-Control, ETags)?
+- What is the TTL?
+- Who manages cache invalidation when data changes?
+
+---
 
 ## Clarifying Questions
 
-Based on the analysis, here are targeted questions across three dimensions:
+### Scope Boundaries
 
-### 1. Scope Boundaries
+**Q1:** Looking at the 5 routes in `src/api/routes/index.ts`, which should be cached? The GET routes (`/users`, `/products`, `/orders`) seem like candidates, but the POST routes modify state. Should caching apply only to GET routes, or is there a specific subset?
 
-**Q1:** Looking at the 6 proxy types (reverse, load-balance, auth, websocket, sse, tls-termination), which should support caching?
+**Q2:** Should caching happen at the middleware level (runs for all matched routes) or within individual route handlers (per-handler control)? I found three options — see data flow analysis above. The middleware approach is simpler but affects all routes at once.
 
-**Context:** WebSocket and SSE are bidirectional/streaming protocols that typically can't be cached. Should caching:
-- Only apply to HTTP proxy types (reverse, load-balance)?
-- Be opt-in per proxy type?
-- Apply globally with type-specific behavior?
+### Integration Points
 
-**Q2:** Should caching apply at the middleware level (before routing) or within specific proxy type handlers?
+**Q3:** The existing `LRUCache` at `src/utils/cache.ts:8` has synchronous `get()`/`set()`. The middleware pipeline is async. Should the cache utility be extended with async methods, or is synchronous fine (assuming in-memory will remain fast)?
 
-**Context:** I found three integration options:
-- A: Cache as middleware (runs for all requests, can short-circuit)
-- B: Cache within each ProxyType handler (type-specific behavior)
-- C: Cache at gateway level (earliest possible, but bypasses other middleware)
+**Q4:** Cache option C (cache before middleware) would bypass the auth middleware at `src/api/middleware/auth.ts`. Should cached responses skip auth checks, or must auth always run (which rules out option C)?
 
-Each has trade-offs for flexibility, performance, and complexity.
+### Requirements Clarity
 
-### 2. Integration Points
+**Q5:** What should happen when cached data becomes stale after a database write? The current routes don't emit any events when data changes. Should cache invalidation be:
+- Time-based (TTL only — simplest, may serve stale data)
+- Explicit (route handlers manually invalidate on write)
+- Not handled in this change (TTL only for now)
 
-**Q3:** The current Cache class has synchronous get/set methods, but middleware is async. Should the cache:
-- Be refactored to async get/set for consistency?
-- Use sync methods with a Promise wrapper in middleware?
-- Remain sync with the assumption that lookups are fast enough?
+**Q6:** Should the cache respect HTTP `Cache-Control` headers from clients, or use a fixed TTL defined in server config?
 
-**Context:** MiddlewarePipeline.execute() is async and awaits each middleware. A sync cache.get() would block the event loop if the lookup is slow.
+---
 
-**Q4:** Should cache coordinate with ConnectionPool, or operate independently?
+## Why This Is a Good Analysis
 
-**Context:** ConnectionPool manages upstream connections with health checks. Cache might:
-- Reuse ConnectionPool's health checking to invalidate cached responses from unhealthy upstreams
-- Operate independently and cache regardless of connection state
-- Participate in the connection lifecycle somehow
+- **Efficient:** Only 5 files, each with a clear purpose
+- **Concrete:** Cites specific line numbers throughout
+- **Pattern-aware:** Found the async/sync conflict before writing a single line
+- **Option-generating:** Identified 3 integration approaches with trade-offs
+- **Question quality:** Every question references specific code findings and offers concrete options
 
-### 3. Requirements Clarity
+---
 
-**Q5:** Should the cache respect HTTP Cache-Control headers from upstream responses, or use fixed TTL?
-
-**Context:** HTTP caching semantics are complex (Cache-Control, ETag, Last-Modified, Vary, etc.). The implementation could:
-- Parse and respect Cache-Control directives (more work, standards-compliant)
-- Use simple fixed TTL per cache entry (simpler, less correct)
-- Hybrid: respect some headers, ignore others
-
-**Q6:** What should happen when cache storage exceeds memory limits?
-
-**Context:** The current Cache class uses LRU/LFU/FIFO eviction. For proxy caching:
-- Is there a memory limit target (e.g., 100MB, 1GB)?
-- Should it log when evicting entries?
-- Should metrics track eviction rates?
-
-**Q7:** How should cache keys be constructed?
-
-**Context:** HTTP caching considers multiple factors:
-- URL (obviously)
-- Method (GET cacheable, POST usually not)
-- Headers (Vary header specifies which request headers affect cache)
-- Request body (for POST/PUT)
-
-Should the cache key be:
-- Simple: just URL
-- Standard: URL + method + relevant headers
-- Custom: user-defined key function
-
-## Why This Is Good Analysis
-
-**✅ Efficient:**
-- Only read 5 files
-- Each file had a clear purpose
-- Stopped when questions became clear
-
-**✅ Concrete:**
-- Cited specific line numbers
-- Showed actual code snippets
-- Traced real data flow
-
-**✅ Pattern-aware:**
-- Identified async pattern conflict
-- Found existing Cache class
-- Understood middleware mechanism
-
-**✅ Question quality:**
-- Each question grounded in code findings
-- Offers informed options
-- Reveals real ambiguity (not guesses)
-- Covers scope, integration, requirements
-
-**✅ BrowserX-specific:**
-- Considered multi-layer architecture
-- Checked cross-component impacts
-- Followed existing patterns
-
-## Counter-example: What NOT to Do
+## Counter-Example: What NOT to Do
 
 ❌ **Reading too many files:**
-```
-Read 15 files trying to understand entire proxy engine
-before realizing request is ambiguous
-```
+> "I'll read all 12 route handlers to understand the full picture before asking questions"
 
 ❌ **Vague questions:**
-```
-"How should caching work?"
-"Where should I put the cache?"
-```
+> "Where do you want caching?" / "How should it work?"
 
 ❌ **Guessing without reading:**
-```
-"I'll add a cache middleware that stores responses.
-Is that okay?"
-```
-
-❌ **No data flow analysis:**
-```
-"I found a Cache class. Should I use it?"
-[Without understanding where/how it would integrate]
-```
+> "I'll add a cache decorator to each route. Is that okay?" (didn't read the middleware system first)
 
 ❌ **Missing pattern conflicts:**
-```
-"I'll use the existing Cache class in middleware"
-[Ignoring that Cache is sync but middleware is async]
-```
+> "I'll use LRUCache in the middleware" (without noticing it's synchronous in an async pipeline)
 
-## Key Takeaways
-
-1. **Read code, not docs** - Real implementation reveals integration points
-2. **<5 file rule** - Stop when questions emerge, don't exhaust context
-3. **Trace data flow** - Understand how data moves through the system
-4. **Identify patterns** - Check for conflicts with existing conventions
-5. **Ask grounded questions** - Every question should reference specific code findings
+❌ **Describing instead of asking:**
+> "I'll implement this as middleware. The middleware will check the cache. If there's a hit, it returns early. If not, it proceeds." (This is a plan, not a question — the ambiguities haven't been surfaced)

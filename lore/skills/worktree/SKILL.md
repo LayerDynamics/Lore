@@ -96,7 +96,7 @@ Use when only some commits from the worktree should be applied.
 
 Generate a diff from the worktree and apply it manually:
 ```bash
-git diff main..<worktree-branch> > /tmp/changes.patch
+git diff $(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')..<worktree-branch> > /tmp/changes.patch
 git apply /tmp/changes.patch
 ```
 Use when the branch history is messy but the final state is correct.

@@ -105,16 +105,16 @@ Based on code analysis, document:
 
 **Example output:**
 ```
-Entry point: proxy-engine/src/gateway/ProxyGateway.ts:45
+Entry point: src/api/router.ts:45
 
 Current flow:
-1. Request arrives → ProxyGateway.handleRequest()
+1. Request arrives → Router.handleRequest()
 2. Middleware pipeline executes
-3. Route to proxy type handler
+3. Route to handler
 4. Response returned
 
 Data structures:
-- ProxyRequest: { method, url, headers, body }
+- Request: { method, url, headers, body }
 - Context: { request, response, metadata }
 
 Pattern: Middleware pipeline (async, can short-circuit)
@@ -130,11 +130,11 @@ Document what would change:
 - **Test impacts:** Which test suites need updates
 - **Pattern conflicts:** Inconsistencies with existing conventions
 
-**BrowserX-specific considerations:**
-- Does change affect multiple layers (Browser, Proxy, Query, Runtime, MCP)?
-- Are DevTools domains affected?
-- Does plugin system need updates?
-- Is Runtime lifecycle involved?
+**Architecture-specific considerations:**
+- Does the change affect multiple layers or modules in the project?
+- Are any domain-specific subsystems affected?
+- Does the plugin or extension system need updates?
+- Is any lifecycle management involved?
 
 ### Step 5: Formulate Clarifying Questions
 
@@ -238,28 +238,26 @@ Present findings in this structure:
 ❌ **Poor:** "Should I add caching?"
 - Not grounded in code, doesn't reveal analysis
 
-✅ **Good:** "I see the middleware pipeline at ProxyGateway.ts:67. Should caching be a middleware (can short-circuit the pipeline) or integrated within each proxy type handler? The middleware approach is simpler but affects all proxy types, while per-handler gives type-specific behavior."
+✅ **Good:** "I see the middleware pipeline at `src/gateway/Gateway.ts:67`. Should caching be a middleware (can short-circuit the pipeline) or integrated within each handler type? The middleware approach is simpler but affects all handlers, while per-handler gives type-specific behavior."
 - Cites specific code
 - Explains trade-offs
 - Offers informed options
 
-### BrowserX Architecture Awareness
+### Architecture Awareness
 
-When analyzing code and forming questions, recognize common BrowserX patterns:
+When analyzing code and forming questions, recognize common architectural patterns in the project:
 
 **Patterns to identify:**
-- **Pipeline pattern:** Sequential stages with timing (Request, Rendering, Query)
-- **State machine pattern:** Strict state transitions (Socket, TCP, TLS, Lifecycle)
-- **Event-driven pattern:** EventBus for cross-component communication
-- **Resource pool pattern:** Lifecycle management (BrowserPool, ConnectionPool)
-- **Domain pattern:** DevTools domains extending BaseDomain
+- **Pipeline pattern:** Sequential stages with ordering (request pipelines, build pipelines, query executors)
+- **State machine pattern:** Strict state transitions (connection states, lifecycle phases)
+- **Event-driven pattern:** Event bus or pub/sub for cross-component communication
+- **Resource pool pattern:** Lifecycle management (connection pools, worker pools)
+- **Domain/module pattern:** Subsystems extending shared base classes or interfaces
 
 **Multi-layer considerations:**
-- Changes might affect Browser, Proxy, Query, Runtime, MCP, or DevTools
-- Check if change should propagate through layers
-- Identify integration points between layers
-
-**See:** `references/analysis_template.md` for BrowserX-specific patterns
+- Changes might propagate across multiple layers or modules — identify which ones
+- Check if a change in one layer requires updates in dependent layers
+- Identify integration points and contracts between components
 
 ## Additional Resources
 
@@ -267,9 +265,9 @@ When analyzing code and forming questions, recognize common BrowserX patterns:
 
 For detailed templates and frameworks:
 
-- **`references/questioning_framework.md`** - Comprehensive framework for asking effective questions across scope, integration, and requirements dimensions. Includes BrowserX-specific patterns and question templates.
+- **`references/questioning_framework.md`** - Comprehensive framework for asking effective questions across scope, integration, and requirements dimensions. Includes question templates for various architectural patterns.
 
-- **`references/analysis_template.md`** - Step-by-step template for code analysis including entry point identification, data flow tracing, impact analysis, and pattern checking. BrowserX architecture patterns explained in detail.
+- **`references/analysis_template.md`** - Step-by-step template for code analysis including entry point identification, data flow tracing, impact analysis, and pattern checking.
 
 ### Example Files
 
@@ -277,7 +275,7 @@ Working examples demonstrating the workflow:
 
 - **`examples/good_analysis_example.md`** - Complete example of analyzing "Add caching to proxy" request, showing the 5-file analysis process leading to targeted clarifying questions. Includes counter-examples of what NOT to do.
 
-- **`examples/scope_examples.md`** - Examples of well-scoped vs poorly-scoped changes in BrowserX context. Demonstrates how to convert vague requests into specific, bounded scopes.
+- **`examples/scope_examples.md`** - Examples of well-scoped vs poorly-scoped changes. Demonstrates how to convert vague requests into specific, bounded scopes.
 
 ## Usage Example
 

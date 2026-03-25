@@ -19,22 +19,24 @@ Generate documentation that mirrors the source directory structure and is writte
 
 ## Core Principles
 
-1. **Mirror structure**: `docs/` mirrors `src/` exactly — same modules, same files, `.md` extension
+1. **Mirror structure**: the documentation directory mirrors the project's source directory exactly — same modules, same files, `.md` extension (e.g., `docs/` mirrors `src/`, `lib/`, `app/`, or whatever the project uses)
 2. **Code-only truth**: Every statement in docs must come from reading the actual source file
 3. **No inference**: If the code doesn't make something explicit, the docs don't claim it
 4. **No invention**: Never add descriptions for behavior that isn't in the code
 
 ## Directory Structure Rule
 
+Documentation mirrors the source tree. First, identify the project's source root (commonly `src/`, `lib/`, `app/`, `pkg/`, or the package directory itself) and the docs root (commonly `docs/`, `doc/`, or a project-specified location).
+
 ```
 project/
-├── docs/
+├── docs/                         ← documentation root
 │   ├── module_a/
-│   │   ├── handler.md        ← documents src/module_a/handler
-│   │   └── utils.md          ← documents src/module_a/utils
+│   │   ├── handler.md        ← documents <src-root>/module_a/handler
+│   │   └── utils.md          ← documents <src-root>/module_a/utils
 │   └── module_b/
-│       └── service.md        ← documents src/module_b/service
-└── src/
+│       └── service.md        ← documents <src-root>/module_b/service
+└── <src-root>/               ← source root (src/, lib/, app/, etc.)
     ├── module_a/
     │   ├── handler.ts
     │   └── utils.ts
@@ -43,22 +45,24 @@ project/
 ```
 
 **Rules:**
-- Every source file gets a corresponding `docs/<module>/<file>.md`
-- Directory nesting in `docs/` matches `src/` exactly
+- Every source file gets a corresponding `<docs-root>/<module>/<file>.md`
+- Directory nesting in the docs root matches the source root exactly
 - No docs files without a corresponding source file
-- Root-level docs (README.md, CONTRIBUTING.md, etc.) are NOT governed by this skill — only `docs/` subdirectories that mirror `src/`
+- Root-level docs (README.md, CONTRIBUTING.md, etc.) are NOT governed by this skill — only the docs subdirectory that mirrors the source root
 
 ## Workflow
 
 ### Step 1: Map the Source Tree
 
-Scan `src/` to build the full file list:
+First, identify the project's source root. Check for: `src/`, `lib/`, `app/`, `pkg/`, or the main package directory (e.g., a Python package named after the project). If ambiguous, ask the user.
+
+Then scan the source root to build the full file list:
 
 ```
-Glob("src/**/*.*")
+Glob("<source-root>/**/*.*")
 ```
 
-Build the target docs structure from this list. Every source file maps to `docs/<same-path>.md`.
+Also identify the docs root (check for `docs/`, `doc/`, or ask the user). Build the target docs structure: every source file maps to `<docs-root>/<relative-path>.md`.
 
 ### Step 2: Read Each Source File Completely
 

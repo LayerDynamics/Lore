@@ -25,7 +25,7 @@ Capture every file that has been modified, created, or deleted since the last co
 
 Run:
 ```bash
-ls -t docs/plans/*.md 2>/dev/null | head -1
+ls -t docs/plans/*.md 2>/dev/null | head -1  # or wherever the project stores plans
 ```
 
 Read the full content of the most recently modified plan file.

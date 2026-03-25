@@ -1,6 +1,8 @@
 # Scope Examples: Well-Scoped vs Poorly-Scoped Changes
 
-This document provides examples of well-scoped and poorly-scoped changes in BrowserX to illustrate effective scope boundaries.
+This document provides examples of well-scoped and poorly-scoped requests to illustrate how to establish clear scope boundaries — applicable to any codebase.
+
+---
 
 ## What Makes Good Scope?
 
@@ -9,409 +11,344 @@ This document provides examples of well-scoped and poorly-scoped changes in Brow
 - Single concern or tightly related concerns
 - Testable in isolation
 - Reversible if problematic
-- Limited cross-layer impact
+- Limited blast radius
 
 **Poorly-scoped changes:**
-- Vague boundaries
+- Vague language ("improve", "enhance", "fix")
 - Multiple unrelated concerns
 - Hard to test comprehensively
-- High blast radius if wrong
 - Cascading dependencies
+- Unclear success criteria
 
-## Example 1: DevTools Domain Enhancement
+---
+
+## Example 1: Vague Feature Request
 
 ### ❌ Poorly Scoped
 
-**User Request:** "Improve DevTools"
+**Request:** "Improve the authentication"
 
 **Problems:**
-- What aspect of DevTools? All 14 domains?
-- Improve how? Performance? Features? API?
+- Which part of auth? Login? Token refresh? Session management?
+- Improve how? Security? Performance? UX?
 - Scope is unbounded
 
-**Result:** Would drain context trying to understand what "improve" means across massive scope.
+**Result:** Would require extensive clarification before any analysis is useful.
 
 ### ✅ Well Scoped
 
-**User Request:** "Add console.table() support to Console domain"
+**Request:** "Add rate limiting to the login endpoint — max 5 failed attempts per IP per 15 minutes"
 
 **Why better:**
-- Specific domain: Console (1 of 14)
-- Specific feature: console.table()
-- Clear boundary: Doesn't affect other domains
-- Testable: Can verify console.table() works
+- Specific endpoint: login only
+- Specific behavior: rate limiting on failures
+- Measurable constraint: 5 attempts / 15 min / IP
+- Clear boundary: doesn't affect other auth flows
 
 **Scope clarity:**
 ```
 IN SCOPE:
-- Console domain: ConsoleMessage handling
-- Add table formatting logic
-- Tests for console.table()
+- Login endpoint: failed attempt tracking per IP
+- Lockout logic after 5 failures
+- Lockout duration: 15 minutes
+- Tests for rate limit enforcement
 
 OUT OF SCOPE:
-- Other console methods (log, warn, etc.) - already exist
-- Other domains - not affected
-- MCP server tools - no changes needed
+- Successful login rate limiting (not requested)
+- Password reset / signup endpoints
+- Existing session validation
+- IP allowlist/blocklist management
 ```
 
-## Example 2: Caching Feature
+---
+
+## Example 2: Broad Feature Addition
 
 ### ❌ Poorly Scoped
 
-**User Request:** "Add caching"
+**Request:** "Add caching"
 
 **Problems:**
-- Where? Browser, Proxy, Query, or all three?
-- What kind? Memory, disk, distributed?
-- For what data? HTTP responses, DNS, connections?
+- Where? API layer? Database queries? Static assets?
+- What kind? In-memory? Redis? HTTP headers?
+- For what data? All responses? Specific routes?
 
-**Result:** Too many unknowns, would need extensive clarification before understanding scope.
+**Result:** Could mean anything from a 20-line middleware to a distributed caching architecture.
 
 ### ✅ Well Scoped
 
-**User Request:** "Add LRU cache middleware for HTTP responses in proxy engine with max 100MB memory"
+**Request:** "Add in-memory LRU cache for GET /products and GET /categories responses with 5-minute TTL"
 
 **Why better:**
-- Where: Proxy engine, specifically middleware
-- What: HTTP responses only (not WebSocket/SSE)
-- How: LRU eviction policy
-- Constraint: 100MB memory limit
+- Where: API layer, specific routes
+- What: GET responses only (not mutations)
+- How: In-memory LRU with TTL
+- Constraint: 5-minute TTL defined
 
 **Scope clarity:**
 ```
 IN SCOPE:
-- ProxyEngine middleware pipeline
-- Cache class extension/usage
-- HTTP response caching only
-- Memory-based LRU eviction
-- Metrics for hit/miss rates
+- Cache middleware for /products and /categories
+- LRU eviction policy
+- 5-minute TTL per cached response
+- Cache bypass on POST/PUT/DELETE to same resources
+- Hit/miss metrics logging
 
 OUT OF SCOPE:
-- Browser engine caching (separate concern)
-- WebSocket/SSE caching (not HTTP)
-- Disk-based caching (memory only)
-- Distributed cache (single instance)
-- Query result caching (different layer)
+- Redis or persistent cache (in-memory only)
+- Other routes or endpoints
+- Cache invalidation on data write (TTL-based only)
+- HTTP Cache-Control header parsing
 ```
 
-## Example 3: Authentication Feature
+---
+
+## Example 3: Error Handling Improvement
 
 ### ❌ Poorly Scoped
 
-**User Request:** "Add auth"
+**Request:** "Fix error handling"
 
 **Problems:**
-- Auth for what? Browser HTTP requests? Proxy? MCP server?
-- What kind? Basic, Bearer, OAuth, cookies?
-- Where stored? In-memory, persistent, encrypted?
+- Which component? All of them?
+- What errors? Network? Validation? Database?
+- What does "fix" mean? Better messages? Recovery? Logging?
 
-**Result:** Massive scope uncertainty; could mean anything from simple Basic auth to full OAuth flow with session management.
+**Result:** Scope encompasses potentially the entire codebase.
+
+### ✅ Well Scoped
+
+**Request:** "Add retry with exponential backoff for database connection failures — 3 retries, starting at 200ms"
+
+**Why better:**
+- Where: Database connection layer
+- What: Retry logic specifically
+- How: Exponential backoff algorithm
+- Trigger: Connection failures only (not query errors)
+
+**Scope clarity:**
+```
+IN SCOPE:
+- DB connection retry logic: 3 attempts
+- Backoff: 200ms, 400ms, 800ms
+- Log each retry attempt
+- Tests for retry behavior and exhaustion
+
+OUT OF SCOPE:
+- Query error retries (different category)
+- Application-level retry (e.g., HTTP client)
+- Permanent error codes (no retry)
+- Circuit breaker pattern (future consideration)
+```
+
+---
+
+## Example 4: Performance Optimization
+
+### ❌ Poorly Scoped
+
+**Request:** "Make it faster"
+
+**Problems:**
+- Make what faster? Page load? Query? Build time?
+- How much faster? 10%? 2x?
+- At what cost? Memory? Complexity?
+
+**Result:** Impossible to start without profiling and much more context.
+
+### ✅ Well Scoped
+
+**Request:** "Optimize the product search query — it's timing out at 30s for catalogs with >10,000 items; target <500ms"
+
+**Why better:**
+- Where: Product search query
+- What: Query performance
+- Target: <500ms (from current 30s)
+- Scenario: Large catalogs (>10,000 items)
+
+**Scope clarity:**
+```
+IN SCOPE:
+- Product search SQL/query optimization
+- Index creation for search columns
+- Benchmark tests for 10,000+ item catalogs
+- Query plan analysis
+
+OUT OF SCOPE:
+- Frontend search UI
+- Caching layer (separate concern)
+- Other search endpoints (category, user search)
+- Full-text search engine migration (future)
+```
+
+---
+
+## Example 5: Cross-Cutting Feature
+
+### ❌ Poorly Scoped
+
+**Request:** "Add observability"
+
+**Problems:**
+- Which layer? API? Database? Background jobs?
+- What kind? Logs? Metrics? Traces?
+- What level of detail?
+
+**Result:** "Observability" spans every module and has no natural boundary.
 
 ### ✅ Well Scoped (Option A)
 
-**User Request:** "Add HTTP Basic authentication support to browser engine's HttpClient for per-request auth headers"
-
-**Why better:**
-- Where: Browser engine, HttpClient class
-- What: HTTP Basic auth only
-- How: Per-request (not session-based)
-- Storage: No credential storage (passed per request)
+**Request:** "Add structured logging to all HTTP request handlers — log method, path, status code, and duration"
 
 **Scope clarity:**
 ```
 IN SCOPE:
-- HttpClient.makeRequest() accept auth option
-- Base64 encode username:password
-- Add Authorization header to request
-- Tests for auth header injection
+- Request logging middleware
+- Structured JSON log format
+- Fields: method, path, status, duration_ms
+- Tests for log output format
 
 OUT OF SCOPE:
-- OAuth/Bearer tokens (different auth scheme)
-- Credential storage/management (passed in)
-- Session/cookie-based auth (stateless)
-- Proxy authentication (different layer)
-- DevTools auth inspection (future feature)
+- Database query logging (separate concern)
+- Background job logging
+- Error alerting / external log shipping
+- Request body logging (PII risk)
 ```
 
 ### ✅ Well Scoped (Option B)
 
-**User Request:** "Add Bearer token support to MCP browser_navigate tool with token stored in session metadata"
-
-**Why better:**
-- Where: MCP server, browser_navigate tool
-- What: Bearer tokens only
-- Storage: Session metadata (already exists)
-- Lifetime: Per-session (cleared on session end)
+**Request:** "Add Prometheus metrics endpoint — expose request count and p99 latency per route"
 
 **Scope clarity:**
 ```
 IN SCOPE:
-- MCP tool option: { auth: { bearer: "token" } }
-- Session.metadata storage for tokens
-- Pass token to HttpClient
-- Clear token on session close
+- /metrics endpoint
+- Request count counter per route
+- Latency histogram per route (p50, p95, p99)
+- Prometheus text format
 
 OUT OF SCOPE:
-- Basic auth (different scheme)
-- Token refresh/expiry (static tokens)
-- Encrypted storage (session metadata is in-memory)
-- Multi-user auth (single session owner)
+- Alerting rules / dashboards
+- Infrastructure metrics (CPU, memory)
+- Database query metrics
+- Business metrics (orders, revenue)
 ```
 
-**Note:** Options A and B are both well-scoped but solve different problems. Without clarification, can't choose between them.
+**Note:** Options A and B both add observability but solve different problems. Without clarification, you can't choose between them.
 
-## Example 4: Error Handling Improvement
+---
+
+## Example 6: Refactoring Request
 
 ### ❌ Poorly Scoped
 
-**User Request:** "Improve error handling"
+**Request:** "Refactor the user module"
 
 **Problems:**
-- Which component? All 5 layers?
-- Which errors? Network? Parse? Runtime?
-- Improve how? Better messages? Recovery? Logging?
-
-**Result:** Scope encompasses potentially hundreds of error paths across entire codebase.
+- Refactor how? Split into smaller files? Change abstractions?
+- Why? Performance? Maintainability? Testing?
+- What's the target state?
 
 ### ✅ Well Scoped
 
-**User Request:** "Add retry logic with exponential backoff for DNS resolution failures in the browser network stack"
+**Request:** "Extract the password hashing logic from `UserService` into a dedicated `PasswordHasher` class to make it independently testable"
 
 **Why better:**
-- Where: Browser engine, DNS resolution
-- What: Retry logic specifically
-- How: Exponential backoff algorithm
-- Trigger: DNS failures only (not all network errors)
+- What to extract: password hashing logic only
+- From where: `UserService`
+- Into what: new `PasswordHasher` class
+- Why: testability (measurable goal)
 
 **Scope clarity:**
 ```
 IN SCOPE:
-- DnsResolver.resolve() retry logic
-- Exponential backoff: 100ms, 200ms, 400ms, 800ms
-- Max 3 retries before final failure
-- Tests for retry behavior
-- Metrics for retry attempts
+- Extract hash/verify methods from UserService
+- Create PasswordHasher class with same interface
+- Update UserService to use PasswordHasher
+- Add unit tests for PasswordHasher in isolation
 
 OUT OF SCOPE:
-- TCP connection retries (separate concern)
-- HTTP error retries (different layer)
-- TLS handshake failures (different protocol)
-- Parser errors (not network errors)
-- Other DNS operations (reverse lookup, etc.)
+- Changing the hashing algorithm
+- Other parts of UserService
+- Auth tokens or session management
+- Password policy validation
 ```
 
-## Example 5: Performance Optimization
-
-### ❌ Poorly Scoped
-
-**User Request:** "Make it faster"
-
-**Problems:**
-- Make what faster? Page load? Query execution? Proxy routing?
-- How much faster? 10%? 2x? Microseconds matter or seconds?
-- At what cost? Memory? Code complexity?
-
-**Result:** Impossible to start without extensive profiling and clarification.
-
-### ✅ Well Scoped
-
-**User Request:** "Optimize rendering pipeline layout stage to reduce reflow time from 50ms to <30ms for pages with 1000+ DOM nodes"
-
-**Why better:**
-- Where: Rendering pipeline, layout stage specifically
-- What: Reflow performance
-- Target: <30ms (from current 50ms)
-- Scenario: Pages with 1000+ nodes
-
-**Scope clarity:**
-```
-IN SCOPE:
-- Layout engine box model calculations
-- DOM tree traversal optimization
-- Benchmark tests for 1000+ node pages
-- Timing metrics in RenderingResult
-
-OUT OF SCOPE:
-- Parse stage optimization (separate)
-- Paint stage optimization (separate)
-- Network performance (different layer)
-- JavaScript execution speed (different subsystem)
-- Pages with <1000 nodes (already fast enough)
-```
-
-## Example 6: BrowserX-Specific: Multi-Layer Features
-
-### ❌ Poorly Scoped
-
-**User Request:** "Add screenshot capability"
-
-**Problems:**
-- Which layer? Browser (rendering), MCP (tool), Query (SELECT)?
-- What format? PNG, JPEG, raw pixels?
-- Full page or viewport? Element-specific?
-
-**Result:** Could mean:
-1. Browser compositor generating pixels
-2. MCP tool exposing screenshots to AI
-3. Query syntax like `SELECT screenshot FROM url`
-4. All of the above (massive scope)
-
-### ✅ Well Scoped (Option A: Browser Layer)
-
-**User Request:** "Add getScreenshot() method to Compositor returning PNG bytes of current viewport"
-
-**Scope clarity:**
-```
-IN SCOPE:
-- CompositorThread.getScreenshot()
-- Convert pixels to PNG format
-- Viewport only (not full page scroll)
-- Return Uint8Array
-
-OUT OF SCOPE:
-- MCP tool integration (separate PR)
-- Query engine syntax (separate feature)
-- JPEG format (PNG only for now)
-- Full page screenshots (viewport only)
-- Element screenshots (entire viewport)
-```
-
-### ✅ Well Scoped (Option B: MCP Layer)
-
-**User Request:** "Add browser_screenshot tool to MCP server that captures viewport and returns base64 PNG"
-
-**Scope clarity:**
-```
-IN SCOPE:
-- New MCP tool: browser_screenshot
-- Call existing Compositor.getScreenshot()
-- Convert PNG bytes to base64
-- Return in tool response
-
-OUT OF SCOPE:
-- Compositor implementation (already exists)
-- Query engine integration (different interface)
-- Full page scroll capture (use existing method)
-- Element selection (viewport only)
-```
-
-**Note:** Option A changes Browser layer, Option B uses existing Browser capability to add MCP tool. Both valid, different scopes.
-
-## Example 7: Plugin System Integration
-
-### ❌ Poorly Scoped
-
-**User Request:** "Make this work with plugins"
-
-**Problems:**
-- Make what work? Entire browser? Specific domain?
-- How? Extension points? Hooks? Both?
-- Which plugin APIs? All of them?
-
-**Result:** "Pluggable" could mean anything from a single hook to complete architectural overhaul.
-
-### ✅ Well Scoped
-
-**User Request:** "Add onBeforeNavigate and onAfterNavigate lifecycle hooks to Runtime plugin API"
-
-**Why better:**
-- Where: Runtime plugin system
-- What: Two specific lifecycle hooks
-- Event timing: Before/after navigation
-
-**Scope clarity:**
-```
-IN SCOPE:
-- Plugin API: onBeforeNavigate(url) hook
-- Plugin API: onAfterNavigate(url, response) hook
-- EventCoordinator emit events
-- Plugin types for hook signatures
-- Tests for hook invocation
-
-OUT OF SCOPE:
-- Other lifecycle hooks (onPageLoad, etc.)
-- DevTools domain hooks (separate system)
-- Proxy middleware hooks (different layer)
-- Plugin discovery/loading (already exists)
-```
+---
 
 ## Red Flags for Poorly-Scoped Requests
 
-Watch for these patterns that indicate scope needs clarification:
+### Vague Verbs
+- "Improve…"
+- "Enhance…"
+- "Fix…" (without specifics)
+- "Optimize…" (without a target)
+- "Support…" (without scope)
 
-### 🚩 Vague Verbs
-- "Improve..."
-- "Enhance..."
-- "Fix..." (without specifics)
-- "Add..." (without details)
-- "Optimize..."
-- "Support..." (without scope)
+### Missing Constraints
+- "Add authentication" — where? what kind? what flows?
+- "Implement caching" — for what? which layer? what TTL?
+- "Make it work with X" — which part? how integrated?
 
-### 🚩 Missing Context
-- "Add authentication" (where? what kind?)
-- "Implement caching" (for what? where?)
-- "Make it work with X" (work how? which part?)
+### Unbounded Reach
+- "Update all handlers…"
+- "Refactor the entire module…"
+- "Add logging everywhere…"
 
-### 🚩 Unbounded Scope
-- "Update all domains..."
-- "Refactor the entire..."
-- "Rewrite the..." (without boundaries)
+### Multiple Concerns
+- "Add auth and caching and metrics" → three separate scopes
+- "Fix bugs and add features" → separate concerns
+- "Optimize and refactor" → different goals, different risks
 
-### 🚩 Multiple Concerns
-- "Add auth and caching and metrics"
-- "Fix bugs and add features"
-- "Optimize and refactor"
+---
 
 ## Converting Poor Scope to Good Scope
 
 ### Pattern: Vague → Specific
 
-**Before:** "Improve query parser"
-**After:** "Add support for JOIN syntax in query parser SELECT statements"
-
-**Before:** "Add metrics"
-**After:** "Add request count and latency histogram metrics to ProxyGateway"
-
-**Before:** "Fix navigation"
-**After:** "Fix browser navigation to properly handle 302 redirects by updating HttpClient redirect following"
+| Before | After |
+|--------|-------|
+| "Improve the parser" | "Add support for optional chaining (`?.`) syntax to the expression parser" |
+| "Add metrics" | "Add request count and latency histogram to the API gateway middleware" |
+| "Fix navigation" | "Fix the router to handle trailing slashes in URL paths as equivalent to without" |
 
 ### Pattern: Unbounded → Bounded
 
-**Before:** "Add logging everywhere"
-**After:** "Add error logging to DevTools domain method handlers with log level filtering"
-
-**Before:** "Make tests better"
-**After:** "Increase Console domain test coverage from 21 to 35 tests by adding edge case tests"
-
-**Before:** "Refactor network code"
-**After:** "Extract DNS caching logic from DnsResolver into separate DnsCache class"
+| Before | After |
+|--------|-------|
+| "Add logging everywhere" | "Add structured error logging to the payment processing module" |
+| "Make tests better" | "Increase unit test coverage of the `OrderCalculator` class from 40% to 80%" |
+| "Refactor database code" | "Extract raw SQL queries from `UserRepository` into named query constants" |
 
 ### Pattern: Multiple → Single
 
 **Before:** "Add auth, caching, and rate limiting"
+
 **After (3 separate scopes):**
-1. "Add HTTP Basic auth to browser HttpClient"
-2. "Add LRU cache middleware to ProxyEngine"
-3. "Add rate limiting middleware to ProxyGateway"
+1. "Add JWT token validation middleware to the API"
+2. "Add LRU cache for product listing responses"
+3. "Add rate limiting (100 req/min per user) to the API gateway"
+
+---
 
 ## Key Takeaways
 
 **Good scope has:**
-- ✅ Specific component/file targets
-- ✅ Clear inclusion/exclusion boundaries
-- ✅ Measurable success criteria
-- ✅ Single concern or tightly related concerns
-- ✅ Isolated testability
+- Specific component or file targets
+- Clear inclusion/exclusion boundaries
+- Measurable success criteria
+- Single concern or tightly related concerns
+- Isolated testability
 
 **Poor scope has:**
-- ❌ Vague language ("improve", "enhance", "fix")
-- ❌ Unbounded reach ("all", "entire", "everywhere")
-- ❌ Multiple unrelated concerns
-- ❌ Missing context on how/where/what
-- ❌ Unclear success criteria
+- Vague language ("improve", "enhance", "fix", "optimize")
+- Unbounded reach ("all", "entire", "everywhere")
+- Multiple unrelated concerns bundled together
+- Missing context on how/where/what
+- Unclear success criteria
 
 **When scope is unclear:**
-- Stop and analyze code (<5 files)
-- Identify specific integration points
-- Form targeted clarifying questions
-- Get boundaries defined before proceeding
+1. Analyze code (≤5 files)
+2. Identify specific integration points
+3. Surface concrete clarifying questions
+4. Get boundaries defined before proceeding

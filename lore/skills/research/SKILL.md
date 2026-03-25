@@ -17,7 +17,7 @@ Extract from `$ARGUMENTS`:
 - Topic or feature description (required — everything before flags)
 - Depth: `--depth quick`, `--depth standard`, or `--depth deep` (default: `standard`)
 - Sources (deep mode only): `--sources code`, `--sources web`, `--sources all` (default: `all`)
-- Output path: `--output <path>` (default: `.feature-research/[kebab-topic]-[YYYY-MM-DD].md`)
+- Output path: `--output <path>` (default: `.feature-research/[kebab-topic]-[YYYY-MM-DD].md` — adapt to your project's preferred research/docs location)
 
 If the topic is absent or ambiguous, ask for clarification before proceeding.
 
@@ -51,7 +51,7 @@ Use the `blueprint-generator` agent to produce:
 - Key conventions to follow
 - Immediate next step
 
-Save to `.feature-research/[topic]-[YYYY-MM-DD].md`.
+Save to `.feature-research/[topic]-[YYYY-MM-DD].md` (or the path specified via `--output`).
 
 ### Q5. Present Summary
 - What was found (2-3 bullets)
@@ -123,7 +123,7 @@ The blueprint includes:
 - Risk register
 - Open questions
 
-Save research report and blueprint to `.feature-research/`.
+Save research report and blueprint to `.feature-research/` (or the path specified via `--output`).
 
 ### Present Summary
 - Key findings (2-3 bullets)
@@ -253,7 +253,7 @@ Save to output path:
 
 ## Output Location
 
-All research outputs go to `.feature-research/` in the project root:
+By default, all research outputs go to `.feature-research/` in the project root. Override with `--output <path>` to use a different location (e.g., `docs/research/`, `notes/`, or any project-specific directory):
 - Quick/Standard reports: `.feature-research/[kebab-topic]-[YYYY-MM-DD].md`
 - Blueprints: `.feature-research/[kebab-topic]-blueprint-[YYYY-MM-DD].md`
 - Deep research: `.feature-research/deep-[kebab-topic]-[YYYY-MM-DD].md`
@@ -262,7 +262,7 @@ All research outputs go to `.feature-research/` in the project root:
 
 - For internal-only features, skip external research even in standard mode
 - The research report is a durable artifact — reference it across sessions
-- If existing research exists in `.feature-research/`, load it before running new research to avoid redundant work
+- If existing research exists in the output directory, load it before running new research to avoid redundant work
 - Quick mode takes minutes; standard takes 15-20 minutes; deep can take 30+ minutes
 - Use `--sources code` in deep mode when external research isn't relevant
 - Results feed directly into implementation — follow the blueprint

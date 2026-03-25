@@ -651,7 +651,7 @@ For each significant risk:
 
 ### Step 2: Save the Document
 
-Save to `docs/plans/` in the project root (create the directory if needed):
+Save to the project's documentation directory. Default: `docs/plans/` (create if needed). Adapt to wherever the project stores design docs (e.g., `docs/`, `specs/`, `design/`):
 
 ```
 Write: docs/plans/<slug-from-title>.md

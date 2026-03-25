@@ -50,14 +50,14 @@ Map answers to @ syntax references for the plan:
 
 ## Phase 3: Write the Plan
 
-Save to `docs/plans/YYYY-MM-DD-<feature-name>.md`.
+Save to `docs/plans/YYYY-MM-DD-<feature-name>.md` (or adapt to the project's documentation structure — e.g., `plans/`, `docs/`, etc.).
 
 ### Every plan MUST start with:
 
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:execute to implement this plan task-by-task.
+> **For Claude:** REQUIRED SUB-SKILL: Use lore:execute to implement this plan task-by-task.
 > **Scope guard:** Do ONLY what is listed here. If you discover adjacent issues, note them as a TODO and continue. Do NOT fix them.
 
 **Goal:** [One sentence]
@@ -108,15 +108,15 @@ For TDD tasks:
 
 After saving the plan, offer:
 
-> **"Plan saved to `docs/plans/<filename>.md`. Two execution options:**
+> **"Plan saved to `docs/plans/<filename>.md` (or your configured plan directory). Two execution options:**
 >
 > **1. Subagent-Driven (this session)** — Fresh subagent per task, review between tasks
-> **2. Parallel Session (separate)** — Open new session, use `superpowers:execute`
+> **2. Parallel Session (separate)** — Open new session, use `lore:execute`
 >
 > **Which?"**
 
-- If Subagent-Driven → invoke `superpowers:execute`
-- If Parallel Session → guide to new session with `superpowers:execute`
+- If Subagent-Driven → invoke `lore:execute`
+- If Parallel Session → guide to new session with `lore:execute`
 
 ## Run the Full Workflow
 

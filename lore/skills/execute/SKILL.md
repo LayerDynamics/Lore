@@ -25,7 +25,7 @@ Plans fail in execution, not in writing. The gap between "planned" and "done" is
 Read it immediately with the `Read` tool.
 
 ### If no plan file is specified:
-1. Run: `ls -t docs/plans/*.md 2>/dev/null`
+1. Run: `ls -t docs/plans/*.md 2>/dev/null` (or check wherever the project stores plans — `plans/`, `.plans/`, etc.)
 2. Present the list to the user — which plan to resume?
 3. Read the selected plan.
 

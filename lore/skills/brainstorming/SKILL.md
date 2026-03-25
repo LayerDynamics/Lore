@@ -44,7 +44,7 @@ Once you believe you understand what is being built:
 
 ### 5. Document the Design
 
-Save the validated design to `docs/plans/YYYY-MM-DD-<topic>-design.md` and commit it.
+Save the validated design to a design file (e.g., `docs/plans/YYYY-MM-DD-<topic>-design.md`, or wherever your project stores design docs) and commit it.
 
 ### 6. Transition to Implementation
 
