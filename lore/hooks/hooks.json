@@ -233,6 +233,26 @@
         ]
       },
       {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/e2e-test-quality-gate.sh",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/e2e-config-validator.sh",
+            "timeout": 5
+          }
+        ]
+      },
+      {
         "hooks": [
           {
             "type": "command",
