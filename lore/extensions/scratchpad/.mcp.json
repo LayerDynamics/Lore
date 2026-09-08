@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "scratchpad": {
-      "command": "node",
-      "args": ["${PROJECT_DIR}/dist/index.js"]
-    }
-  }
-}

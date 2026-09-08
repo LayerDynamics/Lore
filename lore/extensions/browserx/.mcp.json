@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "browserx": {
-      "command": "deno",
-      "args": ["task", "mcp:start"],
-      "cwd": "/Users/ryanoboyle/lore/lore/extensions/browserx/repo"
-    }
-  }
-}

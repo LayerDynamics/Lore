@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "name": "lore",
+  "version": "2.0.0",
+  "description": "Evidence-based engineering workflows for capability-aware coding agents",
+  "core": [
+    "plan",
+    "design",
+    "execute",
+    "continue",
+    "debug",
+    "review",
+    "research",
+    "testing",
+    "verification-before-completion",
+    "scope"
+  ]
+}

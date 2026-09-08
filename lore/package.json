@@ -1,7 +1,7 @@
 {
   "name": "lore-framework",
-  "version": "1.0.0",
-  "description": "Opinionated meta skills & plugin framework for deterministic results",
+  "version": "2.0.0",
+  "description": "Provider-neutral engineering workflows with explicit runtime adapters",
   "author": "LayerDynamics",
   "license": "MIT",
   "homepage": "https://github.com/LayerDynamics/lore",
@@ -10,25 +10,27 @@
     "url": "https://github.com/LayerDynamics/lore.git"
   },
   "bin": {
-    "lore": "./bin/install.sh"
+    "lore": "./bin/lore.mjs"
   },
   "files": [
-    ".claude-plugin",
-    "commands",
-    "skills",
-    "agents",
-    "hooks",
-    "lib",
-    "templates",
-    "extensions"
+    "lore.json",
+    "runtime",
+    "bin/lore.mjs",
+    "skills"
   ],
   "keywords": [
+    "agent-skills",
+    "workflows",
+    "codex",
     "claude-code",
-    "plugin",
-    "framework",
-    "skills",
-    "meta",
-    "deterministic",
-    "workflow"
-  ]
+    "mcp"
+  ],
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "check": "node bin/lore.mjs doctor"
+  }
 }

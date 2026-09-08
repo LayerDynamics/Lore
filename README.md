@@ -1,458 +1,81 @@
 # Lore
 
-**Opinionated meta skills & plugin framework for deterministic results with Claude Code.**
+Provider-neutral engineering workflows with a small default catalog, explicit runtime adapters, and evidence-based completion.
 
-Lore bundles battle-tested skills, commands, agents, and workflows into a single Claude Code plugin. It provides structured approaches to common development tasks — from TDD and debugging to code review, feature research, and security scanning — so Claude follows repeatable, high-quality processes instead of improvising.
+The source code is in `lore/`. Build packages for **Codex**, **Claude Code**, or any host that supports **Agent Skills**. Lore uses the host's configured model and available capabilities; it does not require a particular provider or model generation.
 
-## Installation
+## Workflows
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/LayerDynamics/lore/main/install.sh | bash
+| Workflow | Purpose |
+| --- | --- |
+| `plan`, `design` | Turn the requested outcome into an implementable, testable approach. |
+| `execute`, `continue` | Complete authorized work and resume it without restarting approval. |
+| `debug`, `review` | Trace failures and assess concrete defects. |
+| `research`, `testing` | Gather primary evidence and run meaningful behavioral checks. |
+| `verification-before-completion`, `scope` | Verify acceptance criteria and stay on the actual user request. |
+
+These ten workflows are the complete catalog. There are no legacy profiles, command wrappers, bundled extensions, agent definitions, or administrative tools. Unknown workflow names and unregistered skill directories fail explicitly.
+
+## Build locally
+
+Requires Node.js 22 or newer. No dependencies need downloading for the core.
+
+```sh
+node lore/bin/lore.mjs doctor
+node lore/bin/lore.mjs build --runtime codex --out dist/codex-2.0.0
+node lore/bin/lore.mjs build --runtime claude --out dist/claude-2.0.0
+node lore/bin/lore.mjs build --runtime portable --out dist/portable-2.0.0
 ```
 
-The installer clones the repo into `~/.claude/plugins/_src/lore`, symlinks the plugin into `~/.claude/plugins/lore`, optionally sets up extensions (browserx, trellio, cc-telemetry, findlazy, mcp-trigger-gateway, scratchpad), and offers to launch Claude Code with a guided tour.
+The builder refuses to overwrite a destination. Use a new directory for an update; keep the preceding package for rollback. `./install.sh` and `lore/bin/install.sh` are compatibility entry points for the same builder. They require `--out` and never rewrite agent registries, install extensions, or launch an assistant.
 
-Verify the installation:
+## Install with the host
 
-```bash
-# In a Claude Code session:
-/lore:list
+Run these commands only for the runtime you use. The host's installer controls the global configuration change.
+
+**Codex:**
+
+```sh
+codex plugin marketplace add ./dist/codex-2.0.0
+codex plugin add lore@lore-core
+codex plugin list
 ```
 
-## Quick Start
+Start a new chat and invoke `$lore:plan` or another core workflow. Codex packages set explicit activation policy. If an older Lore package is already enabled from another marketplace, disable that older package in the host's plugin settings before enabling the replacement to avoid duplicate names. Building a package does not disable existing installations.
 
-Once installed, Lore's skills and commands are available in any Claude Code session.
+**Claude Code:**
 
-**List everything available:**
-
-```text
-/lore:list
+```sh
+claude plugin validate ./dist/claude-2.0.0/.claude-plugin/plugin.json
+claude plugin marketplace add ./dist/claude-2.0.0
+claude plugin install lore@lore-core
 ```
 
-**Run a security scan on your project:**
+Start a new session and invoke `/lore:plan`. Skills are native; no duplicate slash-command wrappers are included in the built package.
 
-```text
-/security-check:scan
+**Other Agent Skills hosts:** register or copy the built `skills/` directory using that host's documented mechanism. Each skill includes its complete runtime contract, so activation does not depend on hooks, MCP, a global instructions file, or a vendor-specific task API. Do not assume an arbitrary host will support Codex or Claude plugin manifests.
+
+## Optional components
+
+Add advisory hooks and a read-only MCP catalog:
+
+```sh
+node lore/bin/lore.mjs build --runtime codex --out dist/codex-with-integrations --hooks --mcp
 ```
 
-**Start a TDD workflow:**
+Hooks are supported only in Codex/Claude packages and never replace host safeguards. MCP is standard stdio with two read-only tools: list workflows and load one workflow. For portable hosts, `--mcp` writes a registration with the final absolute package path; import it using the host's MCP configuration mechanism. There are no arbitrary filesystem, shell-runner, or background telemetry tools in the core server.
 
-```text
-Use the test-driven-development skill to implement [your feature]
+
+## Inspect and verify
+
+```sh
+node lore/bin/lore.mjs list
+node lore/bin/lore.mjs show execute
+npm test --prefix lore
 ```
 
-**Plan a multi-step feature:**
+`doctor --tools FILE.json` accepts a JSON array of actual tool names and reports recognized capabilities. Without an inventory it reports no assumed capabilities. It neither probes credentials nor contacts providers. In a generated package, `doctor` verifies the SHA-256 build inventory and reports changed, missing, or unexpected files. The same check runs before the CLI or MCP catalog loads packaged workflows. The inventory detects accidental changes; it is not a cryptographic signature or a substitute for trusting the package source.
 
-```text
-/planning-ext:plan
-```
+Tests exercise real package builds, native subprocesses, MCP stdio, hook payload adapters, input validation, path confinement, concurrent build collisions, symlink handling, strict metadata, package integrity, and preservation of existing files. Host plugin discovery and interactive model behavior are separate verification levels. See [runtime architecture](docs/runtime-architecture.md), [validation results](docs/runtime-validation.md), and [the agent guide](AGENTS.md).
 
-**Deep-dive into unfamiliar code:**
-
-```text
-/code-intel:investigate how does authentication work in this project?
-```
-
-**Research before building:**
-
-```text
-/research:research how to add WebSocket support --depth deep
-```
-
-**Review code without git:**
-
-```text
-/local:local-code-review src/
-```
-
-**Audit dependencies and configs:**
-
-```text
-/security-check:audit
-```
-
----
-
-## Skills (25)
-
-Skills are the core abstraction — structured markdown workflows (each a `SKILL.md`) that guide Claude through complex tasks deterministically. Skills are invoked by name in conversation or triggered automatically based on context.
-
-### Process & Execution Skills
-
-| Skill | What It Does | When to Use |
-| ----- | ------------ | ----------- |
-| `brainstorming` | Collaborative dialogue to explore intent, requirements, and design before implementation. Proposes 2-3 approaches with trade-offs, gets approval, then writes a design doc. | Before any creative or feature work — always brainstorm first |
-| `lifecycle-phases` | Enforces a Clarify → Plan → Execute → Review lifecycle with wave-based parallel execution for each phase. | Managing project execution through structured phases |
-| `rarv-cycle` | Core execution loop: Reason → Act → Reflect → Verify. Every autonomous action follows this cycle — no step is optional. | Any autonomous or semi-autonomous work |
-| `staying-on-request` | Enforces task boundaries — do exactly what was asked, nothing more. Surfaces adjacent issues as TODOs without fixing them. | When you discover adjacent issues or feel tempted to refactor |
-| `context-engineering` | Manages agent context windows, preserves state across sessions, coordinates information flow between agents. | When context is getting large or coordinating multiple agents |
-| `subagent-development` | Executes implementation plans by dispatching a fresh subagent per task with two-stage review (spec compliance + code quality) after each. | Executing implementation plans with independent tasks |
-| `writing-plans` | Guided discovery followed by a structured implementation plan. Reads project context, asks about inclusions and dev practices, writes a bite-sized plan to `docs/plans/`. | When you have a spec or requirements for a multi-step task |
-
-### Debugging & Investigation Skills
-
-| Skill | What It Does | When to Use |
-| ----- | ------------ | ----------- |
-| `debug` | General debugging with root cause investigation. No fixes without understanding the cause first. | Encountering bugs, test failures, or unexpected behavior |
-| `systematic-debugging` | Four-phase investigation methodology: reproduce → isolate → identify root cause → fix. Random fixes waste time. | Any bug or test failure — must complete all phases before proposing fixes |
-| `deep-investigation` | Traces execution paths, follows call chains, maps service integrations, reads tests, surfaces exact `file:line` references. | Tracing how something works, investigating execution paths, preparing for code review |
-| `reading-unfamiliar-code` | Efficiently orients in unfamiliar projects. Starts with entry points and project-level docs before reading source files. | New to a project, need to understand architecture before making changes |
-| `outline-understanding-user-request` | Analyzes actual code (not docs) to understand ambiguous requests. Identifies affected systems and formulates clarifying questions. | Ambiguous requests that would drain context to understand |
-
-### Code Quality & Review Skills
-
-| Skill | What It Does | When to Use |
-| ----- | ------------ | ----------- |
-| `code-review-methodology` | Objective, git-free code review across six dimensions: quality, security, architecture, performance, testing gaps, documentation gaps. | Code reviews without git context, fresh-eyes audits |
-| `pr-style-review` | Synthesizes investigation findings into a structured review with Critical/Important/Minor severity scoring. Only includes issues at 75%+ confidence. | Presenting technical findings as a structured code review |
-| `pre-commit-review` | Last-chance sanity check on the specific diff before it becomes permanent. Scoped to the changes, not the whole codebase. | Before committing or creating PRs |
-| `quality-gates` | Defines the gate system code must pass before shipping. | Reviewing code for merge readiness |
-| `no-placeholders` | Zero tolerance for incomplete code. Scans for stubs, mocks, TODOs, deceptive comments, and language-native stubs. | Before claiming a feature is complete, during code reviews |
-| `verify-before-documenting` | Ensures claims about code are verified against the actual implementation before documenting. | Code reviews, gap analysis, documentation audits |
-| `verification-before-completion` | Requires running verification commands and reading actual output before making any success claim. | Before claiming work is complete, fixed, or passing |
-
-### Research & Planning Skills
-
-| Skill | What It Does | When to Use |
-| ----- | ------------ | ----------- |
-| `feature-research` | Five-phase pre-implementation research: orient → codebase analysis → external research → synthesis → blueprint. | Before implementing a new feature or integration |
-| `codebase-pattern-analysis` | Systematic mapping of architecture, conventions, extension points, and similar features in an unfamiliar codebase. | Understanding codebase patterns before implementing something new |
-| `implementation-blueprint` | Converts research findings into a precise, file-level, step-by-step implementation plan with risk register. | After research is complete and you need a concrete build plan |
-| `test-driven-development` | Red → Green → Refactor. Write the test first, watch it fail, implement minimum passing code, then clean up. | Implementing any feature, bug fix, or behavior change |
-| `test-coverage-analysis` | Analyzes both automated line-coverage metrics and behavioral coverage to find gaps. | Checking coverage, finding untested code, before adding tests |
-| `standup-writing` | Generates standup updates from git history and current working state. | Daily standups, status updates |
-
----
-
-## Commands (33)
-
-All commands are invoked as `/lore:<command-name>`. Each command has a description, accepted arguments, and a defined set of allowed tools.
-
-### Framework Management
-
-| Command | Arguments | What It Does |
-| ------- | --------- | ------------ |
-| `/lore:list` | — | Lists all available skills, commands, and agents with descriptions. |
-| `/lore:setup` | — | Initializes lore in a project by creating/updating `.claude/settings.local.json` to include the lore plugin path. |
-| `/lore:create-skill` | `<name> [--description "..."]` | Creates a new skill from template. Validates kebab-case naming, asks rigid vs. flexible, generates `skills/<name>/SKILL.md`. |
-| `/lore:create-command` | `<name>` | Creates a new command with correct frontmatter. |
-| `/lore:create-agent` | `<name> [--description "..."]` | Creates a new agent with dispatch examples and tool configuration. |
-| `/lore:create-mcp` | `<name> [--type stdio\|sse]` | Creates a new MCP server integration with full directory structure. |
-| `/lore:create-plugin` | `[description or name]` | Guided 7-phase plugin creation: discovery → component planning → design → structure → implementation → validation → documentation. |
-
-### Code Investigation
-
-| Command | Arguments | What It Does |
-| ------- | --------- | ------------ |
-| `/lore:investigate` | `<what to investigate>` | Dispatches a `code-explorer` agent to trace execution paths. Returns raw structured findings: entry points, execution paths, key `file:line` references, open questions. |
-| `/lore:review` | `<topic to review>` | Dispatches `code-explorer` and `integration-mapper` in parallel, then synthesizes into a PR-style review with Critical/Important/Minor/Strengths. |
-
-### Local Development Tools
-
-| Command | Arguments | What It Does |
-| ------- | --------- | ------------ |
-| `/lore:local-code-review` | `[paths...] [--file]` | Dispatches parallel `code-reviewer` agents covering six review dimensions. Writes to `REVIEW.md` with `--file`. |
-| `/lore:review-files` | `<path> [path2...] [--file]` | Targeted code review on specific files/directories. Same six dimensions, scoped to exact paths. |
-| `/lore:explain` | `<file, function, or concept>` | Locates the target, reads supporting context, presents a layered explanation: what, why, how, dependencies, edge cases. |
-| `/lore:standup` | `[time range]` | Generates a standup from `git log` and `git status`. Yesterday/Today/Blockers bullets. |
-| `/lore:diff-review` | `[focus area]` | Reviews all staged + unstaged git changes. Returns READY or FIX BEFORE COMMITTING. |
-
-### Implementation Planning
-
-| Command | Arguments | What It Does |
-| ------- | --------- | ------------ |
-| `/lore:plan` | `[task description]` | Loads the `writing-plans` skill. Reads project context, asks questions, writes plan to `docs/plans/YYYY-MM-DD-<name>.md`, offers execution handoff. |
-| `/lore:continue` | `[path to plan file]` | Resumes an existing plan at the next incomplete task. Hands off to `subagent-driven-development`. |
-| `/lore:scope` | — | Audits the current git diff against the active plan. Reports in-scope vs. out-of-scope drift. |
-| `/lore:focus` | `[description of drift]` | Resets scope when Claude has drifted. Loads `staying-on-request`, re-anchors to the original ask. |
-| `/lore:planning-ext-list` | — | Lists all plans in `docs/plans/` sorted by date with goal, task count, and last-modified date. |
-
-### Feature Research
-
-| Command | Arguments | What It Does |
-| ------- | --------- | ------------ |
-| `/lore:analyze` | `[path] [--focus <area>]` | Launches `codebase-pattern-scout`. Presents architecture, conventions, extension points, and a 10-file reading order. |
-| `/lore:research` | `<feature> [--depth quick\|standard\|deep]` | Full feature research workflow. Quick: codebase only. Standard: + external docs + blueprint. Deep: + risk matrix, rollout implications. Saves to `.feature-research/`. |
-| `/lore:blueprint` | `<feature> [--output markdown\|json]` | Converts research into an implementation blueprint. Saves to `.feature-research/<feature>-blueprint-<date>.md`. |
-| `/lore:deep-research` | `<topic> [--sources code\|web\|all]` | Multi-source deep research combining codebase, docs, GitHub issues, Stack Overflow, and academic papers. |
-
-### Code Quality
-
-| Command | Arguments | What It Does |
-| ------- | --------- | ------------ |
-| `/lore:quality-scan` | `[path]` | Five-pass grep scan for TODO/FIXME, stubs, deceptive phrases, language-native stubs, and empty function bodies. |
-| `/lore:quality-fix` | `[path]` | Guided remediation session. Works through each placeholder in severity order, re-scans to confirm zero remain. |
-
-### Scaling and Load Review
-
-| Command | Arguments | What It Does |
-| ------- | --------- | ------------ |
-| `/lore:frame-task` | `<task or file path>` | Defines scope boundaries, constraints, and what "works at scale" means at 10x/100x. |
-| `/lore:outline-load` | `<component path>` | Maps traffic patterns, data growth, bottlenecks. Estimates load at current/10x/100x. |
-| `/lore:evaluate` | `<path> [--frame <frame>]` | Analyzes time/space complexity, I/O patterns, architecture. Scores /25 with Critical/Important/Minor findings. |
-| `/lore:hone` | `<path> [--findings <eval>]` | Applies targeted optimizations: Map/Set replacements, streaming, pooling, batching, circuit breakers. |
-| `/lore:test-scaling` | `<path> [--level 10x\|100x\|1000x]` | Generates and runs a scale test with realistic data, flags super-linear growth. |
-
-### Security Scanning
-
-| Command | Arguments | What It Does |
-| ------- | --------- | ------------ |
-| `/lore:security-check-scan` | `[path]` | 10-pass vulnerability scan: secrets, passwords, private keys, SQLi, XSS, command injection, insecure configs, path traversal, weak crypto. |
-| `/lore:audit` | `[path]` | 9-step dependency/config audit: npm audit, pip-audit, .env in VCS, file permissions, TLS/SSL, Docker security, security headers. |
-| `/lore:security-check-fix` | `[--severity critical\|high\|all]` | Guided remediation of scan findings by severity. Re-scans after all fixes. |
-
----
-
-## Agents (9)
-
-Agents are specialized subagents dispatched for parallel work. Each has a defined toolset and produces structured output. They are dispatched by commands or by the `subagent-development` skill.
-
-### Investigation Agents
-
-| Agent | Tools | What It Does |
-| ----- | ----- | ------------ |
-| `code-explorer` | Glob, Grep, Read, Bash | Traces execution paths from trigger to terminal side effect. Follows call chains across service boundaries, reads tests to identify edge cases, checks patterns against conventions. Returns: entry point, execution path, data transformations, cross-service boundaries, test coverage, open questions. |
-| `integration-mapper` | Glob, Grep, Read, Bash | Maps all integration points: outbound HTTP calls (URL, method, auth, error handling), inbound endpoints, database access (table, operation, columns, transactions), Redis operations (key pattern, TTL), events. Flags gaps in error handling, fallbacks, and timeouts. |
-| `codebase-pattern-scout` | Glob, Grep, Read, Bash | Maps architecture before implementation. Orients via README/manifests, identifies domain boundaries, traces end-to-end flows, discovers similar features, extracts naming/testing patterns, finds extension points. Returns a prioritized 10-file reading list. |
-
-### Review Agents
-
-| Agent | Tools | What It Does |
-| ----- | ----- | ------------ |
-| `review-synthesizer` | Read, Grep | Synthesizes investigation findings into a PR-style review. Assigns confidence scores (0-100), only surfaces issues at 75%+. Categorizes: Critical (90%+), Important (80%+), Minor (75%+). Every issue requires a `file:line` reference. |
-| `code-reviewer` | Read, Glob, Grep, Bash | Deep code review across six dimensions (quality, security, architecture, performance, testing gaps, documentation gaps) without git context. Scores findings Critical/High/Medium/Low. Always includes Strengths. Uses Sonnet model for cost efficiency. |
-
-### Research Agents
-
-| Agent | Tools | What It Does |
-| ----- | ----- | ------------ |
-| `external-research-synthesizer` | WebFetch, WebSearch, Read | Researches external docs and APIs. Tries context7 MCP first for authoritative docs, falls back to WebSearch. Synthesizes: authoritative API, recommended approach, known failure modes, version caveats, working code example. |
-| `implementation-blueprint-generator` | Read, Write | Converts research into a file-level blueprint: files to create/modify, new interfaces and types, data flow (happy + error path), test strategy, risk register, open questions. Saves to `.feature-research/`. |
-
-### Stub Management Agents
-
-| Agent | Tools | What It Does |
-| ----- | ----- | ------------ |
-| `stub-scanner` | Glob, Grep, Read, Bash | Multi-pass scan for incomplete code: language-native stubs (Critical), TODO/FIXME (High), placeholder returns (High), deceptive comments (Medium), stub variable names (Low). Exempts legitimate test doubles. Returns severity-stratified report with CLEAN or ISSUES FOUND verdict. |
-| `stub-implementer` | Read, Edit, Write, Grep, Glob, Bash | Replaces stubs with real code. Triages each as implementable/needs-input/test-double. Reads full context (callers, types, patterns) before writing. Uses same conventions as the codebase. Verifies no stub patterns remain. Returns: files modified, stubs replaced, blockers. |
-
----
-
-## Extensions (6)
-
-Extensions are self-contained sub-plugins with their own MCP servers, commands, skills, and hooks. They are installed during the initial setup or individually via their `install.sh`/`postinstall.sh` scripts.
-
-### browserx — Browser Automation
-
-**Runtime:** Deno | **MCP Server:** Yes (stdio)
-
-Full browser automation with three categories of MCP tools:
-
-- **Query Tools** — SQL-like declarative queries against web pages (`browserx_query`, `browserx_query_async`, `browserx_query_explain`)
-- **Browser Tools** — Session-based automation (`browser_navigate`, `browser_click`, `browser_type`, `browser_screenshot`, `browser_pdf`, `browser_evaluate`, `browser_query_dom`, `browser_wait`)
-- **Proxy Tools** — Network caching and request interception (`proxy_cache_get/set/clear`, `proxy_add_interceptor`)
-
-**Commands:** `/browse <url>`, `/screenshot <url>`, `/query <sql>`
-
-**Hooks:** Intercepts `WebFetch` and `WebSearch` calls to route them through BrowserX instead.
-
-```text
-/query SELECT title, price FROM "https://example.com/products" WHERE price < 50
-/browse https://docs.example.com
-/screenshot https://example.com --full-page
-```
-
-**Setup:** Requires BrowserX repo. The postinstall script clones `github.com/LayerDynamics/BrowserX` and caches Deno dependencies.
-
----
-
-### trellio — Trello Task Management
-
-**Runtime:** Node.js | **MCP Server:** Yes (stdio)
-
-Full Trello + n8n task management system with 40+ MCP tools and 18 slash commands. Wraps the Trello API with a structured 5-list pipeline: `reference → this_week → today → doing → done`.
-
-**MCP Tool Categories:**
-
-- **Board:** `trellio_get_board_snapshot`, `trello_get_board`, `trello_get_board_activity`
-- **Tasks:** `trellio_quick_add_task`, `trellio_move_card_through_pipeline`, `trellio_batch_update_cards`
-- **Coach:** `coach_assess_crash_state`, `coach_get_smallest_next_action`, `coach_generate_accountability_message`, `coach_weekly_completion_stats`
-- **Search:** `trello_search_cards`, `trellio_get_energy_matched_tasks`
-- **n8n Automation:** `n8n_list_workflows`, `n8n_trigger_workflow`, `n8n_get_execution_log`
-- **Codebase:** `codebase_read_file`, `codebase_search`, `codebase_run_script`
-- **Git:** `git_status`, `git_diff`, `git_log`, `git_commit`, `git_branch`
-
-**Commands:** `/trellio-planning`, `/trellio-board`, `/trellio-add`, `/trellio-priority`, `/trellio-recovery`, `/trellio-cleanup`, `/trellio-status`, `/trellio-weekly`, `/trellio-backfill`, `/trellio-analyze-code`, `/trellio-extract-todos`, `/trellio-audit-docs`
-
-**Setup:** Requires `TRELLO_API_KEY`, `TRELLO_TOKEN`, `TRELLO_BOARD_ID`, list IDs, and label IDs in environment. Run `setup-env.sh` for guided configuration.
-
----
-
-### scratchpad — Collaborative Visual Canvas
-
-**Runtime:** Node.js (TypeScript) | **MCP Server:** Yes (stdio)
-
-Real-time collaborative visual canvas. Runs an HTTP + WebSocket server (port 9400) serving a browser UI where both Claude and the user can simultaneously interact with a shared canvas.
-
-**Capabilities:** Draw shapes, add text, place images, create ASCII art, render markdown — all synced in real-time via WebSocket.
-
-**Architecture:** Express HTTP server + WebSocket bridge between MCP and browser. Canvas state is maintained in-process.
-
-**Setup:** Requires `npm run build` to compile TypeScript. Can run standalone with `--standalone` flag for browser-only mode.
-
----
-
-### cc-telemetry — Session Analytics and Observability
-
-**Runtime:** Python (daemon) | **MCP Server:** No (uses hooks + SQLite)
-
-Comprehensive observability for Claude Code sessions. A background Python daemon watches `~/.claude/projects/**/*.jsonl` transcript files, parses every event, and stores them in SQLite (`~/.claude/telemetry/telemetry.db`).
-
-**What it captures:** Tool calls, errors, thinking blocks, API metadata, hook events, messages, skill invocations, plugin usage.
-
-**Hooks:** All 5 hook points wired — SessionStart, PreToolUse, PostToolUse, UserPromptSubmit, Stop.
-
-**Commands (14):** `/cc-telemetry:sessions`, `/cc-telemetry:performance`, `/cc-telemetry:errors`, `/cc-telemetry:patterns`, `/cc-telemetry:plugins`, `/cc-telemetry:skills`, `/cc-telemetry:commands`, `/cc-telemetry:compare`, `/cc-telemetry:health`, `/cc-telemetry:insights`, `/cc-telemetry:live`, `/cc-telemetry:replay`, `/cc-telemetry:search-errors`, `/cc-telemetry:daemon`
-
-**Skills (3):** `cc-telemetry` (data interpretation), `session-debugging` (diagnose session issues), `workflow-optimization` (usage-based improvement suggestions)
-
-**CLI:** `cc-telemetry sessions`, `cc-telemetry tools`, `cc-telemetry stats`, `cc-telemetry errors`, `cc-telemetry live`, `cc-telemetry daemon status`
-
-**Setup:** `install.sh` creates telemetry directory, symlinks CLI to `~/.local/bin/`, installs a launchd plist for macOS daemon autostart.
-
----
-
-### mcp-trigger-gateway — Automation Trigger Engine
-
-**Runtime:** Node.js (TypeScript) | **MCP Server:** Yes (stdio)
-
-Event-driven automation gateway. Define triggers (cron, webhook, event, file watcher, manual) that fire actions (call MCP servers, make HTTP requests, run shell commands, chain triggers).
-
-**MCP Tools (7):** `create_trigger`, `list_triggers`, `get_trigger`, `update_trigger`, `delete_trigger`, `fire_event`, `execute_trigger`
-
-**Trigger types:** `cron` (scheduled), `webhook` (HTTP endpoint), `event` (custom named events), `watch` (file system changes), `manual` (on-demand)
-
-**Action types:** `mcp_call` (invoke another MCP tool), `http` (REST API call), `shell` (run command), trigger chains
-
-**Persistence:** Triggers stored in `~/.mcp-trigger-gateway/triggers.json`.
-
-**Examples included:** Daily backup, API health monitor, GitHub deployment automation.
-
-**Setup:** `postinstall.sh` runs `npm install` and compiles TypeScript. `service/install.sh` installs as a launchd agent (macOS) or systemd unit (Linux).
-
----
-
-### findlazy — AI-Generated Code Smell Detection
-
-**Runtime:** Deno | **MCP Server:** Yes (stdio)
-
-Static analysis tool specifically designed to catch AI-generated code smells — placeholder logic, stub implementations, deceptive patterns that make code appear complete without being functional. Catches patterns like "for now", "in a real app", mock/simulated returns, `return None` stubs, and structurally sound dead code that evades linters.
-
-**Dual interface:** CLI and MCP server modes.
-
-**CLI commands:** `scan` (scan codebase), `trace` (trace specific pattern), `config` (manage configuration), `ignore` (add to ignore list), `clear` (clear cache)
-
-**Supported languages:** TypeScript/Deno/Node, Python.
-
-**Pattern files:** `patterns/common.json`, `patterns/python.json`, `patterns/typescript.json` — extensible pattern definitions.
-
-**Configuration:** `findlazy.json` at project root (schema: `findlazy.schema.json`).
-
-**Setup:** Requires Deno. `postinstall.sh` caches Deno dependencies.
-
----
-
-## MCP Gateway
-
-The Lore Gateway is a zero-dependency Node.js MCP server that exposes 44 tools over stdio JSON-RPC 2.0. It provides programmatic access to the entire framework.
-
-### Tool Categories
-
-| Category | Count | Examples |
-| -------- | ----- | ------- |
-| **Skills** | 13 | `lore_list_skills`, `lore_skill_info`, `lore_diagnose_skill`, `lore_repair_skill`, `lore_install_skill`, `lore_uninstall_skill`, `lore_backup_skill` |
-| **Commands & Agents** | 2 | `lore_list_commands`, `lore_list_agents` |
-| **Registry** | 5 | `lore_registry_register`, `lore_registry_get`, `lore_registry_list`, `lore_registry_unregister`, `lore_registry_clear` |
-| **Filesystem** | 13 | `lore_tree`, `lore_locate`, `lore_read_file`, `lore_read_json`, `lore_write_file`, `lore_write_json`, `lore_append_file`, `lore_read_frontmatter`, `lore_file_exists` |
-| **Paths** | 5 | `lore_root`, `lore_plugin_root`, `lore_resolve_skill_dir`, `lore_resolve_path`, `lore_list_skill_paths` |
-| **Runner** | 6 | `lore_run_tool`, `lore_run_tool_async`, `lore_run_script`, `lore_start_mcp_server`, `lore_stop_mcp_server`, `lore_test_mcp_server` |
-| **Logging** | 1 | `lore_log` |
-
----
-
-## Hooks
-
-Lore installs two hooks that run automatically during Claude Code sessions:
-
-| Hook | Type | What It Does |
-| ---- | ---- | ------------ |
-| `start-session.sh` | SessionStart | Displays a welcome banner with framework version, checks extension availability, verifies MCP gateway and extension repos, reports status. |
-| `verify-completion.sh` | Stop | Soft guardrail that checks if completion claims include verification evidence (test output, confirmed results). Warns but never blocks. |
-
----
-
-## Project Structure
-
-```text
-lore/
-├── .claude-plugin/
-│   ├── plugin.json              # Plugin manifest (name, version, description)
-│   └── marketplace.json         # Full plugin catalog (core + 6 extensions)
-├── skills/                      # 25 workflow skills
-│   └── <skill-name>/SKILL.md    # Each skill is a structured markdown workflow
-├── commands/                    # 33 slash commands (flat .md files, all under /lore: namespace)
-├── agents/                      # 9 subagent definitions (.md)
-├── hooks/                       # Session hooks
-│   ├── hooks.json               # Hook configuration
-│   ├── start-session.sh         # Welcome banner + extension checks
-│   └── verify-completion.sh     # Completion verification guardrail
-├── lib/                         # Shared utilities (zero dependencies)
-│   ├── fs/                      # File system (read, write, tree, locate, find_configs)
-│   ├── io/                      # I/O (echo, append, stdin, stdout)
-│   ├── path/                    # Path resolution (resolve_path, resolve_skill, resolve_tool)
-│   ├── run/                     # Runners (run_tool, run_mcp)
-│   └── skills/                  # Skill management (list, info, doctor, repair, install, uninstall)
-├── mcp/lore/gateway.js          # MCP Gateway server (44 tools, pure Node.js)
-├── templates/                   # Scaffolding templates
-│   ├── agent/                   # Agent template
-│   ├── command/                 # Command template
-│   ├── plugin/                  # Plugin template
-│   └── skill/                   # Skill template
-├── extensions/                  # Optional sub-plugins
-│   ├── browserx/                # Browser automation (Deno + MCP)
-│   ├── trellio/                 # Trello task management (Node.js + MCP)
-│   ├── scratchpad/              # Visual canvas (Node.js + WebSocket + MCP)
-│   ├── cc-telemetry/            # Session analytics (Python daemon + SQLite)
-│   ├── mcp-trigger-gateway/     # Automation triggers (Node.js + MCP)
-│   └── findlazy/                # AI code smell detection (Deno + MCP)
-├── bin/install.sh               # Symlink installer (used by top-level install.sh)
-├── postinstall.sh               # Extension setup runner
-└── package.json                 # npm package (lore-framework)
-```
-
-## Customization
-
-Create new components using the scaffolding commands:
-
-```text
-/lore:create-skill <name>       # New workflow skill from template
-/lore:create-command <name>     # New slash command with namespace
-/lore:create-agent <name>       # New subagent with dispatch examples
-/lore:create-mcp <name>         # New MCP server integration
-/lore:create-plugin             # Guided end-to-end plugin creation
-```
-
-Templates for each component type are in `templates/`. All generated components follow the conventions defined in `lib/conventions.md`.
-
-## Credits
-
-Lore reimplements and extends patterns from several excellent frameworks:
-
-- [Superpowers](https://github.com/superpowers) — TDD, brainstorming, subagent-driven development, verification
-- [GSD](https://github.com/gsd) — Lifecycle phases, context engineering, wave-based execution
-- [Loki Mode](https://github.com/loki-mode) — RARV cycle, quality gates, memory patterns
-- [SuperClaude](https://github.com/superclaude) — Confidence checking, self-check protocol
-
-## License
-
-MIT
+The independently installed `i-have-adhd` skill can control output style alongside Lore. Lore's runtime contract defers to that presentation preference without weakening acceptance criteria.

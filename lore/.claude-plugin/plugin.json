@@ -1,7 +1,7 @@
 {
   "name": "lore",
-  "version": "1.0.30",
-  "description": "Opinionated meta skills & plugin framework for deterministic results",
+  "version": "2.0.0",
+  "description": "Lore source workspace; build a provider-specific package with the Lore CLI",
   "author": {
     "name": "LayerDynamics"
   }

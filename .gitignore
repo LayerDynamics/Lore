@@ -5,3 +5,5 @@ lore/extensions/*/repo/
 firebase-debug.log
 .feature-research
 .web-research
+# Reproducible runtime packages
+/dist/

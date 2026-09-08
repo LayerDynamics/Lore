@@ -23,7 +23,7 @@ jobs:
 
       - name: Bump patch version
         run: |
-          PLUGIN_JSON="lore/.claude-plugin/plugin.json"
+          PLUGIN_JSON="lore/lore.json"
           CURRENT=$(python3 -c "import json; print(json.load(open('$PLUGIN_JSON'))['version'])")
 
           IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
@@ -32,13 +32,13 @@ jobs:
 
           python3 -c "
           import json
-          pj = '$PLUGIN_JSON'
-          with open(pj) as f:
-              data = json.load(f)
-          data['version'] = '$NEW_VERSION'
-          with open(pj, 'w') as f:
-              json.dump(data, f, indent=2)
-              f.write('\n')
+          for pj in ['lore/lore.json', 'lore/package.json', 'lore/.claude-plugin/plugin.json']:
+              with open(pj) as f:
+                  data = json.load(f)
+              data['version'] = '$NEW_VERSION'
+              with open(pj, 'w') as f:
+                  json.dump(data, f, indent=2)
+                  f.write('\n')
           "
 
           echo "BUMPED_VERSION=$NEW_VERSION" >> "$GITHUB_ENV"
@@ -48,6 +48,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add lore/.claude-plugin/plugin.json
+          git add lore/lore.json lore/package.json lore/.claude-plugin/plugin.json
           git commit -m "chore: bump version to ${BUMPED_VERSION} [skip-bump]"
           git push

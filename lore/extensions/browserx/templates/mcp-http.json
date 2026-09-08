@@ -1,6 +1,0 @@
-{
-  "browserx": {
-    "type": "http",
-    "url": "{{BROWSERX_URL}}"
-  }
-}
