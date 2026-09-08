@@ -22,9 +22,9 @@ Requires Node.js 22 or newer. No dependencies need downloading for the core.
 
 ```sh
 node lore/bin/lore.mjs doctor
-node lore/bin/lore.mjs build --runtime codex --out dist/codex-2.0.1
-node lore/bin/lore.mjs build --runtime claude --out dist/claude-2.0.1
-node lore/bin/lore.mjs build --runtime portable --out dist/portable-2.0.1
+node lore/bin/lore.mjs build --runtime codex --out dist/codex-2.0.2
+node lore/bin/lore.mjs build --runtime claude --out dist/claude-2.0.2
+node lore/bin/lore.mjs build --runtime portable --out dist/portable-2.0.2
 ```
 
 The builder refuses to overwrite a destination. Use a new directory for an update; keep the preceding package for rollback. `./install.sh` and `lore/bin/install.sh` are compatibility entry points for the same builder. They require `--out` and never rewrite agent registries, install extensions, or launch an assistant.
@@ -36,7 +36,7 @@ Run these commands only for the runtime you use. The host's installer controls t
 **Codex:**
 
 ```sh
-codex plugin marketplace add ./dist/codex-2.0.1
+codex plugin marketplace add ./dist/codex-2.0.2
 codex plugin add lore@lore-core
 codex plugin list
 ```
@@ -46,8 +46,8 @@ Start a new chat and invoke `$lore:plan` or another core workflow. Codex package
 **Claude Code:**
 
 ```sh
-claude plugin validate ./dist/claude-2.0.1/.claude-plugin/plugin.json
-claude plugin marketplace add ./dist/claude-2.0.1
+claude plugin validate ./dist/claude-2.0.2/.claude-plugin/plugin.json
+claude plugin marketplace add ./dist/claude-2.0.2
 claude plugin install lore@lore-core
 ```
 
@@ -79,3 +79,13 @@ npm test --prefix lore
 Tests exercise real package builds, native subprocesses, MCP stdio, hook payload adapters, input validation, path confinement, concurrent build collisions, symlink handling, strict metadata, package integrity, and preservation of existing files. Host plugin discovery and interactive model behavior are separate verification levels. See [runtime architecture](docs/runtime-architecture.md), [validation results](docs/runtime-validation.md), and [the agent guide](AGENTS.md).
 
 The independently installed `i-have-adhd` skill can control output style alongside Lore. Lore's runtime contract defers to that presentation preference without weakening acceptance criteria.
+
+## Required drift tracking
+
+Build with `--hooks --drift --mcp` to include the restored drift system alongside the ten workflows. `--drift` adds UserPromptSubmit scope capture, PostToolUse periodic reminders, PreToolUse subagent scope injection, and Stop metrics. It requires Bash and Python 3 on macOS/Linux; native Windows drift operation is not supported. The Node core remains cross-platform.
+
+Drift state retains `~/.claude/drift-state` for compatibility with existing sessions in either host. State is isolated by session identity. `drift-control.sh` supports reviewing, refining, and contesting scope; `drift-stats.sh` reports metrics. The stop hook records metrics, not an independent semantic proof of staying on task.
+
+The global 2.0.2 installations include drift. Native plugin registrations avoid duplicate global callbacks. Real drift scripts also remain at the historical hook paths for conversations that loaded those paths before the upgrade; those directories contain no old plugin manifest or workflow catalog.
+
+Verify drift with `python3 -m unittest discover -s lore/drift/tests -v`.

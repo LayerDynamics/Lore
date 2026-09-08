@@ -9,3 +9,5 @@ Keep domain workflow decisions independent of provider tool names, model IDs, ho
 Verify with `npm test --prefix lore`, `node lore/bin/lore.mjs doctor`, and `git diff --check`. For packaging changes, build all supported runtime artifacts and validate with available host discovery/validation commands in isolated configuration directories. A protocol test or package validator does not prove interactive model behavior; report that boundary.
 
 Version source: `lore/lore.json`. Keep `lore/package.json` and the source `.claude-plugin/plugin.json` version aligned. Runtime manifests are generated from that version. Removed workflows and compatibility components are not retained in the repository or packages.
+
+Automatic drift tracking is required by the user. Preserve `lore/drift/` and `--drift` packaging. It is independent of the ten-workflow catalog. Run its Python tests for drift changes; do not remove it as legacy workflow machinery.

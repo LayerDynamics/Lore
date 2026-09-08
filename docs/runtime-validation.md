@@ -61,3 +61,11 @@ Existing conversations may retain their initial plugin instructions until a new 
 The initial global cleanup missed five directly registered Lore commands in `~/.codex/hooks.json`. They caused exit 127 after the old script paths were removed. Those entries are now removed, remaining global hook preference indices were remapped, and both new hooks were executed successfully (exit 0, valid JSON). The original global hooks file is in the installation backup.
 
 The first GitHub matrix exposed Windows EPERM when renaming staging over an empty reserved directory. Version 2.0.1 keeps that exclusive reservation on Windows, transfers validated entries into it, and publishes the inventory last. macOS and Linux retain directory rename publication. Failed transfers report failure and preserve any nonempty destination for inspection rather than deleting unexpected files.
+
+## Required drift restored in 2.0.2
+
+The user clarified that automatic drift protection is required. Restored the four event hooks plus shared state, drift-control and drift-stats from the preserved implementation. The source lives in `lore/drift`; the `--drift` build option packages it independently of the ten workflows. Added host field aliases and support for subagent message payloads. Preserved the state location for conversation continuity.
+
+Local verification: 70 Python drift tests pass, including actual shell-hook scope capture, 16 tool events, periodic reminder/file evidence, subagent injection, session isolation and stop metrics. All 22 Node tests pass, including six-hook packaging and integrity after executing a packaged Python hook. Bytecode writes are disabled in hook processes to preserve immutable package inventories. Both global installations are 2.0.2 with drift enabled through the plugin. Direct global drift duplicates are removed; real scripts remain at historical paths for running sessions.
+
+The restored implementation requires Bash, Python 3 and POSIX file locking. Windows drift execution is not claimed; core Windows packaging remains supported.

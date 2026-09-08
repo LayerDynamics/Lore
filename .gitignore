@@ -7,3 +7,7 @@ firebase-debug.log
 .web-research
 # Reproducible runtime packages
 /dist/
+
+# Python hook bytecode
+__pycache__/
+*.pyc

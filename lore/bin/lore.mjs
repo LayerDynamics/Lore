@@ -11,7 +11,7 @@ const help = `Lore — provider-neutral engineering workflows
 
   lore list
   lore show NAME
-  lore build --runtime codex|claude|portable --out DIRECTORY [--hooks] [--mcp]
+  lore build --runtime codex|claude|portable --out DIRECTORY [--hooks] [--mcp] [--drift]
   lore doctor [--tools JSON_FILE]
   lore mcp
 
@@ -28,7 +28,7 @@ async function main(argv) {
   const positional = [];
   while (argv.length) {
     const arg = argv.shift();
-    if (['--hooks', '--mcp'].includes(arg)) options[arg.slice(2)] = true;
+    if (['--hooks', '--mcp', '--drift'].includes(arg)) options[arg.slice(2)] = true;
     else if (['--runtime', '--out', '--tools'].includes(arg)) {
       const value = argv.shift();
       if (!value || value.startsWith('--')) throw new Error(`Missing value for ${arg}`);
@@ -37,7 +37,7 @@ async function main(argv) {
     else positional.push(arg);
   }
   if (command !== 'show' && positional.length) throw new Error(`Unexpected argument: ${positional[0]}`);
-  const allowed = { build: ['runtime', 'destination', 'hooks', 'mcp'], list: [], show: [], doctor: ['tools'], mcp: [] }[command];
+  const allowed = { build: ['runtime', 'destination', 'hooks', 'mcp', 'drift'], list: [], show: [], doctor: ['tools'], mcp: [] }[command];
   if (allowed) for (const key of Object.keys(options)) {
     if (!allowed.includes(key)) throw new Error(`Option ${key} is not supported by ${command}`);
   }

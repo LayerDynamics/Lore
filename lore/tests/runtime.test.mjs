@@ -219,3 +219,20 @@ test('concurrent builds cannot overwrite each other', async t => {
   assert.equal((await verifyPackage(destination)).verified, true);
   assert.deepEqual(await readdir(dir), ['shared']);
 });
+
+test('drift packaging includes four functional registrations without bytecode artifacts', async t => {
+  const dir = await temporary(t); const destination = join(dir, 'drift package');
+  await build({ destination, runtime: 'codex', hooks: true, drift: true });
+  const config = JSON.parse(await readFile(join(destination, 'hooks/hooks.json'), 'utf8'));
+  assert.equal(Object.values(config.hooks).flatMap(g => g.flatMap(x => x.hooks)).length, 6);
+  assert.match(config.hooks.PreToolUse[0].matcher, /spawn_agent/);
+  assert.ok(!(await readdir(join(destination, 'drift'))).includes('__pycache__'));
+  if (process.platform !== 'win32') {
+    const proc = spawnSync(config.hooks.UserPromptSubmit[0].hooks[0].command, { shell: true, env: { ...process.env, CODEX_PLUGIN_ROOT: destination, HOME: dir }, input: JSON.stringify({ session_id: 'packaged-drift', cwd: dir, prompt: 'Verify packaged drift hook execution and integrity.' }), encoding: 'utf8' });
+    assert.equal(proc.status, 0, proc.stderr);
+    assert.equal(proc.stderr, '');
+    const projectDirs = await readdir(join(dir, '.claude/drift-state'));
+    assert.ok(projectDirs.some(name => name.startsWith('lore test ')));
+  }
+  assert.equal((await verifyPackage(destination)).verified, true);
+});

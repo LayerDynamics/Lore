@@ -22,10 +22,10 @@ async function checkAssets(root, dir) {
   }
 }
 
-export async function build({ root = ROOT, destination, runtime = 'portable', hooks = false, mcp = false } = {}) {
+export async function build({ root = ROOT, destination, runtime = 'portable', hooks = false, mcp = false, drift = false } = {}) {
   if (!destination) throw new Error('An explicit destination is required');
   if (!['portable', 'codex', 'claude'].includes(runtime)) throw new Error(`Unsupported runtime: ${runtime}`);
-  if (hooks && runtime === 'portable') throw new Error('Portable hosts have no universal hook API; select codex or claude');
+  if ((hooks || drift) && runtime === 'portable') throw new Error('Portable hosts have no universal hook API; select codex or claude');
   const target = resolve(destination);
   const source = await realpath(root);
   let ancestor = dirname(target);
@@ -72,6 +72,20 @@ export async function build({ root = ROOT, destination, runtime = 'portable', ho
       const command = 'node -e "const p=process.env.CODEX_PLUGIN_ROOT||process.env.CLAUDE_PLUGIN_ROOT||process.env.PLUGIN_ROOT;if(!p)throw Error(\'Missing plugin root\');import(require(\'node:url\').pathToFileURL(require(\'node:path\').join(p,\'runtime/hook.mjs\')).href).then(async m=>{let s=\'\';for await(const c of process.stdin){s+=c;if(Buffer.byteLength(s)>1048576)throw Error(\'Hook input too large\')}process.stdout.write(JSON.stringify(await m.handleHook(JSON.parse(s)))+\'\\n\')}).catch(e=>{process.stderr.write(e.message+\'\\n\')})"';
       await put(stage, 'hooks/hooks.json', json({ hooks: { SessionStart: [{ hooks: [{ type: 'command', command, timeout: 5 }] }], Stop: [{ hooks: [{ type: 'command', command, timeout: 5 }] }] } }));
     }
+    if (drift) {
+      await cp(resolve(root, 'drift'), resolve(stage, 'drift'), {
+        recursive: true,
+        filter: source => !source.split(/[\\/]/).some(part => ['tests', '__pycache__'].includes(part)),
+      });
+      const config = hooks ? JSON.parse(await (await import('node:fs/promises')).readFile(resolve(stage, 'hooks/hooks.json'), 'utf8')) : { hooks: {} };
+      for (const [event, script] of Object.entries({ UserPromptSubmit: 'drift-anchor-capture.sh', PostToolUse: 'drift-check-periodic.sh', PreToolUse: 'drift-subagent-inject.sh', Stop: 'drift-check-final.sh' })) {
+        const code = `const p=process.env.CODEX_PLUGIN_ROOT||process.env.CLAUDE_PLUGIN_ROOT||process.env.PLUGIN_ROOT;if(!p)throw Error('Missing plugin root');const r=require('node:child_process').spawnSync('bash',[require('node:path').join(p,'drift','${script}')],{stdio:'inherit'});if(r.error)throw r.error;process.exit(r.status??1)`;
+        const group = { hooks: [{ type: 'command', command: 'node -e "' + code + '"', timeout: 5 }] };
+        if (event === 'PreToolUse') group.matcher = 'Task|Agent|spawn_agent|.*[.]spawn_agent';
+        (config.hooks[event] ??= []).push(group);
+      }
+      await put(stage, 'hooks/hooks.json', json(config));
+    }
     if (mcp) {
       // The process starts a real read-only catalog server, never a tool runner.
       const args = runtime === 'portable' ? [resolve(target, 'runtime/mcp.mjs')] : ['-e', "const p=process.env.CODEX_PLUGIN_ROOT||process.env.CLAUDE_PLUGIN_ROOT||process.env.PLUGIN_ROOT;if(!p)throw Error('Missing plugin root');import(require('node:url').pathToFileURL(require('node:path').join(p,'runtime/mcp.mjs')).href).then(m=>m.serve())"];
@@ -79,7 +93,7 @@ export async function build({ root = ROOT, destination, runtime = 'portable', ho
       if (runtime === 'codex') await put(stage, '.codex-plugin/plugin.json', json({ ...plugin, skills: './skills/', mcpServers: './.mcp.json' }));
     }
     await catalog(stage);
-    await put(stage, 'BUILD.json', json({ schemaVersion: 1, runtime, version: meta.version, hooks, mcp, skills: selected.map(s => s.name), files: await inventory(stage) }));
+    await put(stage, 'BUILD.json', json({ schemaVersion: 1, runtime, version: meta.version, hooks, mcp, drift, skills: selected.map(s => s.name), files: await inventory(stage) }));
     // Reserve without replacing a path created by a concurrent builder.
     await mkdir(target);
     reserved = true;
@@ -94,7 +108,7 @@ export async function build({ root = ROOT, destination, runtime = 'portable', ho
       await rename(stage, target);
     }
     reserved = false;
-    return { destination: target, runtime, skills: selected.length, hooks, mcp };
+    return { destination: target, runtime, skills: selected.length, hooks, mcp, drift };
   } catch (error) {
     if (reserved) {
       try { await rmdir(target); } catch (cleanupError) {

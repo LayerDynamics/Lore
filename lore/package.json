@@ -1,6 +1,6 @@
 {
   "name": "lore-framework",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Provider-neutral engineering workflows with explicit runtime adapters",
   "author": "LayerDynamics",
   "license": "MIT",
@@ -16,7 +16,8 @@
     "lore.json",
     "runtime",
     "bin/lore.mjs",
-    "skills"
+    "skills",
+    "drift"
   ],
   "keywords": [
     "agent-skills",

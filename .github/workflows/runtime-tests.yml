@@ -20,3 +20,7 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: npm test --prefix lore
       - run: node lore/bin/lore.mjs doctor
+
+      - name: Drift lifecycle and scope tests
+        if: runner.os != 'Windows'
+        run: python3 -m unittest discover -s lore/drift/tests -v
