@@ -55,3 +55,9 @@ The user subsequently authorized uninstalling the old installation, installing 2
 - `i-have-adhd@i-have-adhd` remains installed and enabled.
 
 Existing conversations may retain their initial plugin instructions until a new session starts. Global discovery verification does not demonstrate an interactive model response.
+
+## Follow-up corrections
+
+The initial global cleanup missed five directly registered Lore commands in `~/.codex/hooks.json`. They caused exit 127 after the old script paths were removed. Those entries are now removed, remaining global hook preference indices were remapped, and both new hooks were executed successfully (exit 0, valid JSON). The original global hooks file is in the installation backup.
+
+The first GitHub matrix exposed Windows EPERM when renaming staging over an empty reserved directory. Version 2.0.1 keeps that exclusive reservation on Windows, transfers validated entries into it, and publishes the inventory last. macOS and Linux retain directory rename publication. Failed transfers report failure and preserve any nonempty destination for inspection rather than deleting unexpected files.

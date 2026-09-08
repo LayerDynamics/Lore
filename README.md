@@ -22,9 +22,9 @@ Requires Node.js 22 or newer. No dependencies need downloading for the core.
 
 ```sh
 node lore/bin/lore.mjs doctor
-node lore/bin/lore.mjs build --runtime codex --out dist/codex-2.0.0
-node lore/bin/lore.mjs build --runtime claude --out dist/claude-2.0.0
-node lore/bin/lore.mjs build --runtime portable --out dist/portable-2.0.0
+node lore/bin/lore.mjs build --runtime codex --out dist/codex-2.0.1
+node lore/bin/lore.mjs build --runtime claude --out dist/claude-2.0.1
+node lore/bin/lore.mjs build --runtime portable --out dist/portable-2.0.1
 ```
 
 The builder refuses to overwrite a destination. Use a new directory for an update; keep the preceding package for rollback. `./install.sh` and `lore/bin/install.sh` are compatibility entry points for the same builder. They require `--out` and never rewrite agent registries, install extensions, or launch an assistant.
@@ -36,7 +36,7 @@ Run these commands only for the runtime you use. The host's installer controls t
 **Codex:**
 
 ```sh
-codex plugin marketplace add ./dist/codex-2.0.0
+codex plugin marketplace add ./dist/codex-2.0.1
 codex plugin add lore@lore-core
 codex plugin list
 ```
@@ -46,8 +46,8 @@ Start a new chat and invoke `$lore:plan` or another core workflow. Codex package
 **Claude Code:**
 
 ```sh
-claude plugin validate ./dist/claude-2.0.0/.claude-plugin/plugin.json
-claude plugin marketplace add ./dist/claude-2.0.0
+claude plugin validate ./dist/claude-2.0.1/.claude-plugin/plugin.json
+claude plugin marketplace add ./dist/claude-2.0.1
 claude plugin install lore@lore-core
 ```
 

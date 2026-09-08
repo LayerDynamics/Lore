@@ -1,6 +1,6 @@
 {
   "name": "lore",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Lore source workspace; build a provider-specific package with the Lore CLI",
   "author": {
     "name": "LayerDynamics"

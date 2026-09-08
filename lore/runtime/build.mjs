@@ -83,7 +83,16 @@ export async function build({ root = ROOT, destination, runtime = 'portable', ho
     // Reserve without replacing a path created by a concurrent builder.
     await mkdir(target);
     reserved = true;
-    await rename(stage, target);
+    // Windows cannot rename a directory over an existing empty directory.
+    // Keep the exclusive reservation and move validated entries into it;
+    // publish the inventory last so it never describes a partial transfer.
+    if (process.platform === 'win32') {
+      const names = (await readdir(stage)).filter(name => name !== 'BUILD.json');
+      for (const name of [...names, 'BUILD.json']) await rename(resolve(stage, name), resolve(target, name));
+      await rmdir(stage);
+    } else {
+      await rename(stage, target);
+    }
     reserved = false;
     return { destination: target, runtime, skills: selected.length, hooks, mcp };
   } catch (error) {

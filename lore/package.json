@@ -1,6 +1,6 @@
 {
   "name": "lore-framework",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Provider-neutral engineering workflows with explicit runtime adapters",
   "author": "LayerDynamics",
   "license": "MIT",
